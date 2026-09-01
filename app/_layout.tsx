@@ -1,24 +1,66 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import {
+  Merriweather_400Regular,
+  Merriweather_700Bold,
+} from "@expo-google-fonts/merriweather";
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+import {
+  Poppins_400Regular,
+  Poppins_700Bold,
+} from "@expo-google-fonts/poppins";
+
+import {
+  RobotoSlab_400Regular,
+  RobotoSlab_700Bold,
+} from "@expo-google-fonts/roboto-slab";
+
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFonts } from "expo-font";
+import { Stack } from "expo-router";
+import { useEffect, useState } from "react";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const [fontsLoaded] = useFonts({
+    PoppinsRegular: Poppins_400Regular,
+    PoppinsBold: Poppins_700Bold,
+
+    RobotoSlabRegular: RobotoSlab_400Regular,
+    RobotoSlabBold: RobotoSlab_700Bold,
+
+    MerriweatherRegular: Merriweather_400Regular,
+    MerriweatherBold: Merriweather_700Bold,
+  });
+
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    const checkLogin = async () => {
+      try {
+        const loggedIn = await AsyncStorage.getItem("loggedIn");
+
+        console.log("Logged in:", loggedIn);
+      } catch (error) {
+        console.log("Login check failed:", error);
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    if (fontsLoaded) {
+      checkLogin();
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded || isCheckingAuth) {
+    return null;
+  }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+      }}
+    />
   );
 }
+
