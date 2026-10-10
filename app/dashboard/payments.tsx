@@ -1,188 +1,308 @@
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   SafeAreaView,
+  ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
+  TextInputProps,
   TouchableOpacity,
-  useWindowDimensions,
   View,
 } from "react-native";
 
-type CardType = "Visa" | "Mastercard";
+/* ----------------------------- Types & data ----------------------------- */
+
+type CardBrand = "Visa" | "Mastercard";
+type MethodKind = "paypal" | "momo" | "card";
+type PaymentStep = "select" | "add-card" | "processing" | "success";
 type PaymentMethod = {
   brandColor: string;
   icon: string;
   id: string;
+  kind: MethodKind;
   label: string;
+  removable?: boolean;
 };
-type PaymentStep = "select" | "add-card" | "processing" | "success";
 
 const defaultMethods: PaymentMethod[] = [
-  {
-    brandColor: "#1B75BB",
-    icon: "paypal",
-    id: "paypal",
-    label: "PayPal",
-  },
-  {
-    brandColor: "#EB001B",
-    icon: "cc-mastercard",
-    id: "mastercard",
-    label: "Mastercard",
-  },
-  {
-    brandColor: "#1A1F71",
-    icon: "cc-visa",
-    id: "visa",
-    label: "Visa",
-  },
+  { brandColor: "#1B75BB", icon: "paypal", id: "paypal", kind: "paypal", label: "PayPal" },
   {
     brandColor: "#F6A800",
     icon: "mobile-screen-button",
     id: "momo",
+    kind: "momo",
     label: "MTN Mobile Money",
   },
 ];
 
-const cardTypes: CardType[] = ["Visa", "Mastercard"];
-
-const getLastDigits = (value: string) => {
-  const digits = value.replace(/\D/g, "");
-
-  return digits.slice(-4) || "0257";
+const C = {
+  accent: "#FF5A00",
+  accentSoft: "#FFF1EA",
+  bg: "#F4F2F0",
+  danger: "#C23122",
+  disabled: "#D8CDC7",
+  ink: "#1E3631",
+  inkSoft: "#314640",
+  line: "#E8E2DE",
+  muted: "#8B7F7A",
+  placeholder: "#B9AAA4",
+  surface: "#FFFFFF",
 };
+
+const cardTheme: Record<CardBrand | "Unknown", { bg: string; stripe: string }> = {
+  Visa: { bg: "#1A1F71", stripe: "#10144D" },
+  Mastercard: { bg: "#2B2B2B", stripe: "#151515" },
+  Unknown: { bg: "#F25408", stripe: "#A92D08" },
+};
+
+/* ------------------------------- Helpers -------------------------------- */
+
+const digitsOnly = (value: string, max = 99) => value.replace(/\D/g, "").slice(0, max);
 
 const formatCardNumber = (value: string) =>
-  value.replace(/\D/g, "").slice(0, 16).replace(/(.{4})/g, "$1 ").trim();
+  digitsOnly(value, 16).replace(/(.{4})/g, "$1 ").trim();
 
 const formatExpiry = (value: string) => {
-  const digits = value.replace(/\D/g, "").slice(0, 4);
-  return digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
+  const d = digitsOnly(value, 4);
+  return d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d;
 };
 
-const onlyNumbers = (value: string, maxLength: number) =>
-  value.replace(/\D/g, "").slice(0, maxLength);
+const detectBrand = (digits: string): CardBrand | null => {
+  if (/^4/.test(digits)) return "Visa";
+  const two = Number(digits.slice(0, 2));
+  const four = Number(digits.slice(0, 4));
+  if ((two >= 51 && two <= 55) || (four >= 2221 && four <= 2720)) return "Mastercard";
+  return null;
+};
+
+// Luhn checksum – catches most mistyped card numbers.
+const passesLuhn = (digits: string) => {
+  let sum = 0;
+  let double = false;
+  for (let i = digits.length - 1; i >= 0; i--) {
+    let n = Number(digits[i]);
+    if (double) {
+      n *= 2;
+      if (n > 9) n -= 9;
+    }
+    sum += n;
+    double = !double;
+  }
+  return digits.length > 0 && sum % 10 === 0;
+};
+
+const getCardError = (digits: string) => {
+  if (digits.length < 16) return "Enter all 16 digits";
+  if (!detectBrand(digits)) return "We accept Visa and Mastercard";
+  if (!passesLuhn(digits)) return "Check the card number";
+  return null;
+};
+
+const getExpiryError = (expiry: string) => {
+  const d = digitsOnly(expiry);
+  if (d.length < 4) return "Use MM/YY";
+  const month = Number(d.slice(0, 2));
+  const year = 2000 + Number(d.slice(2));
+  if (month < 1 || month > 12) return "Month must be 01–12";
+  const now = new Date();
+  const currentMonth = now.getFullYear() * 12 + now.getMonth();
+  if (year * 12 + (month - 1) < currentMonth) return "This card has expired";
+  return null;
+};
+
+/* ------------------------------ Components ------------------------------ */
+
+function Field({
+  error,
+  label,
+  ...props
+}: TextInputProps & { error?: string | null; label: string }) {
+  const [focused, setFocused] = useState(false);
+
+  return (
+    <View style={styles.field}>
+      <Text style={styles.inputLabel}>{label}</Text>
+      <TextInput
+        accessibilityLabel={label}
+        placeholderTextColor={C.placeholder}
+        {...props}
+        onBlur={(e) => {
+          setFocused(false);
+          props.onBlur?.(e);
+        }}
+        onFocus={(e) => {
+          setFocused(true);
+          props.onFocus?.(e);
+        }}
+        style={[styles.input, focused && styles.inputFocused, !!error && styles.inputError]}
+      />
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+    </View>
+  );
+}
+
+/* -------------------------------- Screen -------------------------------- */
 
 export default function Payments() {
-  const { width } = useWindowDimensions();
-  const successScale = useRef(new Animated.Value(0.72)).current;
+  const params = useLocalSearchParams<{ currency?: string; total?: string }>();
+  const total = parseFloat(params.total ?? "");
+  const hasTotal = Number.isFinite(total) && total > 0;
+  const amountLabel = hasTotal ? `${params.currency ?? "$"}${total.toFixed(2)}` : "";
+  const payLabel = hasTotal ? `Pay ${amountLabel}` : "Pay now";
+
+  const successScale = useRef(new Animated.Value(0.6)).current;
+  const successFade = useRef(new Animated.Value(0)).current;
   const processingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [accountHolder, setAccountHolder] = useState("");
   const [cardNumber, setCardNumber] = useState("");
-  const [cardType, setCardType] = useState<CardType>("Visa");
   const [cvv, setCvv] = useState("");
   const [expiry, setExpiry] = useState("");
+  const [momoNumber, setMomoNumber] = useState("");
   const [methods, setMethods] = useState(defaultMethods);
+  const [paidWith, setPaidWith] = useState("");
+  const [reference, setReference] = useState("");
   const [saveCard, setSaveCard] = useState(true);
-  const [selectedMethodId, setSelectedMethodId] = useState("visa");
+  const [selectedMethodId, setSelectedMethodId] = useState("paypal");
   const [step, setStep] = useState<PaymentStep>("select");
+  const [touched, setTouched] = useState({ cvv: false, expiry: false, holder: false, number: false });
 
-  const cardDigits = cardNumber.replace(/\D/g, "");
-  const expiryDigits = expiry.replace(/\D/g, "");
-  const canSaveCard =
-    cardDigits.length === 16 &&
-    accountHolder.trim().length > 1 &&
-    expiryDigits.length === 4 &&
-    cvv.length === 3;
-  const pageMaxWidth = Math.min(width - 36, 330);
+  const cardDigits = digitsOnly(cardNumber);
+  const brand = detectBrand(cardDigits);
+  const theme = cardTheme[brand ?? "Unknown"];
+  const last4 = cardDigits.slice(-4);
+
+  const errors = {
+    cvv: cvv.length === 3 ? null : "3 digits",
+    expiry: getExpiryError(expiry),
+    holder: accountHolder.trim().length > 1 ? null : "Enter the name on the card",
+    number: getCardError(cardDigits),
+  };
+  const cardIsValid = !errors.cvv && !errors.expiry && !errors.holder && !errors.number;
+
+  const selectedMethod = methods.find((m) => m.id === selectedMethodId);
+  const momoIsValid = digitsOnly(momoNumber).length >= 9;
+  const canPaySelected =
+    !!selectedMethod && (selectedMethod.kind !== "momo" || momoIsValid);
 
   useEffect(
     () => () => {
-      if (processingTimer.current) {
-        clearTimeout(processingTimer.current);
-      }
+      if (processingTimer.current) clearTimeout(processingTimer.current);
     },
     []
   );
 
-  const startProcessing = () => {
+  const startProcessing = (label: string) => {
+    if (step === "processing") return; // guard against double taps
+    setPaidWith(label);
     setStep("processing");
-    successScale.setValue(0.72);
+    successScale.setValue(0.6);
+    successFade.setValue(0);
 
+    // Simulated request – replace with your real payment call.
     processingTimer.current = setTimeout(() => {
+      setReference(`#${Date.now().toString().slice(-8)}`);
       setStep("success");
-      Animated.spring(successScale, {
-        friction: 5,
-        tension: 130,
-        toValue: 1,
-        useNativeDriver: true,
-      }).start();
-    }, 1400);
+      Animated.parallel([
+        Animated.spring(successScale, {
+          friction: 5,
+          tension: 130,
+          toValue: 1,
+          useNativeDriver: true,
+        }),
+        Animated.timing(successFade, {
+          duration: 350,
+          toValue: 1,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, 1600);
   };
 
-  const addCard = () => {
-    if (!canSaveCard) return;
+  const paySelected = () => {
+    if (!selectedMethod || !canPaySelected) return;
+    startProcessing(selectedMethod.label);
+  };
 
-    const lastDigits = getLastDigits(cardNumber);
-    const method: PaymentMethod = {
-      brandColor: cardType === "Visa" ? "#1A1F71" : "#EB001B",
-      icon: cardType === "Visa" ? "cc-visa" : "cc-mastercard",
-      id: `${cardType.toLowerCase()}-${lastDigits}-${Date.now()}`,
-      label: `${cardType} ${lastDigits}`,
-    };
+  const payWithNewCard = () => {
+    if (!cardIsValid) {
+      setTouched({ cvv: true, expiry: true, holder: true, number: true });
+      return;
+    }
 
-    if (saveCard) {
+    const label = `${brand} •••• ${last4}`;
+
+    if (saveCard && brand) {
+      const method: PaymentMethod = {
+        brandColor: brand === "Visa" ? "#1A1F71" : "#EB001B",
+        icon: brand === "Visa" ? "cc-visa" : "cc-mastercard",
+        id: `${brand.toLowerCase()}-${last4}-${Date.now()}`,
+        kind: "card",
+        label,
+        removable: true,
+      };
       setMethods((current) => [method, ...current]);
       setSelectedMethodId(method.id);
     }
 
-    startProcessing();
+    // Never keep raw card data around after it has been used.
+    setCardNumber("");
+    setCvv("");
+    setExpiry("");
+    setAccountHolder("");
+    setTouched({ cvv: false, expiry: false, holder: false, number: false });
+    startProcessing(label);
   };
 
   const removeMethod = (methodId: string) => {
-    setMethods((current) => {
-      const nextMethods = current.filter((method) => method.id !== methodId);
-
-      if (selectedMethodId === methodId) {
-        setSelectedMethodId(nextMethods[0]?.id ?? "");
-      }
-
-      return nextMethods;
-    });
+    const next = methods.filter((m) => m.id !== methodId);
+    setMethods(next);
+    if (selectedMethodId === methodId) setSelectedMethodId(next[0]?.id ?? "");
   };
 
   const goBack = () => {
+    if (step === "processing") return;
     if (step === "add-card") {
       setStep("select");
       return;
     }
-
     router.back();
   };
+
+  /* ------------------------------- Success ------------------------------- */
 
   if (step === "success") {
     return (
       <SafeAreaView style={styles.successContainer}>
-        <View style={[styles.successScreen, { maxWidth: pageMaxWidth }]}>
-          <Text style={styles.successHeadline}>Payment Successful!</Text>
+        <View style={styles.successScreen}>
+          <View style={styles.successTop}>
+            <Animated.View
+              style={[styles.successMark, { transform: [{ scale: successScale }] }]}
+            >
+              <FontAwesome6 name="check" size={38} color="#FFFFFF" />
+            </Animated.View>
 
-          <Animated.View
-            style={[styles.successMark, { transform: [{ scale: successScale }] }]}
-          >
-            <FontAwesome6 name="check" size={42} color="#FFFFFF" />
-          </Animated.View>
-
-          <Text style={styles.successMessage}>
-            Thank you for using our service, your payment is on its way to the
-            receiver!
-          </Text>
+            <Animated.View style={[styles.successTextBlock, { opacity: successFade }]}>
+              <Text style={styles.successHeadline}>Payment successful</Text>
+              <Text style={styles.successMessage}>
+                {hasTotal ? `${amountLabel} was paid with ${paidWith}.` : `Paid with ${paidWith}.`}
+                {"\n"}Your payment is on its way to the receiver.
+              </Text>
+              <Text style={styles.successReference}>Reference {reference}</Text>
+            </Animated.View>
+          </View>
 
           <View style={styles.successActions}>
             <TouchableOpacity
-              activeOpacity={0.88}
-              onPress={() => setStep("select")}
-              style={styles.secondarySuccessButton}
-            >
-              <Text style={styles.secondarySuccessText}>Back</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
+              accessibilityRole="button"
               activeOpacity={0.88}
               onPress={() => router.replace("/dashboard/products" as any)}
               style={styles.primarySuccessButton}
@@ -191,11 +311,12 @@ export default function Payments() {
             </TouchableOpacity>
 
             <TouchableOpacity
+              accessibilityRole="button"
               activeOpacity={0.88}
               onPress={() => router.push("/dashboard/orders" as any)}
               style={styles.secondarySuccessButton}
             >
-              <Text style={styles.secondarySuccessText}>Go to orders</Text>
+              <Text style={styles.secondarySuccessText}>View my orders</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -203,261 +324,316 @@ export default function Payments() {
     );
   }
 
+  /* -------------------------------- Main --------------------------------- */
+
+  const activeSegments = step === "select" ? 1 : step === "add-card" ? 2 : 3;
+  const progressLabels = ["Method", "Details", "Pay"];
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.screenContent}>
-        <View style={[styles.phoneCard, { maxWidth: pageMaxWidth }]}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.flex}
+      >
+        <View style={styles.page}>
+          {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity
+              accessibilityLabel="Go back"
+              accessibilityRole="button"
               activeOpacity={0.75}
+              disabled={step === "processing"}
+              hitSlop={10}
               onPress={goBack}
               style={styles.backButton}
             >
-              <FontAwesome6 name="arrow-left" size={14} color="#1E3631" />
+              <FontAwesome6 name="arrow-left" size={15} color={C.ink} />
             </TouchableOpacity>
 
-            <Text style={styles.title}>
-              {step === "add-card" ? "Add New Card" : "Payment"}
-            </Text>
+            <Text style={styles.title}>{step === "add-card" ? "Add new card" : "Payment"}</Text>
           </View>
 
-          <View style={styles.progressRow}>
-            {[0, 1, 2, 3].map((item) => (
-              <View
-                key={item}
-                style={[
-                  styles.progressSegment,
-                  item <= (step === "select" ? 1 : 2) && styles.activeSegment,
-                ]}
-              />
-            ))}
+          {/* Progress */}
+          <View style={styles.progressWrap}>
+            <View style={styles.progressRow}>
+              {progressLabels.map((label, i) => (
+                <View
+                  key={label}
+                  style={[styles.progressSegment, i < activeSegments && styles.activeSegment]}
+                />
+              ))}
+            </View>
+            <View style={styles.progressRow}>
+              {progressLabels.map((label, i) => (
+                <Text
+                  key={label}
+                  style={[styles.progressLabel, i < activeSegments && styles.activeProgressLabel]}
+                >
+                  {label}
+                </Text>
+              ))}
+            </View>
           </View>
 
+          {/* Processing */}
           {step === "processing" ? (
             <View style={styles.processingState}>
-              <ActivityIndicator color="#FF5A00" size="large" />
-
+              <ActivityIndicator color={C.accent} size="large" />
               <Text style={styles.processingTitle}>Processing payment</Text>
-
               <Text style={styles.processingText}>
-                This will only take a moment.
+                Please keep this screen open. This only takes a moment.
               </Text>
             </View>
           ) : null}
 
+          {/* Select method */}
           {step === "select" ? (
-            <View style={styles.selectBody}>
-              <Text style={styles.sectionLabel}>Select Payment Method</Text>
+            <>
+              <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+              >
+                {hasTotal ? (
+                  <View style={styles.summaryCard}>
+                    <Text style={styles.summaryLabel}>Total to pay</Text>
+                    <Text style={styles.summaryAmount}>{amountLabel}</Text>
+                  </View>
+                ) : null}
 
-              <View style={styles.methodList}>
-                {methods.map((method) => {
-                  const isSelected = selectedMethodId === method.id;
-                  const canRemove = !["paypal", "mastercard", "visa", "momo"].includes(
-                    method.id
-                  );
+                <Text style={styles.sectionLabel}>Choose how to pay</Text>
 
-                  return (
-                    <Pressable
-                      key={method.id}
-                      onPress={() => setSelectedMethodId(method.id)}
-                      style={[styles.methodRow, isSelected && styles.selectedMethodRow]}
-                    >
-                      <View style={styles.methodBrand}>
-                        <FontAwesome6
-                          name={method.icon as any}
-                          size={22}
-                          color={method.brandColor}
-                        />
-                      </View>
+                <View style={styles.methodList}>
+                  {methods.map((method) => {
+                    const isSelected = selectedMethodId === method.id;
+                    const showMomo = isSelected && method.kind === "momo";
 
-                      <Text style={styles.methodName}>{method.label}</Text>
+                    return (
+                      <View key={method.id}>
+                        <View style={[styles.methodRow, isSelected && styles.selectedMethodRow]}>
+                          <Pressable
+                            accessibilityLabel={method.label}
+                            accessibilityRole="radio"
+                            accessibilityState={{ selected: isSelected }}
+                            onPress={() => setSelectedMethodId(method.id)}
+                            style={styles.methodPressable}
+                          >
+                            <View style={styles.methodBrand}>
+                              <FontAwesome6
+                                name={method.icon as any}
+                                size={22}
+                                color={method.brandColor}
+                              />
+                            </View>
 
-                      {canRemove ? (
-                        <Pressable
-                          onPress={(event) => {
-                            event.stopPropagation();
-                            removeMethod(method.id);
-                          }}
-                          style={styles.removeButton}
-                        >
-                          <FontAwesome6 name="trash" size={10} color="#C23122" />
-                        </Pressable>
-                      ) : null}
+                            <Text style={styles.methodName}>{method.label}</Text>
 
-                      <View style={[styles.radioBox, isSelected && styles.selectedRadio]}>
-                        {isSelected ? (
-                          <FontAwesome6 name="check" size={10} color="#FF5A00" />
+                            <View style={[styles.radio, isSelected && styles.selectedRadio]}>
+                              {isSelected ? <View style={styles.radioDot} /> : null}
+                            </View>
+                          </Pressable>
+
+                          {method.removable ? (
+                            <Pressable
+                              accessibilityLabel={`Remove ${method.label}`}
+                              accessibilityRole="button"
+                              hitSlop={8}
+                              onPress={() => removeMethod(method.id)}
+                              style={styles.removeButton}
+                            >
+                              <FontAwesome6 name="trash" size={12} color={C.danger} />
+                            </Pressable>
+                          ) : null}
+                        </View>
+
+                        {showMomo ? (
+                          <View style={styles.momoField}>
+                            <Field
+                              error={momoNumber.length > 0 && !momoIsValid ? "Enter a valid phone number" : null}
+                              keyboardType="phone-pad"
+                              label="Mobile money number"
+                              onChangeText={(v) => setMomoNumber(digitsOnly(v, 12))}
+                              placeholder="024 000 0000"
+                              value={momoNumber}
+                            />
+                          </View>
                         ) : null}
                       </View>
-                    </Pressable>
-                  );
-                })}
+                    );
+                  })}
+                </View>
+
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  activeOpacity={0.86}
+                  onPress={() => setStep("add-card")}
+                  style={styles.addNewCardButton}
+                >
+                  <FontAwesome6 name="plus" size={12} color={C.ink} />
+                  <Text style={styles.addNewCardText}>Add new card</Text>
+                </TouchableOpacity>
+              </ScrollView>
+
+              <View style={styles.footer}>
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled: !canPaySelected }}
+                  activeOpacity={0.9}
+                  disabled={!canPaySelected}
+                  onPress={paySelected}
+                  style={[styles.bottomButton, !canPaySelected && styles.disabledButton]}
+                >
+                  <Text style={styles.bottomButtonText}>{payLabel}</Text>
+                </TouchableOpacity>
               </View>
-
-              <TouchableOpacity
-                activeOpacity={0.86}
-                onPress={() => setStep("add-card")}
-                style={styles.addNewCardButton}
-              >
-                <FontAwesome6 name="plus" size={11} color="#1E3631" />
-
-                <Text style={styles.addNewCardText}>Add New Card</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                activeOpacity={0.9}
-                disabled={!selectedMethodId}
-                onPress={startProcessing}
-                style={[
-                  styles.bottomButton,
-                  !selectedMethodId && styles.disabledButton,
-                ]}
-              >
-                <Text style={styles.bottomButtonText}>Next</Text>
-              </TouchableOpacity>
-            </View>
+            </>
           ) : null}
 
+          {/* Add card */}
           {step === "add-card" ? (
-            <View style={styles.cardBody}>
-              <View style={styles.cardPreview}>
-                <View style={styles.cardStripe} />
-                <View style={styles.cardCurveOne} />
-                <View style={styles.cardCurveTwo} />
+            <>
+              <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+              >
+                {/* Live card preview */}
+                <View style={[styles.cardPreview, { backgroundColor: theme.bg }]}>
+                  <View style={[styles.cardStripe, { backgroundColor: theme.stripe }]} />
+                  <View style={styles.cardCurveOne} />
+                  <View style={styles.cardCurveTwo} />
 
-                <View style={styles.cardPreviewBottom}>
-                  <View>
-                    <Text style={styles.cardTinyLabel}>Card Number</Text>
-                    <Text style={styles.cardMaskedNumber}>
-                      {cardDigits.length >= 4
-                        ? `**** **** **** ${getLastDigits(cardNumber)}`
-                        : "**** **** **** 0000"}
-                    </Text>
-
-                    <Text style={styles.cardTinyLabel}>Expiry date</Text>
-                    <Text style={styles.cardMaskedNumber}>{expiry || "06/20"}</Text>
+                  <View style={styles.cardTopRow}>
+                    {brand ? (
+                      <FontAwesome6
+                        name={brand === "Visa" ? "cc-visa" : "cc-mastercard"}
+                        size={30}
+                        color="#FFFFFF"
+                      />
+                    ) : (
+                      <FontAwesome6 name="credit-card" size={24} color="rgba(255,255,255,0.8)" />
+                    )}
                   </View>
 
-                  <View style={styles.cardChip} />
+                  <Text style={styles.cardNumberPreview}>
+                    {(cardDigits + "••••••••••••••••").slice(0, 16).replace(/(.{4})/g, "$1 ").trim()}
+                  </Text>
+
+                  <View style={styles.cardPreviewBottom}>
+                    <View style={styles.flex}>
+                      <Text style={styles.cardTinyLabel}>Card holder</Text>
+                      <Text numberOfLines={1} style={styles.cardMaskedText}>
+                        {accountHolder.trim() || "Name on card"}
+                      </Text>
+                    </View>
+                    <View>
+                      <Text style={styles.cardTinyLabel}>Expires</Text>
+                      <Text style={styles.cardMaskedText}>{expiry || "MM/YY"}</Text>
+                    </View>
+                  </View>
                 </View>
+
+                <Field
+                  autoComplete="cc-number"
+                  error={touched.number ? errors.number : null}
+                  keyboardType="number-pad"
+                  label="Card number"
+                  maxLength={19}
+                  onBlur={() => setTouched((t) => ({ ...t, number: true }))}
+                  onChangeText={(v) => setCardNumber(formatCardNumber(v))}
+                  placeholder="0000 0000 0000 0000"
+                  value={cardNumber}
+                />
+
+                <Field
+                  autoCapitalize="words"
+                  autoComplete="cc-name"
+                  error={touched.holder ? errors.holder : null}
+                  label="Name on card"
+                  onBlur={() => setTouched((t) => ({ ...t, holder: true }))}
+                  onChangeText={setAccountHolder}
+                  placeholder="As printed on the card"
+                  value={accountHolder}
+                />
+
+                <View style={styles.splitInputRow}>
+                  <View style={styles.splitInput}>
+                    <Field
+                      autoComplete="cc-exp"
+                      error={touched.expiry ? errors.expiry : null}
+                      keyboardType="number-pad"
+                      label="Expiry date"
+                      maxLength={5}
+                      onBlur={() => setTouched((t) => ({ ...t, expiry: true }))}
+                      onChangeText={(v) => setExpiry(formatExpiry(v))}
+                      placeholder="MM/YY"
+                      value={expiry}
+                    />
+                  </View>
+
+                  <View style={styles.splitInput}>
+                    <Field
+                      autoComplete="cc-csc"
+                      error={touched.cvv ? errors.cvv : null}
+                      keyboardType="number-pad"
+                      label="CVV"
+                      maxLength={3}
+                      onBlur={() => setTouched((t) => ({ ...t, cvv: true }))}
+                      onChangeText={(v) => setCvv(digitsOnly(v, 3))}
+                      placeholder="123"
+                      secureTextEntry
+                      value={cvv}
+                    />
+                  </View>
+                </View>
+
+                <Pressable
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: saveCard }}
+                  onPress={() => setSaveCard((v) => !v)}
+                  style={styles.saveRow}
+                >
+                  <View style={[styles.checkbox, saveCard && styles.checkedBox]}>
+                    {saveCard ? <FontAwesome6 name="check" size={10} color="#FFFFFF" /> : null}
+                  </View>
+                  <Text style={styles.saveText}>Save this card for next time</Text>
+                </Pressable>
+              </ScrollView>
+
+              <View style={styles.footer}>
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  activeOpacity={0.9}
+                  onPress={payWithNewCard}
+                  style={styles.bottomButton}
+                >
+                  <Text style={styles.bottomButtonText}>{payLabel}</Text>
+                </TouchableOpacity>
               </View>
-
-              <Text style={styles.formTitle}>Card Details</Text>
-
-              <View style={styles.typeRow}>
-                {cardTypes.map((type) => (
-                  <TouchableOpacity
-                    key={type}
-                    activeOpacity={0.86}
-                    onPress={() => setCardType(type)}
-                    style={[styles.typePill, cardType === type && styles.activeTypePill]}
-                  >
-                    <Text
-                      style={[
-                        styles.typePillText,
-                        cardType === type && styles.activeTypePillText,
-                      ]}
-                    >
-                      {type}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <Text style={styles.inputLabel}>Card number</Text>
-              <TextInput
-                keyboardType="number-pad"
-                placeholder="0000 0000 0000 0000"
-                placeholderTextColor="#B9AAA4"
-                value={cardNumber}
-                maxLength={19}
-                onChangeText={(value) => setCardNumber(formatCardNumber(value))}
-                style={styles.input}
-              />
-
-              <Text style={styles.inputLabel}>Account Holder</Text>
-              <TextInput
-                placeholder="Name on card"
-                placeholderTextColor="#B9AAA4"
-                value={accountHolder}
-                onChangeText={setAccountHolder}
-                style={styles.input}
-              />
-
-              <View style={styles.splitInputRow}>
-                <View style={styles.splitInput}>
-                  <Text style={styles.inputLabel}>Expiry Number</Text>
-                  <TextInput
-                    keyboardType="number-pad"
-                    placeholder="06/28"
-                    placeholderTextColor="#B9AAA4"
-                    value={expiry}
-                    maxLength={5}
-                    onChangeText={(value) => setExpiry(formatExpiry(value))}
-                    style={styles.input}
-                  />
-                </View>
-
-                <View style={styles.splitInput}>
-                  <Text style={styles.inputLabel}>CVV</Text>
-                  <TextInput
-                    keyboardType="number-pad"
-                    placeholder="123"
-                    placeholderTextColor="#B9AAA4"
-                    secureTextEntry
-                    maxLength={3}
-                    value={cvv}
-                    onChangeText={(value) => setCvv(onlyNumbers(value, 3))}
-                    style={styles.input}
-                  />
-                </View>
-              </View>
-
-              <Pressable
-                onPress={() => setSaveCard((current) => !current)}
-                style={styles.saveRow}
-              >
-                <View style={[styles.checkbox, saveCard && styles.checkedBox]}>
-                  {saveCard ? (
-                    <FontAwesome6 name="check" size={10} color="#FFFFFF" />
-                  ) : null}
-                </View>
-
-                <Text style={styles.saveText}>Save card information</Text>
-              </Pressable>
-
-              <TouchableOpacity
-                activeOpacity={0.9}
-                disabled={!canSaveCard}
-                onPress={addCard}
-                style={[styles.bottomButton, !canSaveCard && styles.disabledButton]}
-              >
-                <Text style={styles.bottomButtonText}>Continue</Text>
-              </TouchableOpacity>
-            </View>
+            </>
           ) : null}
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
+/* -------------------------------- Styles -------------------------------- */
+
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
+
   container: {
-    backgroundColor: "#F4F2F0",
+    backgroundColor: C.bg,
     flex: 1,
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight ?? 0 : 0,
   },
 
-  screenContent: {
-    alignItems: "center",
+  page: {
+    alignSelf: "center",
     flex: 1,
-    justifyContent: "center",
-    padding: 18,
-  },
-
-  phoneCard: {
-    height: 620,
-    padding: 18,
+    maxWidth: 440,
+    paddingHorizontal: 20,
     width: "100%",
   },
 
@@ -465,412 +641,433 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     gap: 12,
+    paddingTop: 12,
   },
 
   backButton: {
     alignItems: "center",
-    height: 28,
+    height: 32,
     justifyContent: "center",
-    width: 28,
+    width: 32,
   },
 
   title: {
-    color: "#1E3631",
+    color: C.ink,
     fontFamily: "PoppinsBold",
-    fontSize: 14,
+    fontSize: 16,
   },
 
-  progressRow: {
-    flexDirection: "row",
-    gap: 5,
-    marginTop: 18,
-  },
+  progressWrap: { gap: 6, marginTop: 16 },
+
+  progressRow: { flexDirection: "row", gap: 6 },
 
   progressSegment: {
     backgroundColor: "#D3D0CD",
+    borderRadius: 2,
     flex: 1,
-    height: 2,
+    height: 3,
   },
 
-  activeSegment: {
-    backgroundColor: "#FF5A00",
-  },
+  activeSegment: { backgroundColor: C.accent },
 
-  selectBody: {
+  progressLabel: {
+    color: C.placeholder,
     flex: 1,
-    paddingTop: 30,
+    fontFamily: "PoppinsRegular",
+    fontSize: 10,
   },
 
-  sectionLabel: {
-    color: "#1E3631",
-    fontFamily: "PoppinsBold",
+  activeProgressLabel: { color: C.inkSoft },
+
+  scrollContent: {
+    paddingBottom: 16,
+    paddingTop: 22,
+  },
+
+  /* Summary */
+  summaryCard: {
+    alignItems: "center",
+    backgroundColor: C.surface,
+    borderColor: C.line,
+    borderRadius: 12,
+    borderWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 22,
+    padding: 16,
+  },
+
+  summaryLabel: {
+    color: C.muted,
+    fontFamily: "PoppinsRegular",
     fontSize: 12,
-    marginBottom: 14,
   },
 
-  methodList: {
-    gap: 9,
+  summaryAmount: {
+    color: C.ink,
+    fontFamily: "PoppinsBold",
+    fontSize: 20,
   },
+
+  /* Methods */
+  sectionLabel: {
+    color: C.ink,
+    fontFamily: "PoppinsBold",
+    fontSize: 13,
+    marginBottom: 12,
+  },
+
+  methodList: { gap: 10 },
 
   methodRow: {
     alignItems: "center",
-    borderColor: "#EFEAE6",
-    borderRadius: 7,
-    borderWidth: 1,
+    backgroundColor: C.surface,
+    borderColor: C.line,
+    borderRadius: 10,
+    borderWidth: 1.5,
     flexDirection: "row",
-    minHeight: 45,
-    paddingHorizontal: 10,
+    minHeight: 54,
   },
 
   selectedMethodRow: {
-    borderColor: "#FF5A00",
+    backgroundColor: C.accentSoft,
+    borderColor: C.accent,
   },
 
-  methodBrand: {
+  methodPressable: {
     alignItems: "center",
-    width: 34,
+    flex: 1,
+    flexDirection: "row",
+    minHeight: 54,
+    paddingHorizontal: 12,
   },
+
+  methodBrand: { alignItems: "center", width: 34 },
 
   methodName: {
-    color: "#1E3631",
+    color: C.ink,
     flex: 1,
     fontFamily: "PoppinsBold",
-    fontSize: 12,
+    fontSize: 13,
     marginLeft: 10,
   },
 
-  radioBox: {
+  radio: {
     alignItems: "center",
-    borderColor: "#E2DEDA",
-    borderRadius: 4,
-    borderWidth: 1,
-    height: 17,
+    borderColor: "#D5CFCA",
+    borderRadius: 10,
+    borderWidth: 1.5,
+    height: 20,
     justifyContent: "center",
-    width: 17,
+    width: 20,
   },
 
-  selectedRadio: {
-    borderColor: "#FF5A00",
+  selectedRadio: { borderColor: C.accent },
+
+  radioDot: {
+    backgroundColor: C.accent,
+    borderRadius: 5,
+    height: 10,
+    width: 10,
   },
 
   removeButton: {
     alignItems: "center",
-    height: 24,
+    height: 40,
     justifyContent: "center",
-    marginRight: 6,
-    width: 24,
+    width: 40,
   },
+
+  momoField: { paddingHorizontal: 2, paddingTop: 2 },
 
   addNewCardButton: {
     alignItems: "center",
-    backgroundColor: "#F6F5F4",
-    borderRadius: 6,
+    borderColor: "#CFC8C3",
+    borderRadius: 10,
+    borderStyle: "dashed",
+    borderWidth: 1.5,
     flexDirection: "row",
     gap: 8,
     justifyContent: "center",
-    marginTop: 12,
-    minHeight: 38,
+    marginTop: 14,
+    minHeight: 48,
   },
 
   addNewCardText: {
-    color: "#1E3631",
+    color: C.ink,
     fontFamily: "PoppinsBold",
-    fontSize: 12,
+    fontSize: 13,
+  },
+
+  /* Footer / CTA */
+  footer: {
+    paddingBottom: 18,
+    paddingTop: 10,
   },
 
   bottomButton: {
     alignItems: "center",
-    backgroundColor: "#FF5A00",
-    borderRadius: 6,
+    backgroundColor: C.accent,
+    borderRadius: 10,
     justifyContent: "center",
-    marginTop: "auto",
-    minHeight: 44,
+    minHeight: 50,
   },
 
-  activeButton: {
-    backgroundColor: "#FF5A00",
-  },
-
-  disabledButton: {
-    backgroundColor: "#D8CDC7",
-  },
+  disabledButton: { backgroundColor: C.disabled },
 
   bottomButtonText: {
     color: "#FFFFFF",
     fontFamily: "PoppinsBold",
-    fontSize: 12,
+    fontSize: 14,
   },
 
-  cardBody: {
-    flex: 1,
-    paddingTop: 34,
-  },
-
+  /* Card preview */
   cardPreview: {
-    backgroundColor: "#F25408",
-    borderRadius: 10,
-    height: 136,
-    justifyContent: "flex-end",
+    borderRadius: 14,
+    height: 168,
+    justifyContent: "space-between",
     overflow: "hidden",
-    padding: 16,
+    padding: 18,
   },
 
   cardStripe: {
-    backgroundColor: "#A92D08",
-    height: 16,
+    height: 3,
     left: 0,
     position: "absolute",
     right: 0,
-    top: 10,
+    top: 0,
   },
 
   cardCurveOne: {
-    borderColor: "rgba(255,184,42,0.35)",
-    borderRadius: 90,
-    borderWidth: 10,
-    height: 170,
+    borderColor: "rgba(255,255,255,0.10)",
+    borderRadius: 120,
+    borderWidth: 12,
+    height: 200,
     position: "absolute",
-    right: -45,
-    top: -26,
-    width: 120,
+    right: -60,
+    top: -40,
+    width: 150,
   },
 
   cardCurveTwo: {
-    borderColor: "rgba(255,184,42,0.28)",
-    borderRadius: 90,
-    borderWidth: 8,
-    height: 160,
+    borderColor: "rgba(255,255,255,0.07)",
+    borderRadius: 120,
+    borderWidth: 9,
+    height: 190,
     position: "absolute",
-    right: -18,
-    top: -26,
-    width: 96,
+    right: -20,
+    top: -40,
+    width: 120,
+  },
+
+  cardTopRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    height: 30,
+    justifyContent: "flex-end",
+  },
+
+  cardNumberPreview: {
+    color: "#FFFFFF",
+    fontFamily: "PoppinsBold",
+    fontSize: 16,
+    letterSpacing: 1.5,
   },
 
   cardPreviewBottom: {
     alignItems: "flex-end",
     flexDirection: "row",
-    justifyContent: "space-between",
+    gap: 16,
   },
 
   cardTinyLabel: {
-    color: "#FFE4D3",
-    fontFamily: "PoppinsBold",
-    fontSize: 8,
-    marginTop: 8,
+    color: "rgba(255,255,255,0.7)",
+    fontFamily: "PoppinsRegular",
+    fontSize: 9,
   },
 
-  cardMaskedNumber: {
+  cardMaskedText: {
     color: "#FFFFFF",
     fontFamily: "PoppinsBold",
-    fontSize: 10,
-    letterSpacing: 1,
+    fontSize: 12,
   },
 
-  cardChip: {
-    backgroundColor: "#FFBD1A",
-    borderRadius: 16,
-    height: 31,
-    width: 31,
-  },
-
-  formTitle: {
-    color: "#1E3631",
-    fontFamily: "PoppinsBold",
-    fontSize: 13,
-    marginTop: 18,
-  },
-
-  typeRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginTop: 10,
-  },
-
-  typePill: {
-    borderColor: "#E8E2DE",
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-  },
-
-  activeTypePill: {
-    backgroundColor: "#FFF1EF",
-    borderColor: "#FF5A00",
-  },
-
-  typePillText: {
-    color: "#8B7F7A",
-    fontFamily: "PoppinsBold",
-    fontSize: 10,
-  },
-
-  activeTypePillText: {
-    color: "#FF5A00",
-  },
+  /* Form */
+  field: { marginTop: 14 },
 
   inputLabel: {
-    color: "#314640",
+    color: C.inkSoft,
     fontFamily: "PoppinsRegular",
-    fontSize: 10,
+    fontSize: 11,
     marginBottom: 6,
-    marginTop: 12,
   },
 
   input: {
-    borderColor: "#BEB9B4",
-    borderRadius: 5,
-    borderWidth: 1,
-    color: "#1E3631",
+    backgroundColor: C.surface,
+    borderColor: "#CFC8C3",
+    borderRadius: 8,
+    borderWidth: 1.5,
+    color: C.ink,
     fontFamily: "PoppinsRegular",
-    fontSize: 12,
-    height: 36,
-    paddingHorizontal: 10,
+    fontSize: 14,
+    height: 46,
+    paddingHorizontal: 12,
   },
 
-  splitInputRow: {
-    flexDirection: "row",
-    gap: 12,
+  inputFocused: { borderColor: C.accent },
+
+  inputError: { borderColor: C.danger },
+
+  errorText: {
+    color: C.danger,
+    fontFamily: "PoppinsRegular",
+    fontSize: 11,
+    marginTop: 4,
   },
 
-  splitInput: {
-    flex: 1,
-  },
+  splitInputRow: { flexDirection: "row", gap: 12 },
+
+  splitInput: { flex: 1 },
 
   saveRow: {
     alignItems: "center",
     flexDirection: "row",
-    gap: 7,
-    marginTop: 12,
+    gap: 10,
+    marginTop: 18,
+    minHeight: 32,
   },
 
   checkbox: {
     alignItems: "center",
     borderColor: "#6D7670",
-    borderRadius: 3,
-    borderWidth: 1,
-    height: 15,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    height: 20,
     justifyContent: "center",
-    width: 15,
+    width: 20,
   },
 
   checkedBox: {
-    backgroundColor: "#6D7670",
+    backgroundColor: C.accent,
+    borderColor: C.accent,
   },
 
   saveText: {
-    color: "#1E3631",
+    color: C.ink,
     fontFamily: "PoppinsBold",
-    fontSize: 11,
+    fontSize: 12,
   },
 
+  /* Processing */
   processingState: {
     alignItems: "center",
     flex: 1,
     justifyContent: "center",
+    paddingBottom: 60,
   },
 
   processingTitle: {
-    color: "#1E3631",
+    color: C.ink,
     fontFamily: "PoppinsBold",
-    fontSize: 16,
-    marginTop: 18,
+    fontSize: 17,
+    marginTop: 20,
   },
 
   processingText: {
-    color: "#8B7F7A",
+    color: C.muted,
     fontFamily: "PoppinsRegular",
     fontSize: 12,
-    marginTop: 5,
+    marginTop: 6,
+    maxWidth: 240,
+    textAlign: "center",
   },
 
+  /* Success */
   successContainer: {
-    alignItems: "center",
-    backgroundColor: "#F4F2F0",
+    backgroundColor: C.accent,
     flex: 1,
-    justifyContent: "center",
-    padding: 18,
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight ?? 0 : 0,
   },
 
   successScreen: {
-    alignItems: "center",
-    backgroundColor: "#FF5A00",
-    borderRadius: 18,
-    minHeight: 580,
-    paddingHorizontal: 22,
-    paddingVertical: 56,
-    shadowColor: "#2F170F",
-    shadowOffset: {
-      width: 0,
-      height: 20,
-    },
-    shadowOpacity: 0.18,
-    shadowRadius: 32,
+    alignSelf: "center",
+    flex: 1,
+    justifyContent: "space-between",
+    maxWidth: 440,
+    paddingBottom: 24,
+    paddingHorizontal: 24,
     width: "100%",
-    elevation: 8,
   },
 
-  successHeadline: {
-    color: "#FFFFFF",
-    fontFamily: "PoppinsBold",
-    fontSize: 19,
-    marginTop: 110,
+  successTop: {
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
   },
 
   successMark: {
     alignItems: "center",
     borderColor: "#FFFFFF",
-    borderRadius: 40,
+    borderRadius: 48,
     borderWidth: 3,
-    height: 70,
+    height: 92,
     justifyContent: "center",
-    marginTop: 70,
-    width: 70,
+    width: 92,
+  },
+
+  successTextBlock: { alignItems: "center", marginTop: 32 },
+
+  successHeadline: {
+    color: "#FFFFFF",
+    fontFamily: "PoppinsBold",
+    fontSize: 22,
   },
 
   successMessage: {
     color: "#FFFFFF",
-    fontFamily: "PoppinsBold",
-    fontSize: 12,
-    lineHeight: 17,
-    marginTop: 42,
-    maxWidth: 210,
+    fontFamily: "PoppinsRegular",
+    fontSize: 13,
+    lineHeight: 20,
+    marginTop: 12,
+    maxWidth: 260,
     textAlign: "center",
   },
 
-  successActions: {
-    gap: 11,
-    marginTop: "auto",
-    width: "100%",
+  successReference: {
+    color: "rgba(255,255,255,0.8)",
+    fontFamily: "PoppinsRegular",
+    fontSize: 11,
+    marginTop: 16,
   },
+
+  successActions: { gap: 12, width: "100%" },
 
   primarySuccessButton: {
     alignItems: "center",
     backgroundColor: "#FFFFFF",
-    borderRadius: 7,
+    borderRadius: 10,
     justifyContent: "center",
-    minHeight: 38,
+    minHeight: 50,
   },
 
   primarySuccessText: {
-    color: "#314640",
+    color: C.accent,
     fontFamily: "PoppinsBold",
-    fontSize: 12,
+    fontSize: 14,
   },
 
   secondarySuccessButton: {
     alignItems: "center",
     borderColor: "#FFFFFF",
-    borderRadius: 7,
-    borderWidth: 1,
+    borderRadius: 10,
+    borderWidth: 1.5,
     justifyContent: "center",
-    minHeight: 38,
+    minHeight: 50,
   },
 
   secondarySuccessText: {
     color: "#FFFFFF",
     fontFamily: "PoppinsBold",
-    fontSize: 12,
+    fontSize: 14,
   },
 });
-

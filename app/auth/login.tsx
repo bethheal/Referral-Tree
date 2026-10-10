@@ -1,4 +1,5 @@
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import { loginWithPassword, saveAuthSession } from "@/components/backendApi";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
@@ -17,6 +18,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState("");
 
   // --------------------------------
@@ -35,7 +37,7 @@ export default function Login() {
   // LOGIN
   // --------------------------------
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email.trim() || !password) {
       showToast("Fill all fields");
       return;
@@ -46,11 +48,17 @@ export default function Login() {
       return;
     }
 
-    showToast("Login successful");
-
-    setTimeout(() => {
-      router.replace("/dashboard");
-    }, 700);
+    try {
+      setIsSubmitting(true);
+      const auth = await loginWithPassword({ email, password });
+      await saveAuthSession(auth);
+      showToast("Login successful");
+      setTimeout(() => router.replace("/dashboard"), 500);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Login failed");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // --------------------------------
@@ -71,11 +79,7 @@ export default function Login() {
   // --------------------------------
 
   const handleSocialLogin = (provider: string) => {
-    showToast(`${provider} login successful`);
-
-    setTimeout(() => {
-      router.replace("/dashboard");
-    }, 700);
+    showToast(`${provider} login is not connected yet`);
   };
 
   // --------------------------------
@@ -200,11 +204,12 @@ export default function Login() {
 
           <TouchableOpacity
             activeOpacity={0.86}
+            disabled={isSubmitting}
             onPress={handleLogin}
-            style={styles.primaryButton}
+            style={[styles.primaryButton, isSubmitting && styles.disabledButton]}
           >
             <Text style={styles.primaryButtonText}>
-              Log in
+              {isSubmitting ? "Logging in..." : "Log in"}
             </Text>
           </TouchableOpacity>
 
@@ -451,6 +456,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginTop: 8,
     paddingVertical: 16,
+  },
+
+  disabledButton: {
+    opacity: 0.72,
   },
 
   primaryButtonText: {

@@ -1,5 +1,4 @@
 import { addCartItem, getCartItems } from "@/components/cartStore";
-import DashboardBottomNav from "@/components/dashboardBottomNav";
 import { formatGhs, products } from "@/components/dashboardData";
 import PageHeader from "@/components/pageHeader";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
@@ -525,7 +524,6 @@ export default function Products() {
           ) : null}
         </ScrollView>
 
-        <DashboardBottomNav activeLabel="Products" />
       </View>
 
       <Animated.View

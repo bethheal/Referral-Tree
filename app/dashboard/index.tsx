@@ -1,19 +1,26 @@
-import { bottomNavItems, orders } from "@/components/dashboardData";
+import { orders } from "@/components/dashboardData";
 import {
-  getReferralLevelRows,
-  getReferralTotal,
+  accountHistory,
+  financialSummary,
+  paymentHistory,
+} from "@/components/accountFeatureData";
+import {
+  clearAuthSession,
+  getDashboardSummary,
+  type DashboardApiSummary,
+} from "@/components/backendApi";
+import {
+  getMemberDashboardSummary,
+  getMemberDirectReferrals,
   mockReferralLink,
   mockReferralTree,
+  referralSystem,
 } from "@/components/referralData";
-import ReferralTree from "@/components/referralTree";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Clipboard from "expo-clipboard";
 import { router } from "expo-router";
-import { useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  Animated,
-  Pressable,
   SafeAreaView,
   ScrollView,
   Share,
@@ -32,80 +39,51 @@ const getGreeting = () => {
   return "Good evening";
 };
 
-type DashboardNavItemProps = {
-  icon: string;
-  isActive: boolean;
-  isHome: boolean;
-  label: string;
-  onPress: () => void;
-};
-
-function DashboardNavItem({
-  icon,
-  isActive,
-  isHome,
-  label,
-  onPress,
-}: DashboardNavItemProps) {
-  const scale = useRef(new Animated.Value(1)).current;
-
-  const animateTo = (value: number) => {
-    Animated.spring(scale, {
-      toValue: value,
-      friction: 5,
-      tension: 130,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  return (
-    <Animated.View style={{ transform: [{ scale }] }}>
-      <Pressable
-        onHoverIn={() => animateTo(1.08)}
-        onHoverOut={() => animateTo(1)}
-        onPress={onPress}
-        onPressIn={() => animateTo(0.94)}
-        onPressOut={() => animateTo(1)}
-        style={styles.navItem}
-      >
-        <View
-          style={[
-            styles.navIconWrap,
-            isHome && styles.homeNavIconWrap,
-            isActive && !isHome && styles.activeNavIconWrap,
-          ]}
-        >
-          <FontAwesome6
-            name={icon as any}
-            size={isHome ? 19 : 16}
-            color={isHome ? "#FFFFFF" : isActive ? "#C23122" : "#B9AAA4"}
-          />
-        </View>
-
-        <Text style={[styles.navLabel, isActive && styles.activeNavLabel]}>
-          {label}
-        </Text>
-      </Pressable>
-    </Animated.View>
-  );
-}
-
 export default function Dashboard() {
   const greeting = getGreeting();
   const [hasCopiedReferralLink, setHasCopiedReferralLink] = useState(false);
-
-  // Temporary user name.
-  // Later this can come from your authentication data.
-  const user = "User";
+  const [dashboardApiSummary, setDashboardApiSummary] =
+    useState<DashboardApiSummary | null>(null);
 
   // ============================================================
   // DUMMY DASHBOARD DATA
   // ============================================================
 
-  const totalPoints = 1250;
-  const totalReferrals = getReferralTotal(mockReferralTree);
-  const totalEarnings = 100;
-  const currentLevel = 3;
+  const summary = getMemberDashboardSummary(referralSystem, "user-1");
+  const user = dashboardApiSummary?.account.fullName.split(" ")[0] ?? "User";
+  const totalPoints =
+    dashboardApiSummary?.financial.totalPoints ?? summary.totalPoints;
+  const totalReferrals =
+    dashboardApiSummary?.stats.totalReferrals ?? summary.totalTeamMembers;
+  const totalLeads = dashboardApiSummary?.stats.totalLeads ?? 0;
+  const currentEarnings =
+    dashboardApiSummary?.financial.totalEarnings ??
+    financialSummary.totalEarnings;
+  const availableCashOut =
+    dashboardApiSummary?.financial.availableBalance ??
+    financialSummary.availableCashOut;
+  const pendingPayments =
+    dashboardApiSummary?.financial.pendingEarnings ??
+    financialSummary.pendingPayments;
+  const projectedCashOut = dashboardApiSummary
+    ? dashboardApiSummary.financial.availableBalance +
+      dashboardApiSummary.financial.pendingEarnings +
+      dashboardApiSummary.financial.potentialEarnings
+    : financialSummary.projectedCashOut;
+  const referralLink = dashboardApiSummary?.referralLink ?? mockReferralLink;
+  const latestActivity =
+    accountHistory[0]?.title ?? paymentHistory[0]?.title ?? "No recent activity";
+  const referralPreview =
+    dashboardApiSummary?.referralPreview ??
+    getMemberDirectReferrals(referralSystem, "user-1")
+      .slice(0, 5)
+      .map((member) => ({
+        directReferrals: getMemberDirectReferrals(referralSystem, member.id).length,
+        fullName: member.name,
+        id: member.id,
+        joinedAt: member.createdAt,
+        status: member.status,
+      }));
 
   const recentActivity = [
     {
@@ -131,7 +109,7 @@ export default function Dashboard() {
     },
   ];
 
-  const networkLevels = getReferralLevelRows(mockReferralTree);
+  const networkPreviewNodes = mockReferralTree.children.slice(0, 4);
 
   // ============================================================
   // LOGOUT
@@ -139,15 +117,30 @@ export default function Dashboard() {
 
   const handleLogout = async () => {
     try {
-      // Remove saved login status
-      await AsyncStorage.removeItem("loggedIn");
-
-      // Go back to login page
+      await clearAuthSession();
       router.replace("/auth/login");
     } catch (error) {
       console.log("Logout failed:", error);
     }
   };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    getDashboardSummary()
+      .then((apiSummary) => {
+        if (isMounted) {
+          setDashboardApiSummary(apiSummary);
+        }
+      })
+      .catch((error) => {
+        console.log("Dashboard API unavailable, using local fallback:", error);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // ============================================================
   // NAVIGATION
@@ -166,7 +159,7 @@ export default function Dashboard() {
   };
 
   const copyReferralLink = async () => {
-    await Clipboard.setStringAsync(mockReferralLink);
+    await Clipboard.setStringAsync(referralLink);
     setHasCopiedReferralLink(true);
 
     setTimeout(() => {
@@ -176,8 +169,8 @@ export default function Dashboard() {
 
   const shareReferralLink = async () => {
     await Share.share({
-      message: mockReferralLink,
-      url: mockReferralLink,
+      message: referralLink,
+      url: referralLink,
       title: "Join Angel Foods",
     });
   };
@@ -194,7 +187,9 @@ export default function Dashboard() {
         ====================================================== */}
 
         <View style={styles.topBar}>
-          <View>
+          <View style={styles.headerIconButton} />
+
+          <View style={styles.headerCopy}>
             <Text style={styles.greeting}>
               {greeting}, {user}
             </Text>
@@ -202,12 +197,12 @@ export default function Dashboard() {
             <Text style={styles.subGreeting}>Welcome back to Angel Foods</Text>
           </View>
 
-          {/* LOGOUT BUTTON */}
-
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Logout"
             activeOpacity={0.8}
             onPress={handleLogout}
-            style={styles.notificationButton}
+            style={styles.headerIconButton}
           >
             <FontAwesome6 name="right-from-bracket" size={17} color="#C23122" />
           </TouchableOpacity>
@@ -221,91 +216,164 @@ export default function Dashboard() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {/* ====================================================
-              DASHBOARD TITLE
-          ==================================================== */}
-
-          <View style={styles.titleSection}>
-            <Text style={styles.dashboardTitle}>DASHBOARD</Text>
-          </View>
-
-          {/* ====================================================
-              POINTS HERO
-          ==================================================== */}
-
-          <View style={styles.pointsCard}>
-            <View style={styles.pointsTop}>
-              <View style={styles.pointsIcon}>
-                <FontAwesome6 name="star" size={18} color="#D7B126" />
+          <View style={styles.heroCard}>
+            <View style={styles.heroTop}>
+              <View>
+                <Text style={styles.heroTitle}>Dashboard</Text>
+                <Text style={styles.heroSubtitle}>Your Angel Foods overview</Text>
               </View>
 
-              <Text style={styles.pointsLabel}>TOTAL POINTS</Text>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() => router.push("/dashboard/admin" as any)}
+                style={styles.heroAdminButton}
+              >
+                <FontAwesome6 name="shield-halved" size={12} color="#15203A" />
+                <Text style={styles.heroAdminText}>Admin</Text>
+              </TouchableOpacity>
             </View>
 
-            <Text style={styles.pointsValue}>
-              {totalPoints.toLocaleString()}
-            </Text>
+            <View style={styles.heroMoneyRow}>
+              <View style={styles.heroMoneyBlock}>
+                <Text style={styles.heroMetricLabel}>Current Earnings</Text>
+                <Text style={styles.heroMetricValue}>
+                  GHS {currentEarnings.toLocaleString("en-GH")}
+                </Text>
+              </View>
 
-            <Text style={styles.pointsDescription}>
-              Keep referring friends and shopping to grow your rewards.
-            </Text>
+              <View style={styles.heroDivider} />
+
+              <View style={styles.heroMoneyBlock}>
+                <Text style={styles.heroMetricLabel}>Cash-Out</Text>
+                <Text style={styles.heroMetricValue}>
+                  GHS {availableCashOut.toLocaleString("en-GH")}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.heroMiniGrid}>
+              <View style={styles.heroMiniCard}>
+                <Text style={styles.heroMiniLabel}>Points</Text>
+                <Text style={styles.heroMiniValue}>{totalPoints.toLocaleString()}</Text>
+              </View>
+
+              <View style={styles.heroMiniCard}>
+                <Text style={styles.heroMiniLabel}>Referrals</Text>
+                <Text style={styles.heroMiniValue}>
+                  {totalReferrals.toLocaleString()}
+                </Text>
+              </View>
+
+              <View style={styles.heroMiniCard}>
+                <Text style={styles.heroMiniLabel}>Leads</Text>
+                <Text style={styles.heroMiniValue}>{totalLeads.toLocaleString()}</Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.summaryGrid}>
+            <View style={styles.summaryTile}>
+              <View style={styles.summaryIconWrap}>
+                <FontAwesome6 name="wallet" size={14} color="#2D5B43" />
+              </View>
+              <Text style={styles.summaryTileLabel}>Available Balance</Text>
+              <Text style={styles.summaryTileValue}>
+                GHS {availableCashOut.toLocaleString("en-GH")}
+              </Text>
+            </View>
+
+            <View style={styles.summaryTile}>
+              <View style={styles.summaryIconWrap}>
+                <FontAwesome6 name="hourglass-half" size={14} color="#A3671D" />
+              </View>
+              <Text style={styles.summaryTileLabel}>Pending Earnings</Text>
+              <Text style={styles.summaryTileValue}>
+                GHS {pendingPayments.toLocaleString("en-GH")}
+              </Text>
+            </View>
+
+            <View style={styles.summaryTile}>
+              <View style={styles.summaryIconWrap}>
+                <FontAwesome6 name="chart-line" size={14} color="#C23122" />
+              </View>
+              <Text style={styles.summaryTileLabel}>Potential Cash-Out</Text>
+              <Text style={styles.summaryTileValue}>
+                GHS {projectedCashOut.toLocaleString("en-GH")}
+              </Text>
+            </View>
+
+            <View style={styles.summaryTile}>
+              <View style={styles.summaryIconWrap}>
+                <FontAwesome6 name="bolt" size={14} color="#4F46E5" />
+              </View>
+              <Text style={styles.summaryTileLabel}>Latest Activity</Text>
+              <Text numberOfLines={2} style={styles.summaryTileValueSmall}>
+                {latestActivity}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.profilePrompt}>
+            <View style={styles.profilePromptIcon}>
+              <FontAwesome6 name="user-gear" size={16} color="#C23122" />
+            </View>
+
+            <View style={styles.profilePromptCopy}>
+              <Text style={styles.profilePromptTitle}>Complete your account profile</Text>
+              <Text style={styles.profilePromptText}>
+                Keep phone, payment, and security details ready for cash-out review.
+              </Text>
+            </View>
 
             <TouchableOpacity
               activeOpacity={0.85}
-              onPress={() => openSection("points")}
-              style={styles.pointsButton}
+              onPress={() => openSection("account")}
+              style={styles.profilePromptButton}
             >
-              <Text style={styles.pointsButtonText}>View Points History</Text>
-
               <FontAwesome6 name="arrow-right" size={12} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
 
-          {/* ====================================================
-              QUICK STATS
-          ==================================================== */}
+         
 
-          <View style={styles.statsRow}>
-            {/* REFERRALS */}
+          <View style={styles.sectionHeader}>
+            <View>
+              <Text style={styles.sectionTitle}>Recent Referrals</Text>
 
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={openReferrals}
-              style={styles.statCard}
-            >
-              <View style={styles.statIcon}>
-                <FontAwesome6 name="users" size={15} color="#C23122" />
-              </View>
+              <Text style={styles.sectionSubtitle}>
+                New activity in your network
+              </Text>
+            </View>
 
-              <Text style={styles.statValue}>{totalReferrals}</Text>
-
-              <Text style={styles.statLabel}>Referrals</Text>
+            <TouchableOpacity onPress={openReferrals}>
+              <Text style={styles.sectionAction}>View all</Text>
             </TouchableOpacity>
-
-            {/* EARNINGS */}
-
-            <View style={styles.statCard}>
-              <View style={styles.statIcon}>
-                <FontAwesome6 name="coins" size={15} color="#D7B126" />
-              </View>
-
-              <Text style={styles.statValue}>{totalEarnings}</Text>
-
-              <Text style={styles.statLabel}>Earned</Text>
-            </View>
-
-            {/* NETWORK LEVEL */}
-
-            <View style={styles.statCard}>
-              <View style={styles.statIcon}>
-                <FontAwesome6 name="layer-group" size={15} color="#C23122" />
-              </View>
-
-              <Text style={styles.statValue}>{currentLevel}</Text>
-
-              <Text style={styles.statLabel}>Network Level</Text>
-            </View>
           </View>
+
+          <View style={styles.referralPreviewGrid}>
+            {referralPreview.map((referral, index) => (
+              <TouchableOpacity
+                key={referral.id}
+                activeOpacity={0.86}
+                onPress={openReferrals}
+                style={styles.referralPreviewCard}
+              >
+                <Text style={styles.referralPreviewNumber}>{index + 1}</Text>
+                <View style={styles.referralPreviewAvatar}>
+                  <Text style={styles.referralPreviewInitial}>
+                    {referral.fullName.charAt(0)}
+                  </Text>
+                </View>
+                <Text numberOfLines={1} style={styles.referralPreviewName}>
+                  {referral.fullName}
+                </Text>
+                <Text style={styles.referralPreviewMeta}>
+                  {referral.directReferrals} referrals
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
 
           {/* ====================================================
               INVITE & EARN
@@ -330,7 +398,7 @@ export default function Dashboard() {
 
             <View style={styles.linkBox}>
               <Text numberOfLines={1} style={styles.referralLink}>
-                {mockReferralLink}
+                {referralLink}
               </Text>
             </View>
 
@@ -394,29 +462,92 @@ export default function Dashboard() {
                   {totalReferrals} total referrals
                 </Text>
                 <Text style={styles.networkSummaryText}>
-                  Tap members in the tree to expand or collapse each level.
+                  Preview is read-only. Open the full network to expand referrals
+                  and view authorized details.
                 </Text>
               </View>
             </View>
 
-            <View style={styles.treeContainer}>
-              <ReferralTree data={mockReferralTree} compact />
-            </View>
-
-            {/* LEVEL BREAKDOWN */}
-
-            <View style={styles.levelList}>
-              {networkLevels.map((item) => (
-                <View key={item.level} style={styles.levelRow}>
-                  <View style={styles.levelLeft}>
-                    <View style={styles.levelDot} />
-
-                    <Text style={styles.levelName}>{item.label}</Text>
-                  </View>
-
-                  <Text style={styles.levelPeople}>{item.people} people</Text>
+            <View style={styles.networkPreview}>
+              <View style={[styles.networkPreviewRow, styles.networkPreviewRootRow]}>
+                <View style={styles.networkPreviewRail}>
+                  <View style={styles.networkPreviewDot} />
                 </View>
-              ))}
+
+                <View style={styles.networkPreviewIcon}>
+                  <FontAwesome6 name="trophy" size={12} color="#FFFFFF" />
+                </View>
+
+                <View style={styles.networkPreviewCopy}>
+                  <Text style={styles.networkPreviewName}>{mockReferralTree.name}</Text>
+                  <Text style={styles.networkPreviewMeta}>
+                    Root account - {mockReferralTree.children.length} direct referrals
+                  </Text>
+                </View>
+
+                <View style={styles.networkPreviewStatus}>
+                  <Text style={styles.networkPreviewStatusText}>
+                    {mockReferralTree.children.length} of 4
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.networkPreviewChildren}>
+                {networkPreviewNodes.map((member) => (
+                  <TouchableOpacity
+                    key={member.id}
+                    activeOpacity={0.85}
+                    onPress={openReferrals}
+                    style={styles.networkPreviewRow}
+                  >
+                    <View style={styles.networkPreviewRail}>
+                      <View style={styles.networkPreviewDotMuted} />
+                    </View>
+
+                    <View style={styles.networkPreviewChevron}>
+                      <FontAwesome6 name="chevron-right" size={9} color="#8B7F7A" />
+                    </View>
+
+                    <View style={styles.networkPreviewAvatar}>
+                      <Text style={styles.networkPreviewAvatarText}>
+                        {member.name
+                          .split(" ")
+                          .map((part) => part[0])
+                          .join("")
+                          .slice(0, 2)}
+                      </Text>
+                    </View>
+
+                    <View style={styles.networkPreviewCopy}>
+                      <Text numberOfLines={1} style={styles.networkPreviewName}>
+                        {member.name}
+                      </Text>
+                      <Text numberOfLines={1} style={styles.networkPreviewMeta}>
+                        Level {member.treeLevel} - {member.children.length} direct
+                      </Text>
+                    </View>
+
+                    <View style={styles.networkPreviewProgress}>
+                      <View style={styles.networkPreviewProgressTrack}>
+                        <View
+                          style={[
+                            styles.networkPreviewProgressFill,
+                            {
+                              width: `${Math.min(
+                                (member.children.length / 4) * 100,
+                                100
+                              )}%`,
+                            },
+                          ]}
+                        />
+                      </View>
+                      <Text style={styles.networkPreviewProgressText}>
+                        {member.children.length}/4
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
 
             {/* VIEW TREE BUTTON */}
@@ -518,27 +649,6 @@ export default function Dashboard() {
           ))}
         </ScrollView>
 
-        {/* ======================================================
-            BOTTOM NAVIGATION
-        ====================================================== */}
-
-        <View style={styles.bottomNav}>
-          {bottomNavItems.map((item) => {
-            const isActive = item.label === "Home";
-            const isHome = item.label === "Home";
-
-            return (
-              <DashboardNavItem
-                key={item.label}
-                icon={item.icon}
-                isActive={isActive}
-                isHome={isHome}
-                label={item.label}
-                onPress={() => openSection(item.slug)}
-              />
-            );
-          })}
-        </View>
       </View>
     </SafeAreaView>
   );
@@ -567,10 +677,17 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
 
+  headerCopy: {
+    alignItems: "center",
+    flex: 1,
+    paddingHorizontal: 12,
+  },
+
   greeting: {
     color: "#1E3631",
     fontFamily: "PoppinsBold",
-    fontSize: 21,
+    fontSize: 18,
+    textAlign: "center",
   },
 
   subGreeting: {
@@ -578,9 +695,10 @@ const styles = StyleSheet.create({
     fontFamily: "PoppinsRegular",
     fontSize: 12,
     marginTop: 3,
+    textAlign: "center",
   },
 
-  notificationButton: {
+  headerIconButton: {
     alignItems: "center",
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
@@ -598,10 +716,126 @@ const styles = StyleSheet.create({
   },
 
   // ============================================================
+  // HERO
+  // ============================================================
+
+  heroCard: {
+    backgroundColor: "#C23122",
+    borderRadius: 18,
+    overflow: "hidden",
+    padding: 18,
+    shadowColor: "#7A170E",
+    shadowOffset: {
+      width: 0,
+      height: 14,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 22,
+    elevation: 8,
+  },
+
+  heroTop: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+
+  heroTitle: {
+    color: "#FFFFFF",
+    fontFamily: "PoppinsBold",
+    fontSize: 24,
+  },
+
+  heroSubtitle: {
+    color: "#FFE6DF",
+    fontFamily: "PoppinsRegular",
+    fontSize: 11,
+    marginTop: 1,
+  },
+
+  heroAdminButton: {
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 8,
+    flexDirection: "row",
+    gap: 6,
+    minHeight: 32,
+    paddingHorizontal: 10,
+  },
+
+  heroAdminText: {
+    color: "#15203A",
+    fontFamily: "PoppinsBold",
+    fontSize: 10,
+  },
+
+  heroMoneyRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 13,
+    marginTop: 22,
+  },
+
+  heroMoneyBlock: {
+    flex: 1,
+  },
+
+  heroMetricLabel: {
+    color: "#FFD9D1",
+    fontFamily: "PoppinsRegular",
+    fontSize: 10,
+  },
+
+  heroMetricValue: {
+    color: "#FFFFFF",
+    fontFamily: "PoppinsBold",
+    fontSize: 18,
+    marginTop: 4,
+  },
+
+  heroDivider: {
+    backgroundColor: "rgba(255,255,255,0.25)",
+    height: 42,
+    width: 1,
+  },
+
+  heroMiniGrid: {
+    flexDirection: "row",
+    gap: 9,
+    marginTop: 16,
+  },
+
+  heroMiniCard: {
+    backgroundColor: "rgba(255,255,255,0.14)",
+    borderColor: "rgba(255,255,255,0.22)",
+    borderRadius: 8,
+    borderWidth: 1,
+    flex: 1,
+    minHeight: 62,
+    padding: 10,
+  },
+
+  heroMiniLabel: {
+    color: "#FFE6DF",
+    fontFamily: "PoppinsRegular",
+    fontSize: 9,
+  },
+
+  heroMiniValue: {
+    color: "#FFFFFF",
+    fontFamily: "PoppinsBold",
+    fontSize: 16,
+    marginTop: 6,
+  },
+
+  // ============================================================
   // TITLE
   // ============================================================
 
   titleSection: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 14,
   },
 
@@ -610,6 +844,22 @@ const styles = StyleSheet.create({
     fontFamily: "PoppinsBold",
     fontSize: 22,
     letterSpacing: 0.5,
+  },
+
+  adminButton: {
+    alignItems: "center",
+    backgroundColor: "#1E3631",
+    borderRadius: 12,
+    flexDirection: "row",
+    gap: 7,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+
+  adminButtonText: {
+    color: "#FFFFFF",
+    fontFamily: "PoppinsBold",
+    fontSize: 11,
   },
 
   // ============================================================
@@ -717,6 +967,280 @@ const styles = StyleSheet.create({
     fontFamily: "PoppinsRegular",
     fontSize: 10,
     marginTop: 1,
+  },
+
+  // ============================================================
+  // DASHBOARD SUMMARY & MENU
+  // ============================================================
+
+  summaryGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: 14,
+  },
+
+  summaryTile: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#F0E4DF",
+    borderRadius: 8,
+    borderWidth: 1,
+    flexBasis: "47%",
+    flexGrow: 1,
+    minHeight: 104,
+    padding: 12,
+  },
+
+  summaryIconWrap: {
+    alignItems: "center",
+    backgroundColor: "#FFF3EF",
+    borderRadius: 8,
+    height: 30,
+    justifyContent: "center",
+    marginBottom: 10,
+    width: 30,
+  },
+
+  summaryPrimaryTile: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#F0E4DF",
+  },
+
+  summaryPrimaryLabel: {
+    color: "#8B7F7A",
+    fontFamily: "PoppinsBold",
+    fontSize: 10,
+  },
+
+  summaryPrimaryValue: {
+    color: "#1E3631",
+    fontFamily: "PoppinsBold",
+    fontSize: 20,
+    marginTop: 9,
+  },
+
+  summaryTileLabel: {
+    color: "#8B7F7A",
+    fontFamily: "PoppinsRegular",
+    fontSize: 10,
+  },
+
+  summaryTileValue: {
+    color: "#1E3631",
+    fontFamily: "PoppinsBold",
+    fontSize: 17,
+    marginTop: 9,
+  },
+
+  summaryTileValueSmall: {
+    color: "#1E3631",
+    fontFamily: "PoppinsBold",
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: 7,
+  },
+
+  projectionNote: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#F0D6D0",
+    borderRadius: 8,
+    borderWidth: 1,
+    color: "#8B7F7A",
+    fontFamily: "PoppinsRegular",
+    fontSize: 10,
+    lineHeight: 16,
+    marginTop: 10,
+    padding: 11,
+  },
+
+  profilePrompt: {
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderColor: "#F0E4DF",
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 11,
+    marginTop: 12,
+    minHeight: 76,
+    padding: 12,
+  },
+
+  profilePromptIcon: {
+    alignItems: "center",
+    backgroundColor: "#FFF1EF",
+    borderRadius: 10,
+    height: 38,
+    justifyContent: "center",
+    width: 38,
+  },
+
+  profilePromptCopy: {
+    flex: 1,
+  },
+
+  profilePromptTitle: {
+    color: "#1E3631",
+    fontFamily: "PoppinsBold",
+    fontSize: 12,
+  },
+
+  profilePromptText: {
+    color: "#8B7F7A",
+    fontFamily: "PoppinsRegular",
+    fontSize: 10,
+    lineHeight: 15,
+    marginTop: 2,
+  },
+
+  profilePromptButton: {
+    alignItems: "center",
+    backgroundColor: "#C23122",
+    borderRadius: 16,
+    height: 32,
+    justifyContent: "center",
+    width: 32,
+  },
+
+  referralPreviewGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+
+  referralPreviewCard: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#F0E4DF",
+    borderRadius: 8,
+    borderWidth: 1,
+    flexBasis: "30%",
+    flexGrow: 1,
+    minHeight: 118,
+    overflow: "hidden",
+    padding: 10,
+    position: "relative",
+  },
+
+  referralPreviewNumber: {
+    color: "#E7DDD9",
+    fontFamily: "PoppinsBold",
+    fontSize: 48,
+    position: "absolute",
+    right: 8,
+    top: -5,
+  },
+
+  referralPreviewAvatar: {
+    alignItems: "center",
+    backgroundColor: "#C23122",
+    borderRadius: 15,
+    height: 30,
+    justifyContent: "center",
+    width: 30,
+  },
+
+  referralPreviewInitial: {
+    color: "#FFFFFF",
+    fontFamily: "PoppinsBold",
+    fontSize: 12,
+    textTransform: "uppercase",
+  },
+
+  referralPreviewName: {
+    color: "#1E3631",
+    fontFamily: "PoppinsBold",
+    fontSize: 11,
+    lineHeight: 15,
+    marginTop: 20,
+  },
+
+  referralPreviewMeta: {
+    color: "#8B7F7A",
+    fontFamily: "PoppinsRegular",
+    fontSize: 9,
+    marginTop: 3,
+  },
+
+  menuToggle: {
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderColor: "#F0D6D0",
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 14,
+    minHeight: 48,
+    paddingHorizontal: 14,
+  },
+
+  menuToggleLeft: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10,
+  },
+
+  menuToggleText: {
+    color: "#1E3631",
+    fontFamily: "PoppinsBold",
+    fontSize: 13,
+  },
+
+  menuGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 9,
+    marginTop: 10,
+  },
+
+  menuItem: {
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderColor: "#F0E4DF",
+    borderRadius: 8,
+    borderWidth: 1,
+    flexBasis: "47%",
+    flexDirection: "row",
+    flexGrow: 1,
+    gap: 9,
+    minHeight: 58,
+    paddingHorizontal: 11,
+    position: "relative",
+  },
+
+  menuIconWrap: {
+    alignItems: "center",
+    backgroundColor: "#FFF1EF",
+    borderRadius: 10,
+    height: 32,
+    justifyContent: "center",
+    width: 32,
+  },
+
+  menuItemText: {
+    color: "#314640",
+    flex: 1,
+    fontFamily: "PoppinsBold",
+    fontSize: 11,
+    lineHeight: 15,
+  },
+
+  menuBadge: {
+    alignItems: "center",
+    backgroundColor: "#C23122",
+    borderRadius: 9,
+    minWidth: 18,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    position: "absolute",
+    right: 7,
+    top: 6,
+  },
+
+  menuBadgeText: {
+    color: "#FFFFFF",
+    fontFamily: "PoppinsBold",
+    fontSize: 8,
   },
 
   // ============================================================
@@ -885,6 +1409,155 @@ const styles = StyleSheet.create({
     fontSize: 10,
     lineHeight: 15,
     marginTop: 2,
+  },
+
+  networkPreview: {
+    backgroundColor: "#FBFDFD",
+    borderColor: "#EDF1F0",
+    borderRadius: 10,
+    borderWidth: 1,
+    overflow: "hidden",
+    paddingVertical: 8,
+  },
+
+  networkPreviewRow: {
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderColor: "#EEF2F1",
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    marginHorizontal: 8,
+    marginVertical: 5,
+    minHeight: 56,
+    paddingHorizontal: 8,
+  },
+
+  networkPreviewRootRow: {
+    borderColor: "#F0D6D0",
+  },
+
+  networkPreviewChildren: {
+    borderLeftColor: "#E7EFED",
+    borderLeftWidth: 1,
+    marginLeft: 26,
+    paddingLeft: 8,
+  },
+
+  networkPreviewRail: {
+    alignItems: "center",
+    height: 32,
+    justifyContent: "center",
+    width: 10,
+  },
+
+  networkPreviewDot: {
+    backgroundColor: "#C9F6E7",
+    borderRadius: 4,
+    height: 8,
+    width: 8,
+  },
+
+  networkPreviewDotMuted: {
+    backgroundColor: "#E7EFED",
+    borderRadius: 4,
+    height: 8,
+    width: 8,
+  },
+
+  networkPreviewChevron: {
+    alignItems: "center",
+    height: 28,
+    justifyContent: "center",
+    width: 18,
+  },
+
+  networkPreviewIcon: {
+    alignItems: "center",
+    backgroundColor: "#2EC9A3",
+    borderRadius: 8,
+    height: 30,
+    justifyContent: "center",
+    marginHorizontal: 9,
+    width: 30,
+  },
+
+  networkPreviewAvatar: {
+    alignItems: "center",
+    backgroundColor: "#FFF1EF",
+    borderColor: "#F0D6D0",
+    borderRadius: 15,
+    borderWidth: 1,
+    height: 30,
+    justifyContent: "center",
+    marginRight: 9,
+    width: 30,
+  },
+
+  networkPreviewAvatarText: {
+    color: "#C23122",
+    fontFamily: "PoppinsBold",
+    fontSize: 9,
+  },
+
+  networkPreviewCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  networkPreviewName: {
+    color: "#1E3631",
+    fontFamily: "PoppinsBold",
+    fontSize: 11,
+  },
+
+  networkPreviewMeta: {
+    color: "#8B7F7A",
+    fontFamily: "PoppinsRegular",
+    fontSize: 9,
+    marginTop: 2,
+  },
+
+  networkPreviewStatus: {
+    alignItems: "center",
+    backgroundColor: "#E9FBF5",
+    borderRadius: 9,
+    minWidth: 46,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+  },
+
+  networkPreviewStatusText: {
+    color: "#2F7C50",
+    fontFamily: "PoppinsBold",
+    fontSize: 8,
+  },
+
+  networkPreviewProgress: {
+    alignItems: "flex-end",
+    marginLeft: 8,
+    width: 58,
+  },
+
+  networkPreviewProgressTrack: {
+    backgroundColor: "#EEF3F2",
+    borderRadius: 7,
+    height: 14,
+    overflow: "hidden",
+    width: 54,
+  },
+
+  networkPreviewProgressFill: {
+    backgroundColor: "#C9F6E7",
+    height: "100%",
+  },
+
+  networkPreviewProgressText: {
+    color: "#6C625F",
+    fontFamily: "PoppinsBold",
+    fontSize: 8,
+    marginTop: -12,
+    paddingRight: 6,
   },
 
   treeContainer: {
@@ -1106,6 +1779,143 @@ const styles = StyleSheet.create({
     color: "#C23122",
     fontFamily: "PoppinsBold",
     fontSize: 14,
+  },
+
+  // ============================================================
+  // SIDE DRAWER
+  // ============================================================
+
+  drawerOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    top: -60,
+    left: -18,
+    right: -18,
+    bottom: 0,
+    flexDirection: "row",
+    zIndex: 100,
+    elevation: 20,
+  },
+
+  drawerBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.42)",
+  },
+
+  drawerPanel: {
+    backgroundColor: "#192536",
+    height: "100%",
+    maxWidth: 330,
+    width: "82%",
+    shadowColor: "#000000",
+    shadowOffset: { width: 4, height: 0 },
+    shadowOpacity: 0.22,
+    shadowRadius: 16,
+    elevation: 16,
+  },
+
+  drawerBrand: {
+    alignItems: "center",
+    borderBottomColor: "rgba(255,255,255,0.12)",
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    minHeight: 90,
+    paddingHorizontal: 17,
+    paddingTop: 8,
+  },
+
+  drawerLogo: {
+    alignItems: "center",
+    backgroundColor: "#FFB900",
+    borderRadius: 12,
+    height: 44,
+    justifyContent: "center",
+    width: 44,
+  },
+
+  drawerBrandCopy: {
+    flex: 1,
+    marginLeft: 11,
+  },
+
+  drawerBrandTitle: {
+    color: "#FFFFFF",
+    fontFamily: "PoppinsBold",
+    fontSize: 17,
+  },
+
+  drawerBrandSubtitle: {
+    color: "#B8C1CD",
+    fontFamily: "PoppinsRegular",
+    fontSize: 10,
+    letterSpacing: 0.8,
+    marginTop: 1,
+  },
+
+  drawerCloseButton: {
+    alignItems: "center",
+    borderRadius: 18,
+    height: 34,
+    justifyContent: "center",
+    width: 34,
+  },
+
+  drawerItems: {
+    paddingHorizontal: 8,
+    paddingTop: 14,
+    paddingBottom: 26,
+  },
+
+  drawerItem: {
+    alignItems: "center",
+    borderRadius: 12,
+    flexDirection: "row",
+    marginBottom: 4,
+    minHeight: 49,
+    paddingHorizontal: 16,
+    position: "relative",
+  },
+
+  drawerItemActive: {
+    backgroundColor: "#FFB900",
+  },
+
+  drawerItemIcon: {
+    marginRight: 15,
+    textAlign: "center",
+    width: 20,
+  },
+
+  drawerItemLabel: {
+    color: "#F1F4F8",
+    flex: 1,
+    fontFamily: "PoppinsBold",
+    fontSize: 13,
+  },
+
+  drawerItemLabelActive: {
+    color: "#111827",
+  },
+
+  drawerBadge: {
+    alignItems: "center",
+    backgroundColor: "#C23122",
+    borderRadius: 10,
+    minWidth: 20,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+  },
+
+  drawerBadgeText: {
+    color: "#FFFFFF",
+    fontFamily: "PoppinsBold",
+    fontSize: 10,
+  },
+
+  drawerDivider: {
+    backgroundColor: "rgba(255,255,255,0.12)",
+    height: 1,
+    marginHorizontal: 12,
+    marginVertical: 10,
   },
 
   // ============================================================

@@ -8,7 +8,9 @@ import {
   View,
 } from "react-native";
 import {
+  MAX_DIRECT_PLACEMENT_CHILDREN,
   getReferralInitials,
+  referralSystem,
   ReferralNodeData,
 } from "./referralData";
 
@@ -25,10 +27,20 @@ type ReferralNodeProps = {
 function ReferralNode({ node, compact }: ReferralNodeProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const hasChildren = node.children.length > 0;
-  const shownChildren = compact ? node.children.slice(0, 3) : node.children;
+  const shownChildren = compact ? node.children.slice(0, 4) : node.children;
   const hiddenCount = compact
     ? Math.max(node.children.length - shownChildren.length, 0)
     : 0;
+  const sponsor = node.sponsorId
+    ? referralSystem.users.find((user) => user.id === node.sponsorId)
+    : null;
+  const placementParent = node.placementParentId
+    ? referralSystem.users.find((user) => user.id === node.placementParentId)
+    : null;
+  const availablePositions = Math.max(
+    MAX_DIRECT_PLACEMENT_CHILDREN - node.children.length,
+    0
+  );
 
   return (
     <View style={styles.nodeBranch}>
@@ -36,21 +48,21 @@ function ReferralNode({ node, compact }: ReferralNodeProps) {
         disabled={!hasChildren}
         onPress={() => setIsExpanded((current) => !current)}
         style={({ pressed }) => [
-          styles.nodeCard,
-          node.level === 0 && styles.rootNodeCard,
+          compact ? styles.compactNodeCard : styles.nodeCard,
+          node.treeLevel === 0 && styles.rootNodeCard,
           pressed && hasChildren && styles.pressedNode,
         ]}
       >
         <View
           style={[
             styles.avatar,
-            node.level === 0 && styles.rootAvatar,
+            node.treeLevel === 0 && styles.rootAvatar,
           ]}
         >
           <Text
             style={[
               styles.avatarText,
-              node.level === 0 && styles.rootAvatarText,
+              node.treeLevel === 0 && styles.rootAvatarText,
             ]}
           >
             {getReferralInitials(node.name)}
@@ -61,10 +73,30 @@ function ReferralNode({ node, compact }: ReferralNodeProps) {
           {node.name}
         </Text>
 
+        <Text numberOfLines={1} style={styles.nodeCode}>
+          {node.referralCode}
+        </Text>
+
         <View style={styles.levelPill}>
           <Text style={styles.levelPillText}>
-            {node.level === 0 ? "You" : `Level ${node.level}`}
+            {node.treeLevel === 0 ? "Root" : `Level ${node.treeLevel}`}
           </Text>
+        </View>
+
+        <View style={styles.positionSlots}>
+          {Array.from({ length: MAX_DIRECT_PLACEMENT_CHILDREN }, (_, index) => {
+            const slot = index + 1;
+            const isFilled = node.children.some(
+              (child) => child.placementPosition === slot
+            );
+
+            return (
+              <View
+                key={slot}
+                style={[styles.slotDot, isFilled && styles.filledSlotDot]}
+              />
+            );
+          })}
         </View>
 
         {hasChildren ? (
@@ -76,7 +108,24 @@ function ReferralNode({ node, compact }: ReferralNodeProps) {
             />
 
             <Text style={styles.childCountText}>
-              {node.children.length} {node.children.length === 1 ? "child" : "children"}
+              {node.children.length}/4 placed
+            </Text>
+          </View>
+        ) : null}
+
+        {!compact ? (
+          <View style={styles.nodeMeta}>
+            <Text numberOfLines={1} style={styles.nodeMetaText}>
+              Sponsor: {sponsor?.name ?? "None"}
+            </Text>
+            <Text numberOfLines={1} style={styles.nodeMetaText}>
+              Parent: {placementParent?.name ?? "None"}
+            </Text>
+            <Text style={styles.nodeMetaText}>
+              Product L{node.productLevel} - {node.qualificationStatus}
+            </Text>
+            <Text style={styles.nodeMetaText}>
+              Open slots: {availablePositions}
             </Text>
           </View>
         ) : null}
@@ -98,7 +147,7 @@ function ReferralNode({ node, compact }: ReferralNodeProps) {
 
           {hiddenCount > 0 ? (
             <Text style={styles.hiddenCount}>
-              +{hiddenCount} more first-level members
+              +{hiddenCount} more members
             </Text>
           ) : null}
         </View>
@@ -149,9 +198,20 @@ const styles = StyleSheet.create({
     borderColor: "#F0E4DF",
     borderRadius: 8,
     borderWidth: 1,
-    minHeight: 116,
+    minHeight: 194,
     padding: 10,
-    width: 92,
+    width: 148,
+  },
+
+  compactNodeCard: {
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderColor: "#F0E4DF",
+    borderRadius: 8,
+    borderWidth: 1,
+    minHeight: 138,
+    padding: 10,
+    width: 104,
   },
 
   rootNodeCard: {
@@ -197,6 +257,14 @@ const styles = StyleSheet.create({
     maxWidth: 74,
   },
 
+  nodeCode: {
+    color: "#8B7F7A",
+    fontFamily: "PoppinsRegular",
+    fontSize: 8,
+    marginTop: 2,
+    maxWidth: 96,
+  },
+
   levelPill: {
     backgroundColor: "#FFF1EF",
     borderRadius: 8,
@@ -224,6 +292,41 @@ const styles = StyleSheet.create({
     fontSize: 8,
   },
 
+  positionSlots: {
+    flexDirection: "row",
+    gap: 4,
+    marginTop: 7,
+  },
+
+  slotDot: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#E1D2CB",
+    borderRadius: 4,
+    borderWidth: 1,
+    height: 8,
+    width: 8,
+  },
+
+  filledSlotDot: {
+    backgroundColor: "#3A8B5D",
+    borderColor: "#3A8B5D",
+  },
+
+  nodeMeta: {
+    borderTopColor: "#F1E8E4",
+    borderTopWidth: 1,
+    marginTop: 8,
+    paddingTop: 7,
+    width: "100%",
+  },
+
+  nodeMetaText: {
+    color: "#8B7F7A",
+    fontFamily: "PoppinsRegular",
+    fontSize: 8,
+    lineHeight: 13,
+  },
+
   childrenWrap: {
     alignItems: "center",
   },
@@ -236,7 +339,7 @@ const styles = StyleSheet.create({
 
   childrenRow: {
     flexDirection: "row",
-    gap: 12,
+    gap: 14,
   },
 
   childBranch: {

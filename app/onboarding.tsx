@@ -1,5 +1,6 @@
 import DeliveryAnimation from "@/components/deliveryAnimation";
 import NavigationButtons from "@/components/navigationBtn";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useRef, useState } from "react";
 import {
@@ -120,8 +121,22 @@ export default function Onboarding() {
   // START SHOPPING
   // --------------------------------
 
+  const finishOnboarding = async () => {
+    try {
+      await AsyncStorage.setItem("onboardingComplete", "true");
+    } catch (error) {
+      console.log("Saving onboarding status failed:", error);
+    } finally {
+      router.replace("/auth/login");
+    }
+  };
+
   const handleStartShopping = () => {
-    router.replace("/auth/login");
+    finishOnboarding();
+  };
+
+  const handleSkip = () => {
+    finishOnboarding();
   };
 
   return (
@@ -205,6 +220,7 @@ export default function Onboarding() {
             showSkip={true}
             showNext={true}
             skipRoute="/auth/login"
+            onSkip={handleSkip}
           />
         )}
       </View>

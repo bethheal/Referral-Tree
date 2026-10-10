@@ -1,4 +1,9 @@
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import {
+  requestRegistrationOtp,
+  saveAuthSession,
+  verifyRegistrationOtp,
+} from "@/components/backendApi";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
@@ -16,28 +21,64 @@ import {
 export default function Signup() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [registrationId, setRegistrationId] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState("");
 
-  const showToast = (message: string) => {
+  const showToast = (message: string, duration = 2200) => {
     setToast(message);
-    setTimeout(() => setToast(""), 2200);
+    setTimeout(() => setToast(""), duration);
   };
 
-  const handleSignup = () => {
-    if (!fullName.trim() || !email.trim() || !password) {
+  const handleSignup = async () => {
+    if (!fullName.trim() || !email.trim() || !phoneNumber.trim() || !password) {
       showToast("Fill all fields");
       return;
     }
 
-    showToast("Sign up successful");
-    setTimeout(() => router.replace("/auth/login"), 700);
+    try {
+      setIsSubmitting(true);
+
+      if (!registrationId) {
+        const result = await requestRegistrationOtp({
+          email,
+          fullName,
+          password,
+          phoneNumber,
+        });
+
+        setRegistrationId(result.registrationId);
+        if (result.otp) {
+          setOtp(result.otp);
+          showToast(`Testing OTP: ${result.otp}`, 30000);
+        } else {
+          showToast("OTP sent. Enter the code to continue.");
+        }
+        return;
+      }
+
+      if (!otp.trim()) {
+        showToast("Enter your OTP");
+        return;
+      }
+
+      const auth = await verifyRegistrationOtp({ otp, registrationId });
+      await saveAuthSession(auth);
+      showToast("Account created");
+      setTimeout(() => router.replace("/dashboard"), 500);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Sign up failed");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSocialSignup = (provider: string) => {
-    showToast(`${provider} sign up successful`);
-    setTimeout(() => router.replace("/auth/login"), 700);
+    showToast(`${provider} sign up is not connected yet`);
   };
 
   return (
@@ -84,6 +125,19 @@ export default function Signup() {
           </View>
 
           <View style={styles.inputGroup}>
+            <Text style={styles.label}>Phone number</Text>
+            <TextInput
+              autoComplete="tel"
+              keyboardType="phone-pad"
+              onChangeText={setPhoneNumber}
+              placeholder="+233 55 000 0000"
+              placeholderTextColor="#A69A95"
+              style={styles.input}
+              value={phoneNumber}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
             <Text style={styles.label}>Password</Text>
             <View style={styles.passwordInputWrap}>
               <TextInput
@@ -109,12 +163,33 @@ export default function Signup() {
             </View>
           </View>
 
+          {registrationId ? (
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>OTP code</Text>
+              <TextInput
+                keyboardType="number-pad"
+                onChangeText={setOtp}
+                placeholder="6-digit code"
+                placeholderTextColor="#A69A95"
+                style={styles.input}
+                value={otp}
+              />
+            </View>
+          ) : null}
+
           <TouchableOpacity
             activeOpacity={0.86}
+            disabled={isSubmitting}
             onPress={handleSignup}
-            style={styles.primaryButton}
+            style={[styles.primaryButton, isSubmitting && styles.disabledButton]}
           >
-            <Text style={styles.primaryButtonText}>Create account</Text>
+            <Text style={styles.primaryButtonText}>
+              {isSubmitting
+                ? "Please wait..."
+                : registrationId
+                ? "Verify OTP"
+                : "Create account"}
+            </Text>
           </TouchableOpacity>
 
           <View style={styles.dividerRow}>
@@ -273,6 +348,10 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontFamily: "PoppinsBold",
     fontSize: 16,
+  },
+
+  disabledButton: {
+    opacity: 0.72,
   },
 
   dividerRow: {

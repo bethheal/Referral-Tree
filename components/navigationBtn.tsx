@@ -10,6 +10,7 @@ import {
 type NavigationButtonsProps = {
   onNext?: () => void;
   onBack?: () => void;
+  onSkip?: () => void;
 
   showBack?: boolean;
   showSkip?: boolean;
@@ -21,6 +22,7 @@ type NavigationButtonsProps = {
 export default function NavigationButtons({
   onNext,
   onBack,
+  onSkip,
   showBack = false,
   showSkip = false,
   showNext = false,
@@ -29,6 +31,11 @@ export default function NavigationButtons({
 
   // SKIP ONBOARDING
   const handleSkip = () => {
+    if (onSkip) {
+      onSkip();
+      return;
+    }
+
     router.replace(skipRoute as any);
   };
 

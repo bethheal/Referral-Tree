@@ -1,0 +1,156 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum AccountStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+}
+
+enum LedgerState {
+  POTENTIAL
+  PENDING
+  AVAILABLE
+  PAID
+  VOID
+}
+
+enum CashOutStatus {
+  REQUESTED
+  UNDER_REVIEW
+  APPROVED
+  PROCESSING
+  PAID
+  REJECTED
+}
+
+model User {
+  id           String        @id @default(cuid())
+  fullName     String
+  email        String        @unique
+  phoneNumber  String        @unique
+  passwordHash String
+  referralCode String        @unique
+  referrerId   String?
+  referrer     User?         @relation("ReferralTree", fields: [referrerId], references: [id])
+  referrals    User[]        @relation("ReferralTree")
+  role         Role          @default(USER)
+  status       AccountStatus @default(PENDING_VERIFICATION)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  ledger          LedgerEntry[]
+  cashOutRequests CashOutRequest[]
+  securityEvents  SecurityEvent[]
+  ownedLeads      Lead[]
+  notification        Message[]
+}
+
+model RegistrationAttempt {
+  id                String   @id @default(cuid())
+  fullName          String
+  email             String
+  phoneNumber       String
+  passwordHash      String
+  referralCode      String?
+  otpHash           String
+  otpExpiresAt      DateTime
+  otpAttempts       Int      @default(0)
+  resendAvailableAt DateTime
+  createdAt         DateTime @default(now())
+
+  @@index([phoneNumber])
+  @@index([email])
+}
+
+model LedgerEntry {
+  id          String      @id @default(cuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  type        String
+  state       LedgerState
+  amount      Decimal
+  currency    String
+  description String
+  referenceId String      @unique
+  createdAt   DateTime    @default(now())
+
+  @@index([userId, state])
+}
+
+model CashOutRequest {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+  amount        Decimal
+  currency      String
+  status        CashOutStatus @default(REQUESTED)
+  ledgerEntryId String        @unique
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([userId, status])
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  actorUserId  String?
+  targetUserId String?
+  action       String
+  oldValue     Json?
+  newValue     Json?
+  reason       String?
+  createdAt    DateTime @default(now())
+
+  @@index([actorUserId])
+  @@index([targetUserId])
+}
+
+model SecurityEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  type      String
+  ipAddress String?
+  userAgent String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId, type])
+}
+
+model Lead {
+  id             String   @id @default(cuid())
+  ownerUserId    String
+  owner          User     @relation(fields: [ownerUserId], references: [id])
+  displayName    String
+  status         String
+  potentialValue Decimal
+  createdAt      DateTime @default(now())
+
+  @@index([ownerUserId, status])
+}
+
+model Message {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  title     String
+  body      String
+  createdAt DateTime  @default(now())
+  readAt    DateTime?
+
+  @@index([userId, createdAt])
+}

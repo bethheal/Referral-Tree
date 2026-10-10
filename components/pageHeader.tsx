@@ -1,9 +1,6 @@
-import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-import { router } from "expo-router";
 import {
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 
@@ -18,17 +15,7 @@ export default function PageHeader({
 }: PageHeaderProps) {
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        activeOpacity={0.7}
-        onPress={() => router.back()}
-        style={styles.backButton}
-      >
-        <FontAwesome6
-          name="arrow-left"
-          size={17}
-          color="#261D1A"
-        />
-      </TouchableOpacity>
+      <View style={styles.menuSlot} />
 
       <View style={styles.titleContainer}>
         <Text style={styles.title}>{title}</Text>
@@ -53,12 +40,8 @@ const styles = StyleSheet.create({
     marginTop: 30,
   },
 
-  backButton: {
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 22,
+  menuSlot: {
     height: 44,
-    justifyContent: "center",
     width: 44,
   },
 

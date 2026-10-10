@@ -5,7 +5,6 @@ import {
   removeCartItem,
   updateCartItemQuantity,
 } from "@/components/cartStore";
-import DashboardBottomNav from "@/components/dashboardBottomNav";
 import { formatGhs } from "@/components/dashboardData";
 import PageHeader from "@/components/pageHeader";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
@@ -22,10 +21,12 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { placeOrder } from "./orderStore";
 
 export default function Cart() {
   const { width } = useWindowDimensions();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [placing, setPlacing] = useState(false);
 
   const horizontalPadding = width >= 620 ? 22 : 18;
   const isWide = width >= 760;
@@ -62,6 +63,31 @@ export default function Cart() {
   const removeItem = async (name: string) => {
     const items = await removeCartItem(name);
     setCartItems(items);
+  };
+
+  const checkout = async () => {
+    if (placing || hydratedCartItems.length === 0) return;
+    setPlacing(true);
+
+    try {
+      await placeOrder(
+        hydratedCartItems.map((item) => ({
+          name: item.name,
+          quantity: item.quantity,
+        })),
+        total
+      );
+
+      // clear the cart
+      for (const item of cartItems) {
+        await removeCartItem(item.name);
+      }
+      setCartItems([]);
+
+      router.push("/dashboard/orders" as any);
+    } finally {
+      setPlacing(false);
+    }
   };
 
   return (
@@ -189,10 +215,13 @@ export default function Cart() {
 
                 <TouchableOpacity
                   activeOpacity={0.85}
-                  onPress={() => router.push("/dashboard/payments" as any)}
-                  style={styles.checkoutButton}
+                  disabled={placing}
+                  onPress={checkout}
+                  style={[styles.checkoutButton, placing && { opacity: 0.6 }]}
                 >
-                  <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
+                  <Text style={styles.checkoutButtonText}>
+                    {placing ? "Placing order..." : "Proceed to Checkout"}
+                  </Text>
 
                   <FontAwesome6 name="arrow-right" size={12} color="#FFFFFF" />
                 </TouchableOpacity>
@@ -223,7 +252,6 @@ export default function Cart() {
           )}
         </ScrollView>
 
-        <DashboardBottomNav activeLabel="Cart" />
       </View>
     </SafeAreaView>
   );

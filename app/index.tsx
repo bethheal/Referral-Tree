@@ -1,15 +1,38 @@
 
 
 import Loading from "@/components/loading";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 
 export default function Index() {
   const router = useRouter();
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      router.replace("/onboarding");
+      const routeUser = async () => {
+        try {
+          const [loggedIn, onboardingComplete] = await Promise.all([
+            AsyncStorage.getItem("loggedIn"),
+            AsyncStorage.getItem("onboardingComplete"),
+          ]);
+
+          if (loggedIn === "true") {
+            router.replace("/dashboard");
+            return;
+          }
+
+          router.replace(
+            onboardingComplete === "true" ? "/auth/login" : "/onboarding"
+          );
+        } catch (error) {
+          console.log("Startup route check failed:", error);
+          router.replace("/onboarding");
+        }
+      };
+
+      routeUser();
     }, 2000);
 
     return () => clearTimeout(timer);

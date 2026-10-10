@@ -1,0 +1,13 @@
+{
+  "name": "@angelfoods/backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --experimental-strip-types src/server.ts",
+    "start": "node --experimental-strip-types src/server.ts",
+    "test": "node --experimental-strip-types tests/backend.test.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

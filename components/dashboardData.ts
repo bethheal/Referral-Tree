@@ -13,7 +13,7 @@ export const bottomNavItems = [
   { label: "Products", icon: "bag-shopping", slug: "products" },
   { label: "Cart", icon: "cart-shopping", slug: "cart" },
   { label: "Home", icon: "house", slug: "home" },
-  { label: "Payments", icon: "credit-card", slug: "payments" },
+  { label: "Wallet", icon: "wallet", slug: "payments" },
   { label: "Profile", icon: "user", slug: "profile" },
 ];
 
