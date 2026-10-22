@@ -425,6 +425,14 @@ try {
   const notFound = await request(baseUrl, "/missing");
   assert.equal(notFound.response.status, 404);
 
+  const jsonReadiness = await request(baseUrl, "/ready");
+  assert.equal(jsonReadiness.response.status, 200);
+  assert.deepEqual(jsonReadiness.body, {
+    status: "ready",
+    storage: "development-json",
+    productionReady: false,
+  });
+
   const allowedOrigin = await fetch(`${baseUrl}/health`, {
     headers: { Origin: "http://localhost:8081" },
   });
