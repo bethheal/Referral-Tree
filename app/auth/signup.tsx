@@ -69,7 +69,7 @@ export default function Signup() {
       const auth = await verifyRegistrationOtp({ otp, registrationId });
       await saveAuthSession(auth);
       showToast("Account created");
-      setTimeout(() => router.replace("/dashboard"), 500);
+      setTimeout(() => router.replace("/dashboard/payments?welcome=1"), 500);
     } catch (error) {
       showToast(error instanceof Error ? error.message : "Sign up failed");
     } finally {
@@ -88,7 +88,7 @@ export default function Signup() {
         style={styles.keyboardView}
       >
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <FontAwesome6 name="arrow-left" size={18} color="#C23122" />
+          <FontAwesome6 name="arrow-left" size={18} color="#192536" />
         </TouchableOpacity>
 
         <View style={styles.header}>
@@ -245,7 +245,7 @@ export default function Signup() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
   },
 
   keyboardView: {
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
 
   primaryButton: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 16,
     marginTop: 8,
     paddingVertical: 16,
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
   },
 
   footerLink: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 14,
   },

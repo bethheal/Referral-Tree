@@ -1,6 +1,7 @@
 
 
 import Loading from "@/components/loading";
+import { hasAuthSession } from "@/components/backendApi";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
@@ -14,11 +15,11 @@ export default function Index() {
       const routeUser = async () => {
         try {
           const [loggedIn, onboardingComplete] = await Promise.all([
-            AsyncStorage.getItem("loggedIn"),
+            hasAuthSession(),
             AsyncStorage.getItem("onboardingComplete"),
           ]);
 
-          if (loggedIn === "true") {
+          if (loggedIn) {
             router.replace("/dashboard");
             return;
           }
@@ -57,7 +58,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontFamily: "PoppinsBold",
-    color: "#C23122",
+    color: "#192536",
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 10,

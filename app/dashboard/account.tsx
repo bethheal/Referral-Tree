@@ -7,6 +7,12 @@ import {
 } from "@/components/referralData";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import * as Clipboard from "expo-clipboard";
+import {
+  getMembershipState,
+  startMembershipCheckout,
+  type MembershipApiState,
+  type MembershipPlanKey,
+} from "@/components/backendApi";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -14,6 +20,7 @@ import {
   Alert,
   Image,
   KeyboardAvoidingView,
+  Linking,
   LayoutChangeEvent,
   Modal,
   Platform,
@@ -28,6 +35,7 @@ import {
   View,
 } from "react-native";
 import MembershipPlans from "./MembershipPlans";
+import type { PlanKey } from "./accountServices";
 
 /* -------------------------------------------------------------------------- */
 /* Theme                                                                      */
@@ -35,15 +43,15 @@ import MembershipPlans from "./MembershipPlans";
 
 // App-wide palette.
 const C = {
-  bg: "#F7F5FB",
+  bg: "#FFFFFF",
   card: "#FFFFFF",
-  ink: "#1C1B2E",
-  muted: "#8A8AA3",
-  line: "#EFEDF5",
-  pink: "#F0508F",
-  pinkSoft: "#FDE7F0",
-  lilac: "#EBD7F7",
-  lilacSoft: "#F4EAFB",
+  ink: "#192536",
+  muted: "#8B7F7A",
+  line: "#E7DDD9",
+  pink: "#FFB900",
+  pinkSoft: "#FFF4CC",
+  lilac: "#FFFFFF",
+  lilacSoft: "#FFF4CC",
   green: "#1F9A87",
   greenSoft: "#E3F4F1",
   mint: "#E4F7EE",
@@ -1217,7 +1225,7 @@ function PaymentFlow({
 
                   {selected === PAYPAL ? (
                     <Text style={styles.summaryHint}>
-                      You'll confirm this payment with PayPal.
+                      You&apos;ll confirm this payment with PayPal.
                     </Text>
                   ) : null}
                 </View>
@@ -1315,96 +1323,13 @@ function PaymentFlow({
 /* Payment methods section (replaces Payment Accounts)                        */
 /* -------------------------------------------------------------------------- */
 
-function PaymentMethodsList({
-  methods,
-  onOpenFlow,
-  onRemove,
-  onSetDefault,
-}: {
-  methods: SavedMethod[];
-  onOpenFlow: () => void;
-  onRemove: (id: string) => void;
-  onSetDefault: (id: string) => void;
-}) {
+function PaymentMethodsList() {
   return (
-    <View>
-      {methods.length === 0 ? (
-        <EmptyState message="No saved payment methods yet." />
-      ) : (
-        methods.map((method) => (
-          <View key={method.id} style={styles.methodRow}>
-            <View
-              style={[
-                styles.methodBadge,
-                {
-                  backgroundColor:
-                    method.kind === "mobile_money"
-                      ? C.amberSoft
-                      : method.kind === "paypal"
-                        ? C.blueSoft
-                        : C.lilacSoft,
-                },
-              ]}
-            >
-              <FontAwesome6
-                name={
-                  method.kind === "card"
-                    ? "credit-card"
-                    : method.kind === "paypal"
-                      ? "paypal"
-                      : "mobile-screen-button"
-                }
-                size={13}
-                color={
-                  method.kind === "mobile_money"
-                    ? C.amber
-                    : method.kind === "paypal"
-                      ? C.blue
-                      : C.purple
-                }
-              />
-            </View>
-            <View style={styles.methodCopy}>
-              <Text numberOfLines={1} style={styles.listTitle}>
-                {methodTitle(method)}
-              </Text>
-              <Text numberOfLines={1} style={styles.listMeta}>
-                {methodDetail(method)}
-                {method.isDefault ? " · Default" : ""}
-              </Text>
-            </View>
-            {!method.isDefault ? (
-              <Pressable
-                accessibilityRole="button"
-                hitSlop={6}
-                onPress={() => onSetDefault(method.id)}
-              >
-                <Text style={styles.linkAction}>Set default</Text>
-              </Pressable>
-            ) : null}
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Remove ${methodTitle(method)}`}
-              hitSlop={8}
-              onPress={() => onRemove(method.id)}
-              style={styles.removeButton}
-            >
-              <FontAwesome6 name="trash-can" size={13} color={C.danger} />
-            </Pressable>
-          </View>
-        ))
-      )}
-
-      <ActionButton
-        filled
-        icon="plus"
-        label="Add payment method"
-        onPress={onOpenFlow}
-      />
-    </View>
+    <Text style={styles.note}>
+      Payments use Flutterwave secure checkout. Choose card or Mobile Money there; Angel Foods does not store payment details.
+    </Text>
   );
 }
-
 /* -------------------------------------------------------------------------- */
 /* Screen                                                                     */
 /* -------------------------------------------------------------------------- */
@@ -1442,9 +1367,74 @@ export default function Account() {
 
   /* ------------------------------- Data ---------------------------------- */
 
-  const { methods, addMethod, removeMethod, setDefault } = usePaymentMethods();
-  const [membershipPlan, setMembershipPlan] = useState("Free");
-  const [billingAccountId, setBillingAccountId] = useState<string | null>(null);
+  const { methods, addMethod } = usePaymentMethods();
+  const [membershipPlan, setMembershipPlan] = useState<PlanKey>("free");
+  const [membershipState, setMembershipState] = useState<MembershipApiState>({
+    membership: null,
+    latestPayment: null,
+  });
+  const [membershipLoading, setMembershipLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    getMembershipState()
+      .then((state) => {
+        if (!mounted) return;
+        setMembershipState(state);
+        setMembershipPlan(
+          state.membership?.status === "ACTIVE" ? state.membership.plan : "free",
+        );
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (mounted) setMembershipLoading(false);
+      });
+    return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    if (membershipState.latestPayment?.status !== "PENDING") return;
+    let mounted = true;
+    const refresh = async () => {
+      try {
+        const state = await getMembershipState();
+        if (!mounted) return;
+        setMembershipState(state);
+        setMembershipPlan(
+          state.membership?.status === "ACTIVE" ? state.membership.plan : "free",
+        );
+      } catch {
+        // Keep the visible payment status pending if the server cannot be reached.
+      }
+    };
+    const timer = setInterval(refresh, 4000);
+    return () => {
+      mounted = false;
+      clearInterval(timer);
+    };
+  }, [membershipState.latestPayment?.reference, membershipState.latestPayment?.status]);
+
+  const beginMembershipCheckout = async (nextPlan: PlanKey, expectedAmount: number) => {
+    if (nextPlan === "free") {
+      throw new Error("Changing to the Free plan is not available from this payment flow.");
+    }
+    const checkout = await startMembershipCheckout(nextPlan as MembershipPlanKey, expectedAmount);
+    setMembershipState((current) => ({
+      ...current,
+      latestPayment: {
+        amount: checkout.amount,
+        createdAt: new Date().toISOString(),
+        plan: checkout.plan,
+        reference: checkout.reference,
+        status: "PENDING",
+      },
+    }));
+    try {
+      await Linking.openURL(checkout.checkoutUrl);
+    } catch {
+      throw new Error("Flutterwave checkout could not be opened. Your current membership access has not changed.");
+    }
+  };
 
   const user = useMemo(
     () => referralSystem.users.find((item) => item.id === CURRENT_USER_ID),
@@ -1620,19 +1610,6 @@ export default function Account() {
 
   const latestWithdrawal = history.find(
     (item) => item.category === "withdrawal",
-  );
-
-  // Shape the saved methods for MembershipPlans, which expects account-like records.
-  const billingAccounts = useMemo(
-    () =>
-      methods.map((method) => ({
-        accountNumber: method.last4 ?? method.phone ?? "",
-        holder: method.holder ?? fullName,
-        id: method.id,
-        isDefault: method.isDefault,
-        kind: method.kind,
-      })),
-    [methods, fullName],
   );
 
   /* ----------------------------- Handlers -------------------------------- */
@@ -1973,7 +1950,7 @@ export default function Account() {
           ) : null}
           {typeof pending !== "number" || typeof withdrawn !== "number" ? (
             <Text style={styles.note}>
-              "—" means that figure isn't provided by the current data source.
+              The em dash means that figure isn&apos;t provided by the current data source.
             </Text>
           ) : null}
         </Section>
@@ -1982,15 +1959,10 @@ export default function Account() {
         <Section
           icon="credit-card"
           onLayout={trackSection("methods")}
-          subtitle="PayPal, MTN Mobile Money and saved cards"
+          subtitle="Secure checkout"
           title="Payment Methods"
         >
-          <PaymentMethodsList
-            methods={methods}
-            onOpenFlow={() => setFlowOpen(true)}
-            onRemove={removeMethod}
-            onSetDefault={setDefault}
-          />
+          <PaymentMethodsList />
         </Section>
 
         {/* Membership plan */}
@@ -2001,16 +1973,11 @@ export default function Account() {
           title="Membership Plan"
         >
           <MembershipPlans
-            accounts={billingAccounts}
-            billingAccountId={billingAccountId}
             currentPlan={membershipPlan}
-            loading={false}
-            monthEarnings={monthEarnings}
-            onAddAccount={() => setFlowOpen(true)}
-            onChange={(nextPlan: string, accountId?: string | null) => {
-              setMembershipPlan(nextPlan);
-              if (accountId !== undefined) setBillingAccountId(accountId);
-            }}
+            membership={membershipState.membership}
+            latestPayment={membershipState.latestPayment}
+            loading={membershipLoading}
+            onChange={beginMembershipCheckout}
           />
         </Section>
 
@@ -2349,7 +2316,7 @@ const softShadow = {
 
 const styles = StyleSheet.create({
   container: { backgroundColor: C.bg, flex: 1 },
-  pressed: { opacity: 0.72 },
+  pressed: { backgroundColor: "#192536" },
   flexShrink: { flexShrink: 1 },
   spacer: { height: 20 },
 
@@ -2366,7 +2333,7 @@ const styles = StyleSheet.create({
     padding: 18,
   },
   heroBlobLarge: {
-    backgroundColor: "rgba(240,80,143,0.18)",
+    backgroundColor: "rgba(255,185,0,0.18)",
     borderRadius: 90,
     height: 180,
     position: "absolute",
@@ -2852,12 +2819,6 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: "center", paddingVertical: 24, rowGap: 8 },
   emptyText: { color: C.muted, fontFamily: "PoppinsRegular", fontSize: 11 },
   errorText: {
-    color: C.danger,
-    fontFamily: "PoppinsRegular",
-    fontSize: 10,
-    marginTop: 6,
-  },
-  fieldError: {
     color: C.danger,
     fontFamily: "PoppinsRegular",
     fontSize: 10,

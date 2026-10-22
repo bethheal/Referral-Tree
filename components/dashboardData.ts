@@ -73,7 +73,7 @@ export const products = [
     unit: "6 tins",
     rating: 4.5,
     description: "Rich tomato base for jollof, soups, and sauces.",
-    color: "#C23122",
+    color: "#192536",
     icon: "box",
     image:
       "https://images.unsplash.com/photo-1607305387299-a3d9611cd469?auto=format&fit=crop&w=500&q=80",

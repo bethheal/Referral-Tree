@@ -243,7 +243,7 @@ export default function PaymentAccounts({
 
       {loading ? (
         <View style={styles.centered}>
-          <ActivityIndicator color="#C23122" />
+          <ActivityIndicator color="#192536" />
         </View>
       ) : error ? (
         <View style={styles.centered}>
@@ -264,7 +264,7 @@ export default function PaymentAccounts({
             onPress={openAdd}
             style={({ pressed }) => [styles.addTile, pressed && styles.pressed]}
           >
-            <FontAwesome6 name="plus" size={18} color="#C23122" />
+            <FontAwesome6 name="plus" size={18} color="#192536" />
             <Text style={styles.addTileText}>Add</Text>
           </Pressable>
 
@@ -357,13 +357,13 @@ export default function PaymentAccounts({
 
             {selected.kind !== "card" ? (
               <Pressable disabled={busy} onPress={() => openEdit(selected)} style={styles.manageButton}>
-                <FontAwesome6 name="pen" size={11} color="#C23122" />
+                <FontAwesome6 name="pen" size={11} color="#192536" />
                 <Text style={styles.manageButtonText}>Edit</Text>
               </Pressable>
             ) : null}
 
             <Pressable disabled={busy} onPress={() => confirmRemove(selected)} style={styles.manageButton}>
-              <FontAwesome6 name="trash" size={11} color="#C23122" />
+              <FontAwesome6 name="trash" size={11} color="#192536" />
               <Text style={styles.manageButtonText}>Remove</Text>
             </Pressable>
           </View>
@@ -515,7 +515,7 @@ export default function PaymentAccounts({
               </View>
               {prefixMismatch ? (
                 <Text style={styles.hint}>
-                  This number doesn't start with a usual {kindInfo.label} prefix (
+                  This number doesn&apos;t start with a usual {kindInfo.label} prefix (
                   {kindInfo.prefixes.join(", ")}). Check the network, unless the number was ported.
                 </Text>
               ) : null}
@@ -594,7 +594,7 @@ const styles = StyleSheet.create({
 
   centered: { alignItems: "center", paddingVertical: 24, rowGap: 8 },
   emptyText: { color: "#8B7F7A", fontFamily: "PoppinsRegular", fontSize: 11, lineHeight: 17, marginTop: 8, textAlign: "center" },
-  link: { color: "#C23122", fontFamily: "PoppinsBold", fontSize: 11 },
+  link: { color: "#192536", fontFamily: "PoppinsBold", fontSize: 11 },
 
   carousel: { columnGap: 12, paddingRight: 4, paddingVertical: 4 },
   addTile: {
@@ -609,7 +609,7 @@ const styles = StyleSheet.create({
     rowGap: 6,
     width: 64,
   },
-  addTileText: { color: "#C23122", fontFamily: "PoppinsBold", fontSize: 10 },
+  addTileText: { color: "#192536", fontFamily: "PoppinsBold", fontSize: 10 },
 
   card: {
     borderColor: "transparent",
@@ -620,7 +620,7 @@ const styles = StyleSheet.create({
     padding: 14,
     width: 230,
   },
-  cardSelected: { borderColor: "#C23122" },
+  cardSelected: { borderColor: "#192536" },
   previewCard: { marginTop: 12, width: "100%" },
   cardTop: { alignItems: "center", flexDirection: "row", justifyContent: "space-between" },
   badge: {
@@ -645,7 +645,7 @@ const styles = StyleSheet.create({
   cardMeta: { color: "rgba(255,255,255,0.8)", fontFamily: "PoppinsRegular", fontSize: 10 },
 
   manage: {
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
     borderColor: "#F0D6D0",
     borderRadius: 12,
     borderWidth: 1,
@@ -665,7 +665,7 @@ const styles = StyleSheet.create({
     minHeight: 38,
     paddingHorizontal: 12,
   },
-  manageButtonPrimary: { backgroundColor: "#C23122", borderColor: "#C23122" },
+  manageButtonPrimary: { backgroundColor: "#192536", borderColor: "#192536" },
   manageButtonText: { color: "#314640", fontFamily: "PoppinsBold", fontSize: 10 },
   manageButtonPrimaryText: { color: "#FFFFFF", fontFamily: "PoppinsBold", fontSize: 10 },
 
@@ -692,7 +692,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
-  kindChipActive: { backgroundColor: "#FFF1EF", borderColor: "#C23122" },
+  kindChipActive: { backgroundColor: "#FFF1EF", borderColor: "#192536" },
   kindBadge: {
     alignItems: "center",
     borderRadius: 12,
@@ -702,11 +702,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
   },
   kindText: { color: "#6C625F", fontFamily: "PoppinsBold", fontSize: 10 },
-  kindTextActive: { color: "#C23122" },
+  kindTextActive: { color: "#192536" },
 
   label: { color: "#8B7F7A", fontFamily: "PoppinsRegular", fontSize: 11, marginBottom: 5, marginTop: 10 },
   input: {
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
     borderColor: "#F0D6D0",
     borderRadius: 10,
     borderWidth: 1,
@@ -720,7 +720,7 @@ const styles = StyleSheet.create({
   col: { flex: 1 },
 
   phoneRow: {
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
     borderColor: "#F0D6D0",
     borderRadius: 10,
     borderWidth: 1,
@@ -740,12 +740,12 @@ const styles = StyleSheet.create({
   phoneInput: { color: "#1E3631", flex: 1, fontFamily: "PoppinsRegular", fontSize: 13, paddingHorizontal: 12 },
 
   hint: { color: "#8A5C13", fontFamily: "PoppinsRegular", fontSize: 10, lineHeight: 15, marginTop: 6 },
-  error: { color: "#C23122", fontFamily: "PoppinsRegular", fontSize: 11, marginTop: 10 },
+  error: { color: "#192536", fontFamily: "PoppinsRegular", fontSize: 11, marginTop: 10 },
   secureNote: { color: "#8B7F7A", fontFamily: "PoppinsRegular", fontSize: 9, lineHeight: 14, marginTop: 10 },
 
   submit: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 12,
     justifyContent: "center",
     marginTop: 14,

@@ -1,6 +1,5 @@
-import type { CashOutRequest, Database, LedgerEntry, User } from "../models/types.ts";
-import { env } from "../config/env.ts";
-import { createId, nowIso } from "../utils/crypto.ts";
+import type { CashOutRequest, Database, LedgerEntry } from "../models/types.ts";
+import { HttpError } from "../utils/http.ts";
 
 const sum = (entries: LedgerEntry[]) =>
   entries.reduce((total, entry) => total + entry.amount, 0);
@@ -51,91 +50,16 @@ export const getFinancialSummary = (data: Database, userId: string) => {
   };
 };
 
-export const awardReferralRewards = (
-  data: Database,
-  referrer: User,
-  sourceUser: User
-) => {
-  const timestamp = nowIso();
-
-  data.ledger.push(
-    {
-      id: createId("ledger"),
-      userId: referrer.id,
-      type: "COMMISSION",
-      state: "PENDING",
-      amount: 50,
-      currency: "GHS",
-      description: `Referral commission pending for ${sourceUser.fullName}`,
-      referenceId: `registration:${sourceUser.id}:commission`,
-      createdAt: timestamp,
-    },
-    {
-      id: createId("ledger"),
-      userId: referrer.id,
-      type: "POINTS",
-      state: "AVAILABLE",
-      amount: 50,
-      currency: "POINTS",
-      description: `Referral points for ${sourceUser.fullName}`,
-      referenceId: `registration:${sourceUser.id}:points`,
-      createdAt: timestamp,
-    },
-    {
-      id: createId("ledger"),
-      userId: referrer.id,
-      type: "COMMISSION",
-      state: "POTENTIAL",
-      amount: 25,
-      currency: "GHS",
-      description: `Potential network earnings for ${sourceUser.fullName}`,
-      referenceId: `registration:${sourceUser.id}:potential`,
-      createdAt: timestamp,
-    }
-  );
-};
-
 export const requestCashOut = (
-  data: Database,
-  userId: string,
-  amount: number
+  _data: Database,
+  _userId: string,
+  _amount: number
 ) => {
-  if (!Number.isFinite(amount) || amount < env.minCashOut) {
-    throw new Error(`Minimum cash-out amount is GHS ${env.minCashOut}.`);
-  }
-
-  const summary = getFinancialSummary(data, userId);
-
-  if (amount > summary.availableBalance) {
-    throw new Error("Available balance is not enough for this cash-out.");
-  }
-
-  const ledgerEntry: LedgerEntry = {
-    id: createId("ledger"),
-    userId,
-    type: "CASH_OUT",
-    state: "PENDING",
-    amount: -amount,
-    currency: "GHS",
-    description: "Cash-out requested",
-    referenceId: createId("cashout_ref"),
-    createdAt: nowIso(),
-  };
-  const cashOut: CashOutRequest = {
-    id: createId("cashout"),
-    userId,
-    amount,
-    currency: "GHS",
-    status: "REQUESTED",
-    ledgerEntryId: ledgerEntry.id,
-    createdAt: nowIso(),
-    updatedAt: nowIso(),
-  };
-
-  data.ledger.push(ledgerEntry);
-  data.cashOuts.push(cashOut);
-
-  return cashOut;
+  throw new HttpError(
+    "Cash-outs are unavailable until withdrawal and eligibility rules are approved and backed by PostgreSQL transactions.",
+    503,
+    "FINANCIAL_RULES_UNCONFIGURED"
+  );
 };
 
 export const getPaymentHistory = (data: Database, userId: string) =>

@@ -1,7 +1,7 @@
 import { bottomNavItems } from "@/components/dashboardData";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { router } from "expo-router";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
   Animated,
   Pressable,
@@ -30,6 +30,7 @@ function DashboardNavItem({
   onPress,
 }: DashboardNavItemProps) {
   const scale = useRef(new Animated.Value(1)).current;
+  const [hovered, setHovered] = useState(false);
 
   const animateTo = (value: number) => {
     Animated.spring(scale, {
@@ -47,8 +48,14 @@ function DashboardNavItem({
       }}
     >
       <Pressable
-        onHoverIn={() => animateTo(1.08)}
-        onHoverOut={() => animateTo(1)}
+        onHoverIn={() => {
+          setHovered(true);
+          animateTo(1.08);
+        }}
+        onHoverOut={() => {
+          setHovered(false);
+          animateTo(1);
+        }}
         onPress={onPress}
         onPressIn={() => animateTo(0.94)}
         onPressOut={() => animateTo(1)}
@@ -64,16 +71,19 @@ function DashboardNavItem({
             isActive &&
               !isHome &&
               styles.activeNavIconWrap,
+            hovered && styles.hoveredNavIconWrap,
           ]}
         >
           <FontAwesome6
             name={icon as any}
             size={isHome ? 19 : 16}
             color={
-              isHome
+              hovered
+                ? "#192536"
+                : isHome
                 ? "#FFFFFF"
                 : isActive
-                ? "#C23122"
+                ? "#192536"
                 : "#B9AAA4"
             }
           />
@@ -83,6 +93,7 @@ function DashboardNavItem({
           style={[
             styles.navLabel,
             isActive && styles.activeNavLabel,
+            hovered && styles.hoveredNavLabel,
           ]}
         >
           {label}
@@ -171,16 +182,20 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF1EF",
   },
 
+  hoveredNavIconWrap: {
+    backgroundColor: "#FFB900",
+  },
+
   homeNavIconWrap: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderColor: "#FFFFFF",
     borderRadius: 28,
     borderWidth: 5,
     height: 58,
     justifyContent: "center",
 
-    shadowColor: "#C23122",
+    shadowColor: "#192536",
     shadowOffset: {
       width: 0,
       height: 8,
@@ -199,7 +214,11 @@ const styles = StyleSheet.create({
   },
 
   activeNavLabel: {
-    color: "#C23122",
+    color: "#192536",
+  },
+
+  hoveredNavLabel: {
+    color: "#FFB900",
   },
 });
 

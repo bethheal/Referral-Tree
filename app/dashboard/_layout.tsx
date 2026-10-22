@@ -1,9 +1,10 @@
-import { clearAuthSession } from "@/components/backendApi";
+import { hasAuthSession, logoutSession } from "@/components/backendApi";
 import DashboardBottomNav from "@/components/dashboardBottomNav";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { router, Stack, usePathname } from "expo-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -16,6 +17,7 @@ const dashboardMenu = [
   { label: "Dashboard", icon: "table-cells-large", slug: "home" },
   { label: "Referral Network", icon: "people-group", slug: "referrals" },
   { label: "Account Details", icon: "wallet", slug: "account" },
+  { label: "Wallet", icon: "wallet", slug: "payments" },
   // { label: "Account History", icon: "clock-rotate-left", slug: "history" },
   // { label: "Payment History", icon: "receipt", slug: "payment-history" },
   { label: "notification", icon: "message", slug: "notification" },
@@ -43,7 +45,7 @@ const getActiveBottomLabel = (pathname: string) => {
   if (slug === "products") return "Products";
   if (slug === "cart") return "Cart";
   if (["payments", "payment-history", "cash-out", "earnings"].includes(slug)) {
-    return "Payments";
+    return "Wallet";
   }
   if (["profile", "account", "history", "notification"].includes(slug)) {
     return "Profile";
@@ -61,6 +63,15 @@ const getActiveMenuSlug = (pathname: string) => {
 export default function DashboardLayout() {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void hasAuthSession().then((hasSession) => {
+      if (active && !hasSession) router.replace("/auth/login");
+    });
+    return () => { active = false; };
+  }, []);
   const activeBottomLabel = useMemo(
     () => getActiveBottomLabel(pathname),
     [pathname],
@@ -79,9 +90,17 @@ export default function DashboardLayout() {
   };
 
   const logout = async () => {
+    if (isLoggingOut) return;
     setIsMenuOpen(false);
-    await clearAuthSession();
-    router.replace("/auth/login");
+    setIsLoggingOut(true);
+    try {
+      await logoutSession();
+      router.replace("/auth/login");
+    } catch {
+      Alert.alert("Logout failed", "We couldn't end your session. Check your connection and try again.");
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (

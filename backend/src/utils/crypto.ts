@@ -7,6 +7,9 @@ const base64Url = (input: Buffer | string) =>
 export const createId = (prefix: string) =>
   `${prefix}_${crypto.randomBytes(12).toString("hex")}`;
 
+export const hashSessionToken = (token: string) =>
+  crypto.createHash("sha256").update(token).digest("hex");
+
 export const nowIso = () => new Date().toISOString();
 
 export const hashPassword = (password: string) => {
@@ -21,13 +24,20 @@ export const hashPassword = (password: string) => {
 export const verifyPassword = (password: string, stored: string) => {
   const [, salt, hash] = stored.split("$");
 
-  if (!salt || !hash) return false;
+  if (
+    !salt ||
+    !/^[a-f0-9]{32}$/i.test(salt) ||
+    !hash ||
+    !/^[a-f0-9]{64}$/i.test(hash)
+  ) return false;
 
   const candidate = crypto
     .pbkdf2Sync(password, salt, 210000, 32, "sha256")
     .toString("hex");
 
-  return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(candidate));
+  const expected = Buffer.from(hash, "hex");
+  const actual = Buffer.from(candidate, "hex");
+  return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
 };
 
 export const createOtp = () =>
@@ -41,6 +51,8 @@ export const signToken = (payload: Record<string, unknown>) => {
   const body = base64Url(
     JSON.stringify({
       ...payload,
+      iss: "angelfoods-api",
+      aud: "angelfoods-client",
       exp: Math.floor(Date.now() / 1000) + 60 * 60 * 12,
     })
   );
@@ -53,24 +65,53 @@ export const signToken = (payload: Record<string, unknown>) => {
 };
 
 export const verifyToken = (token: string) => {
-  const [header, body, signature] = token.split(".");
+  try {
+    if (token.length > 4096) return null;
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const [header, body, signature] = parts;
 
-  if (!header || !body || !signature) return null;
+    if (!header || !body || !signature) return null;
+    const headerValue = JSON.parse(
+      Buffer.from(header, "base64url").toString("utf8")
+    );
+    if (headerValue.alg !== "HS256" || headerValue.typ !== "JWT") return null;
 
-  const expected = crypto
-    .createHmac("sha256", env.jwtSecret)
-    .update(`${header}.${body}`)
-    .digest("base64url");
+    const expected = crypto
+      .createHmac("sha256", env.jwtSecret)
+      .update(`${header}.${body}`)
+      .digest("base64url");
 
-  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
+    const signatureBytes = Buffer.from(signature);
+    const expectedBytes = Buffer.from(expected);
+    if (
+      signatureBytes.length !== expectedBytes.length ||
+      !crypto.timingSafeEqual(signatureBytes, expectedBytes)
+    ) {
+      return null;
+    }
+
+    const payload = JSON.parse(Buffer.from(body, "base64url").toString("utf8"));
+
+    if (
+      typeof payload.exp !== "number" ||
+      payload.exp <= Date.now() / 1000 ||
+      payload.iss !== "angelfoods-api" ||
+      payload.aud !== "angelfoods-client" ||
+      typeof payload.sub !== "string" ||
+      typeof payload.role !== "string"
+    ) {
+      return null;
+    }
+
+    return payload as {
+      sub: string;
+      role: string;
+      exp: number;
+      iss: string;
+      aud: string;
+    };
+  } catch {
     return null;
   }
-
-  const payload = JSON.parse(Buffer.from(body, "base64url").toString("utf8"));
-
-  if (typeof payload.exp !== "number" || payload.exp < Date.now() / 1000) {
-    return null;
-  }
-
-  return payload as { sub: string; role: string; exp: number };
 };

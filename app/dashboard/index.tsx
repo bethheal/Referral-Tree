@@ -5,8 +5,8 @@ import {
   paymentHistory,
 } from "@/components/accountFeatureData";
 import {
-  clearAuthSession,
   getDashboardSummary,
+  logoutSession,
   type DashboardApiSummary,
 } from "@/components/backendApi";
 import {
@@ -117,7 +117,7 @@ export default function Dashboard() {
 
   const handleLogout = async () => {
     try {
-      await clearAuthSession();
+      await logoutSession();
       router.replace("/auth/login");
     } catch (error) {
       console.log("Logout failed:", error);
@@ -204,7 +204,7 @@ export default function Dashboard() {
             onPress={handleLogout}
             style={styles.headerIconButton}
           >
-            <FontAwesome6 name="right-from-bracket" size={17} color="#C23122" />
+            <FontAwesome6 name="right-from-bracket" size={17} color="#192536" />
           </TouchableOpacity>
         </View>
 
@@ -223,14 +223,6 @@ export default function Dashboard() {
                 <Text style={styles.heroSubtitle}>Your Angel Foods overview</Text>
               </View>
 
-              <TouchableOpacity
-                activeOpacity={0.85}
-                onPress={() => router.push("/dashboard/admin" as any)}
-                style={styles.heroAdminButton}
-              >
-                <FontAwesome6 name="shield-halved" size={12} color="#15203A" />
-                <Text style={styles.heroAdminText}>Admin</Text>
-              </TouchableOpacity>
             </View>
 
             <View style={styles.heroMoneyRow}>
@@ -294,7 +286,7 @@ export default function Dashboard() {
 
             <View style={styles.summaryTile}>
               <View style={styles.summaryIconWrap}>
-                <FontAwesome6 name="chart-line" size={14} color="#C23122" />
+                <FontAwesome6 name="chart-line" size={14} color="#192536" />
               </View>
               <Text style={styles.summaryTileLabel}>Potential Cash-Out</Text>
               <Text style={styles.summaryTileValue}>
@@ -315,7 +307,7 @@ export default function Dashboard() {
 
           <View style={styles.profilePrompt}>
             <View style={styles.profilePromptIcon}>
-              <FontAwesome6 name="user-gear" size={16} color="#C23122" />
+              <FontAwesome6 name="user-gear" size={16} color="#192536" />
             </View>
 
             <View style={styles.profilePromptCopy}>
@@ -391,7 +383,7 @@ export default function Dashboard() {
 
           <View style={styles.referralCard}>
             <View style={styles.referralIcon}>
-              <FontAwesome6 name="link" size={17} color="#C23122" />
+              <FontAwesome6 name="link" size={17} color="#192536" />
             </View>
 
             <Text style={styles.referralLabel}>YOUR REFERRAL LINK</Text>
@@ -426,7 +418,7 @@ export default function Dashboard() {
                 onPress={shareReferralLink}
                 style={styles.shareButton}
               >
-                <FontAwesome6 name="share-nodes" size={13} color="#C23122" />
+                <FontAwesome6 name="share-nodes" size={13} color="#192536" />
 
                 <Text style={styles.shareButtonText}>Share</Text>
               </TouchableOpacity>
@@ -454,7 +446,7 @@ export default function Dashboard() {
           <View style={styles.networkCard}>
             <View style={styles.networkSummary}>
               <View style={styles.networkSummaryIcon}>
-                <FontAwesome6 name="sitemap" size={16} color="#C23122" />
+                <FontAwesome6 name="sitemap" size={16} color="#192536" />
               </View>
 
               <View style={styles.networkSummaryCopy}>
@@ -559,7 +551,7 @@ export default function Dashboard() {
             >
               <Text style={styles.treeButtonText}>View Full Referral Tree</Text>
 
-              <FontAwesome6 name="arrow-right" size={12} color="#C23122" />
+              <FontAwesome6 name="arrow-right" size={12} color="#192536" />
             </TouchableOpacity>
           </View>
 
@@ -594,7 +586,7 @@ export default function Dashboard() {
                   <FontAwesome6
                     name={activity.icon as any}
                     size={13}
-                    color="#C23122"
+                    color="#192536"
                   />
                 </View>
 
@@ -635,7 +627,7 @@ export default function Dashboard() {
               style={styles.orderCard}
             >
               <View style={styles.orderIcon}>
-                <FontAwesome6 name="bag-shopping" size={14} color="#C23122" />
+                <FontAwesome6 name="bag-shopping" size={14} color="#192536" />
               </View>
 
               <View style={styles.orderInfo}>
@@ -657,7 +649,7 @@ export default function Dashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
   },
 
   screen: {
@@ -720,7 +712,7 @@ const styles = StyleSheet.create({
   // ============================================================
 
   heroCard: {
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 18,
     overflow: "hidden",
     padding: 18,
@@ -751,22 +743,6 @@ const styles = StyleSheet.create({
     fontFamily: "PoppinsRegular",
     fontSize: 11,
     marginTop: 1,
-  },
-
-  heroAdminButton: {
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 8,
-    flexDirection: "row",
-    gap: 6,
-    minHeight: 32,
-    paddingHorizontal: 10,
-  },
-
-  heroAdminText: {
-    color: "#15203A",
-    fontFamily: "PoppinsBold",
-    fontSize: 10,
   },
 
   heroMoneyRow: {
@@ -867,7 +843,7 @@ const styles = StyleSheet.create({
   // ============================================================
 
   pointsCard: {
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 22,
     overflow: "hidden",
     padding: 20,
@@ -1095,7 +1071,7 @@ const styles = StyleSheet.create({
 
   profilePromptButton: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 16,
     height: 32,
     justifyContent: "center",
@@ -1132,7 +1108,7 @@ const styles = StyleSheet.create({
 
   referralPreviewAvatar: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 15,
     height: 30,
     justifyContent: "center",
@@ -1227,7 +1203,7 @@ const styles = StyleSheet.create({
 
   menuBadge: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 9,
     minWidth: 18,
     paddingHorizontal: 5,
@@ -1269,7 +1245,7 @@ const styles = StyleSheet.create({
   },
 
   sectionAction: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 11,
   },
@@ -1301,7 +1277,7 @@ const styles = StyleSheet.create({
   },
 
   linkBox: {
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
     borderColor: "#F0E4DF",
     borderRadius: 11,
     borderWidth: 1,
@@ -1330,7 +1306,7 @@ const styles = StyleSheet.create({
 
   copyButton: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 11,
     flex: 1,
     flexDirection: "row",
@@ -1357,7 +1333,7 @@ const styles = StyleSheet.create({
   },
 
   shareButtonText: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 11,
   },
@@ -1374,7 +1350,7 @@ const styles = StyleSheet.create({
 
   networkSummary: {
     alignItems: "center",
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
     borderColor: "#F0E4DF",
     borderRadius: 13,
     borderWidth: 1,
@@ -1495,7 +1471,7 @@ const styles = StyleSheet.create({
   },
 
   networkPreviewAvatarText: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 9,
   },
@@ -1570,7 +1546,7 @@ const styles = StyleSheet.create({
 
   rootCircle: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 25,
     height: 50,
     justifyContent: "center",
@@ -1612,7 +1588,7 @@ const styles = StyleSheet.create({
   },
 
   childLetter: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 14,
   },
@@ -1645,7 +1621,7 @@ const styles = StyleSheet.create({
   },
 
   levelDot: {
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 4,
     height: 7,
     width: 7,
@@ -1676,7 +1652,7 @@ const styles = StyleSheet.create({
   },
 
   treeButtonText: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 11,
   },
@@ -1776,7 +1752,7 @@ const styles = StyleSheet.create({
   },
 
   orderTotal: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 14,
   },
@@ -1898,7 +1874,7 @@ const styles = StyleSheet.create({
 
   drawerBadge: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 10,
     minWidth: 20,
     paddingHorizontal: 6,
@@ -1965,7 +1941,7 @@ const styles = StyleSheet.create({
 
   homeNavIconWrap: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderColor: "#FFFFFF",
     borderRadius: 28,
     borderWidth: 5,
@@ -1973,7 +1949,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: -28,
 
-    shadowColor: "#C23122",
+    shadowColor: "#192536",
     shadowOffset: {
       width: 0,
       height: 8,
@@ -1992,6 +1968,6 @@ const styles = StyleSheet.create({
   },
 
   activeNavLabel: {
-    color: "#C23122",
+    color: "#192536",
   },
 });

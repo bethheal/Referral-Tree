@@ -1,4 +1,6 @@
 import type { Database, User } from "../models/types.ts";
+import { randomInt } from "node:crypto";
+import { HttpError } from "../utils/http.ts";
 
 export const createReferralCode = (fullName: string, existingCodes: Set<string>) => {
   const base =
@@ -6,10 +8,10 @@ export const createReferralCode = (fullName: string, existingCodes: Set<string>)
       .replace(/[^a-z0-9]/gi, "")
       .slice(0, 8)
       .toUpperCase() || "ANGEL";
-  let code = `${base}${Math.floor(1000 + Math.random() * 9000)}`;
+  let code = `${base}${randomInt(1000, 10000)}`;
 
   while (existingCodes.has(code)) {
-    code = `${base}${Math.floor(1000 + Math.random() * 9000)}`;
+    code = `${base}${randomInt(1000, 10000)}`;
   }
 
   return code;
@@ -23,11 +25,11 @@ export const findReferrer = (data: Database, referralCode?: string) => {
   );
 
   if (!referrer) {
-    throw new Error("Referral code was not found.");
+    throw new HttpError("Referral code was not found.", 400, "INVALID_REFERRAL_CODE");
   }
 
   if (referrer.status !== "ACTIVE") {
-    throw new Error("Referral code is not active.");
+    throw new HttpError("Referral code is not active.", 400, "REFERRER_INACTIVE");
   }
 
   return referrer;
@@ -43,7 +45,7 @@ export const assertNoReferralLoop = (
 
   while (cursor) {
     if (visited.has(cursor.id)) {
-      throw new Error("Referral loop detected.");
+      throw new HttpError("Referral loop detected.", 400, "REFERRAL_LOOP");
     }
 
     visited.add(cursor.id);

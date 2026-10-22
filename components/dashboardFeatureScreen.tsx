@@ -11,9 +11,9 @@ import {
   mockReferralTree,
   referralSystem,
 } from "@/components/referralData";
+import { logoutSession } from "@/components/backendApi";
 import ReferralTree from "@/components/referralTree";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Clipboard from "expo-clipboard";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -101,7 +101,7 @@ export default function Dashboard(props: DashboardFeatureScreenProps) {
   const handleLogout = async () => {
     try {
       // Remove saved login status
-      await AsyncStorage.removeItem("loggedIn");
+      await logoutSession();
 
       // Go back to login page
       router.replace("/auth/login");
@@ -170,7 +170,7 @@ export default function Dashboard(props: DashboardFeatureScreenProps) {
             onPress={handleLogout}
             style={styles.notificationButton}
           >
-            <FontAwesome6 name="right-from-bracket" size={17} color="#C23122" />
+            <FontAwesome6 name="right-from-bracket" size={17} color="#192536" />
           </TouchableOpacity>
         </View>
 
@@ -188,14 +188,6 @@ export default function Dashboard(props: DashboardFeatureScreenProps) {
 
           <View style={styles.titleSection}>
             <Text style={styles.dashboardTitle}>DASHBOARD</Text>
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={() => router.push("/dashboard/admin" as any)}
-              style={styles.adminButton}
-            >
-              <FontAwesome6 name="shield-halved" size={12} color="#FFFFFF" />
-              <Text style={styles.adminButtonText}>Admin</Text>
-            </TouchableOpacity>
           </View>
 
           {/* ====================================================
@@ -295,7 +287,7 @@ export default function Dashboard(props: DashboardFeatureScreenProps) {
 
           <View style={styles.referralCard}>
             <View style={styles.referralIcon}>
-              <FontAwesome6 name="link" size={17} color="#C23122" />
+              <FontAwesome6 name="link" size={17} color="#192536" />
             </View>
 
             <Text style={styles.referralLabel}>YOUR REFERRAL LINK</Text>
@@ -330,7 +322,7 @@ export default function Dashboard(props: DashboardFeatureScreenProps) {
                 onPress={shareReferralLink}
                 style={styles.shareButton}
               >
-                <FontAwesome6 name="share-nodes" size={13} color="#C23122" />
+                <FontAwesome6 name="share-nodes" size={13} color="#192536" />
 
                 <Text style={styles.shareButtonText}>Share</Text>
               </TouchableOpacity>
@@ -358,7 +350,7 @@ export default function Dashboard(props: DashboardFeatureScreenProps) {
           <View style={styles.networkCard}>
             <View style={styles.networkSummary}>
               <View style={styles.networkSummaryIcon}>
-                <FontAwesome6 name="sitemap" size={16} color="#C23122" />
+                <FontAwesome6 name="sitemap" size={16} color="#192536" />
               </View>
 
               <View style={styles.networkSummaryCopy}>
@@ -400,7 +392,7 @@ export default function Dashboard(props: DashboardFeatureScreenProps) {
             >
               <Text style={styles.treeButtonText}>View Full Referral Tree</Text>
 
-              <FontAwesome6 name="arrow-right" size={12} color="#C23122" />
+              <FontAwesome6 name="arrow-right" size={12} color="#192536" />
             </TouchableOpacity>
           </View>
 
@@ -435,7 +427,7 @@ export default function Dashboard(props: DashboardFeatureScreenProps) {
                   <FontAwesome6
                     name={activity.icon as any}
                     size={13}
-                    color="#C23122"
+                    color="#192536"
                   />
                 </View>
 
@@ -476,7 +468,7 @@ export default function Dashboard(props: DashboardFeatureScreenProps) {
               style={styles.orderCard}
             >
               <View style={styles.orderIcon}>
-                <FontAwesome6 name="bag-shopping" size={14} color="#C23122" />
+                <FontAwesome6 name="bag-shopping" size={14} color="#192536" />
               </View>
 
               <View style={styles.orderInfo}>
@@ -497,7 +489,7 @@ export default function Dashboard(props: DashboardFeatureScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
   },
 
   screen: {
@@ -565,28 +557,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  adminButton: {
-    alignItems: "center",
-    backgroundColor: "#1E3631",
-    borderRadius: 12,
-    flexDirection: "row",
-    gap: 7,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-  },
-
-  adminButtonText: {
-    color: "#FFFFFF",
-    fontFamily: "PoppinsBold",
-    fontSize: 11,
-  },
-
   // ============================================================
   // POINTS
   // ============================================================
 
   pointsCard: {
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 22,
     overflow: "hidden",
     padding: 20,
@@ -827,7 +803,7 @@ const styles = StyleSheet.create({
 
   menuBadge: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 9,
     minWidth: 18,
     paddingHorizontal: 5,
@@ -869,7 +845,7 @@ const styles = StyleSheet.create({
   },
 
   sectionAction: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 11,
   },
@@ -901,7 +877,7 @@ const styles = StyleSheet.create({
   },
 
   linkBox: {
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
     borderColor: "#F0E4DF",
     borderRadius: 11,
     borderWidth: 1,
@@ -930,7 +906,7 @@ const styles = StyleSheet.create({
 
   copyButton: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 11,
     flex: 1,
     flexDirection: "row",
@@ -957,7 +933,7 @@ const styles = StyleSheet.create({
   },
 
   shareButtonText: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 11,
   },
@@ -974,7 +950,7 @@ const styles = StyleSheet.create({
 
   networkSummary: {
     alignItems: "center",
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
     borderColor: "#F0E4DF",
     borderRadius: 13,
     borderWidth: 1,
@@ -1021,7 +997,7 @@ const styles = StyleSheet.create({
 
   rootCircle: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 25,
     height: 50,
     justifyContent: "center",
@@ -1063,7 +1039,7 @@ const styles = StyleSheet.create({
   },
 
   childLetter: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 14,
   },
@@ -1096,7 +1072,7 @@ const styles = StyleSheet.create({
   },
 
   levelDot: {
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 4,
     height: 7,
     width: 7,
@@ -1127,7 +1103,7 @@ const styles = StyleSheet.create({
   },
 
   treeButtonText: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 11,
   },
@@ -1227,7 +1203,7 @@ const styles = StyleSheet.create({
   },
 
   orderTotal: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 14,
   },
@@ -1349,7 +1325,7 @@ const styles = StyleSheet.create({
 
   drawerBadge: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 10,
     minWidth: 20,
     paddingHorizontal: 6,
@@ -1416,7 +1392,7 @@ const styles = StyleSheet.create({
 
   homeNavIconWrap: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderColor: "#FFFFFF",
     borderRadius: 28,
     borderWidth: 5,
@@ -1424,7 +1400,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: -28,
 
-    shadowColor: "#C23122",
+    shadowColor: "#192536",
     shadowOffset: {
       width: 0,
       height: 8,
@@ -1443,6 +1419,6 @@ const styles = StyleSheet.create({
   },
 
   activeNavLabel: {
-    color: "#C23122",
+    color: "#192536",
   },
 });

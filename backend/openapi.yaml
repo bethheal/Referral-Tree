@@ -1,0 +1,473 @@
+openapi: 3.1.0
+info:
+  title: Angel Foods API
+  version: 0.1.0
+  description: Development API surface. Financial reconciliation, order transitions, outbound broadcasts, and web MFA recovery remain disabled pending rules and service configuration.
+servers:
+  - url: http://localhost:3001
+paths:
+  /health:
+    get:
+      summary: Liveness check
+      responses:
+        '200': { description: Process is running }
+  /ready:
+    get:
+      summary: Development readiness status
+      responses:
+        '200': { description: Reports development JSON storage; productionReady is false }
+  /api/auth/register/request-otp:
+    post:
+      summary: Create or refresh a registration challenge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, fullName, password, phoneNumber]
+              properties:
+                email: { type: string, format: email }
+                fullName: { type: string, maxLength: 120 }
+                password: { type: string, minLength: 8, maxLength: 256 }
+                phoneNumber: { type: string }
+                referralCode: { type: string }
+      responses:
+        '201': { description: Registration ID and development OTP only when OTP_DEV_MODE is enabled }
+        '400': { description: Validation failure }
+        '409': { description: Email or phone already registered }
+        '429': { description: Rate limit or OTP resend cooldown }
+  /api/auth/register/verify:
+    post:
+      summary: Verify the challenge and create an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [otp, registrationId]
+              properties:
+                otp: { type: string, pattern: '^\d{6}$' }
+                registrationId: { type: string }
+      responses:
+        '201': { description: Access token and public user profile }
+        '400': { description: Invalid or expired OTP }
+  /api/auth/login:
+    post:
+      summary: Authenticate using email and password
+      responses:
+        '200': { description: Access token and public user profile }
+        '401': { description: Invalid credentials }
+        '403': { description: Account is inactive }
+  /api/me/dashboard:
+    get:
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Current user's account and development summary }
+        '401': { description: Authentication required }
+  /api/me/account:
+    get:
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Current user's public account details }
+  /api/me/account-history:
+    get:
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Current user's activity entries }
+  /api/me/payment-history:
+    get:
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Current user's persisted cash-out history }
+  /api/me/orders:
+    get:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: query, name: offset, schema: { type: integer, minimum: 0 } }
+        - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 50 } }
+      responses:
+        '200': { description: Paginated order history for the authenticated user }
+  /api/me/orders/{id}:
+    get:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Order and status history owned by the authenticated user }
+        '404': { description: Order not found or not owned by the authenticated user }
+  /api/me/invoices:
+    get:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: query, name: offset, schema: { type: integer, minimum: 0 } }
+        - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 50 } }
+      responses:
+        '200': { description: Paginated invoice history for the authenticated user }
+  /api/me/invoices/{id}:
+    get:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Invoice owned by the authenticated user }
+        '404': { description: Invoice not found or not owned by the authenticated user }
+  /api/me/membership:
+    get:
+      security: [{ bearerAuth: [] }]
+      summary: Current membership access and latest payment status
+      responses:
+        '200': { description: Active/expired membership and latest payment state }
+  /api/me/membership/checkout:
+    post:
+      security: [{ bearerAuth: [] }]
+      summary: Start a Flutterwave hosted checkout for one month of membership
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [plan, expectedAmount]
+              properties:
+                plan: { type: string, enum: [silver, gold, premium] }
+                expectedAmount: { type: number, exclusiveMinimum: 0 }
+      responses:
+        '201': { description: Pending payment reference and hosted checkout URL }
+        '409': { description: Existing pending checkout or stale displayed price }
+        '503': { description: Flutterwave credentials or approved server plan prices are not configured }
+  /api/webhooks/flutterwave:
+    post:
+      summary: Verify Flutterwave payment events and activate memberships
+      responses:
+        '200': { description: Webhook received }
+        '401': { description: Invalid Flutterwave webhook hash }
+  /api/payments/flutterwave/return:
+    get:
+      summary: Verify checkout return parameters and show the resulting payment status
+      responses:
+        '200': { description: Static payment status page; query parameters are independently verified }
+  /api/me/referrals:
+    get:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: query, name: offset, schema: { type: integer, minimum: 0 } }
+        - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 50 } }
+      responses:
+        '200': { description: Authorized descendants only }
+  /api/me/referrals/{id}:
+    get:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Referral profile and direct descendants }
+        '403': { description: Referral is outside the requester's network }
+  /api/me/leads:
+    get:
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Current user's leads, paginated }
+  /api/me/notification:
+    get:
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Current user's notifications, paginated }
+  /api/me/cash-outs:
+    post:
+      security: [{ bearerAuth: [] }]
+      responses:
+        '503': { description: Disabled until withdrawal and balance rules are approved and PostgreSQL transactions are implemented }
+  /api/admin/access:
+    get:
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Verified administrator access }
+        '401': { description: Authentication required }
+        '403': { description: Administrator permission required }
+  /api/admin/auth/login:
+    post:
+      summary: Authenticate an administrator account using the centralized account credentials
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8, maxLength: 256 }
+      responses:
+        '200': { description: Session token and public user profile; role data is omitted }
+        '401': { description: Invalid credentials }
+        '403': { description: Valid account without admin permission }
+        '429': { description: Admin login rate limit }
+  /api/admin/dashboard/summary:
+    get:
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Account, membership, payment-status, cash-out, and recent failed-login counts }
+        '401': { description: Authentication required }
+        '403': { description: Administrator permission required }
+  /api/admin/users:
+    get:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 50 } }
+        - { in: query, name: offset, schema: { type: integer, minimum: 0 } }
+        - { in: query, name: search, schema: { type: string, maxLength: 100 } }
+      responses:
+        '200': { description: Paginated users without credential hashes }
+        '401': { description: Authentication required }
+        '403': { description: Administrator permission required }
+  /api/admin/users/{userId}/role:
+    patch:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: path, name: userId, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [role, reason]
+              properties:
+                role: { type: string, enum: [USER, ADMIN] }
+                reason: { type: string, minLength: 8, maxLength: 500 }
+      responses:
+        '200': { description: Bootstrap exception applied and audited }
+        '202': { description: Role change awaits a different administrator's approval }
+        '400': { description: Invalid input or self-role change }
+        '403': { description: Super-admin permission required }
+        '404': { description: User not found }
+  /api/admin/users/{userId}/status:
+    patch:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: path, name: userId, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [status, reason]
+              properties:
+                status: { type: string, enum: [ACTIVE, SUSPENDED] }
+                reason: { type: string, minLength: 8, maxLength: 500 }
+      responses:
+        '200': { description: Updated user status }
+        '400': { description: Invalid input or self-status change }
+        '403': { description: Administrator permission required }
+        '404': { description: User not found }
+  /api/admin/audit-log:
+    get:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+        - { in: query, name: offset, schema: { type: integer, minimum: 0, default: 0 } }
+        - { in: query, name: action, schema: { type: string, maxLength: 80 } }
+        - { in: query, name: actorUserId, schema: { type: string, maxLength: 120 } }
+        - { in: query, name: targetId, schema: { type: string, maxLength: 120 } }
+        - { in: query, name: since, schema: { type: string, format: date-time } }
+        - { in: query, name: until, schema: { type: string, format: date-time } }
+      responses:
+        '200': { description: Paginated, filterable, append-only admin audit events including recorded IP }
+        '401': { description: Authentication required }
+        '403': { description: Administrator permission required }
+  /api/admin/users/{userId}:
+    get:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: path, name: userId, required: true, schema: { type: string } }
+      responses:
+        '200': { description: User, membership, MFA status, and active sessions without credentials or tokens }
+        '403': { description: USER_READ permission required }
+        '404': { description: User not found }
+  /api/admin/users/{userId}/sessions/revoke:
+    post:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: path, name: userId, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [reason]
+              properties:
+                reason: { type: string, minLength: 8, maxLength: 500 }
+      responses:
+        '200': { description: Active sessions revoked and action audited }
+        '403': { description: USER_MANAGE permission or recent MFA required }
+        '404': { description: User not found }
+  /api/admin/memberships:
+    get:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: query, name: status, schema: { type: string, enum: [PENDING, ACTIVE, EXPIRED, CANCELLED, REVOKED] } }
+        - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 50 } }
+        - { in: query, name: offset, schema: { type: integer, minimum: 0 } }
+      responses:
+        '200': { description: Paginated persisted memberships and plan details }
+        '403': { description: PAYMENT_READ permission required }
+  /api/admin/payments:
+    get:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: query, name: status, schema: { type: string } }
+        - { in: query, name: targetType, schema: { type: string, enum: [MEMBERSHIP, PRODUCT_ORDER] } }
+        - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 50 } }
+        - { in: query, name: offset, schema: { type: integer, minimum: 0 } }
+      responses:
+        '200': { description: Paginated persisted payments and safe event metadata }
+        '403': { description: PAYMENT_READ permission required }
+  /api/admin/payment-events:
+    get:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: query, name: status, schema: { type: string } }
+        - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 50 } }
+        - { in: query, name: offset, schema: { type: integer, minimum: 0 } }
+      responses:
+        '200': { description: Persisted received/failed events; payload contents are not returned }
+        '403': { description: PAYMENT_READ permission required }
+  /api/admin/payment-events/{eventId}/reconcile:
+    post:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: path, name: eventId, required: true, schema: { type: string } }
+      responses:
+        '503': { description: Disabled until reconciliation criteria and Flutterwave sandbox verification are approved }
+  /api/admin/referrals:
+    get:
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Paginated persisted sponsor relationships }
+        '403': { description: USER_READ permission required }
+  /api/admin/ledger:
+    get:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: query, name: userId, schema: { type: string } }
+      responses:
+        '200': { description: Read-only paginated commission and earnings ledger }
+        '403': { description: PAYMENT_READ permission required }
+  /api/admin/withdrawals:
+    get:
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Read-only paginated withdrawal requests }
+        '403': { description: PAYMENT_READ permission required }
+  /api/admin/products:
+    get:
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Paginated persisted product catalog }
+        '403': { description: PRODUCT_READ permission required }
+    post:
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [sku, name, priceMinor, reason]
+              properties:
+                sku: { type: string, minLength: 2, maxLength: 80 }
+                name: { type: string, minLength: 2, maxLength: 160 }
+                priceMinor: { type: string, pattern: '^\\d{1,14}$' }
+                reason: { type: string, minLength: 8, maxLength: 500 }
+      responses:
+        '201': { description: Product created and audited }
+        '403': { description: PRODUCT_MANAGE permission or recent MFA required }
+  /api/admin/products/{productId}:
+    patch:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: path, name: productId, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Product updated and audited; archive instead of hard deletion }
+        '403': { description: PRODUCT_MANAGE permission or recent MFA required }
+  /api/admin/orders:
+    get:
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Read-only persisted orders, item snapshots, invoice links, and status history }
+        '403': { description: ORDER_READ permission required }
+  /api/admin/orders/{orderId}/status:
+    patch:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: path, name: orderId, required: true, schema: { type: string } }
+      responses:
+        '503': { description: Disabled until allowed transitions and financial effects are approved }
+  /api/admin/invoices:
+    get:
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Paginated persisted invoices and account/order references }
+        '403': { description: ORDER_READ permission required }
+  /api/admin/notifications:
+    get:
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Persisted delivery statuses and attempt metadata }
+        '403': { description: USER_READ permission required }
+  /api/admin/notifications/broadcast:
+    post:
+      security: [{ bearerAuth: [] }]
+      responses:
+        '503': { description: Disabled until recipient policy and delivery provider are configured }
+  /api/admin/security:
+    get:
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Admin roster, MFA enrollment state, and active session metadata; no secret/token fields }
+        '403': { description: SYSTEM_CONFIGURE permission required }
+  /api/admin/security/admins/{userId}/mfa/reset:
+    post:
+      security: [{ bearerAuth: [] }]
+      responses:
+        '503': { description: No web-based MFA reset; recovery remains CLI-only }
+  /api/admin/approvals:
+    get:
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Pending approval requests }
+        '403': { description: USER_MANAGE or ROLE_MANAGE permission required }
+  /api/admin/approvals/{approvalId}:
+    patch:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: path, name: approvalId, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [decision, reason]
+              properties:
+                decision: { type: string, enum: [APPROVED, REJECTED] }
+                reason: { type: string, minLength: 8, maxLength: 500 }
+      responses:
+        '200': { description: Request decided; role changes execute transactionally and cannot be self-approved }
+        '403': { description: Distinct MFA-verified administrator required }
+        '409': { description: Request was already decided or target changed }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

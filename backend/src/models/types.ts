@@ -19,12 +19,40 @@ export type CashOutStatus =
   | "PROCESSING"
   | "PAID"
   | "REJECTED";
+export type MembershipPlan = "silver" | "gold" | "premium";
+export type MembershipPaymentStatus = "PENDING" | "PAID" | "FAILED";
+export type MembershipStatus = "ACTIVE" | "EXPIRED";
+
+export type MembershipPayment = {
+  id: string;
+  userId: string;
+  plan: MembershipPlan;
+  amount: number;
+  currency: "GHS";
+  status: MembershipPaymentStatus;
+  reference: string;
+  flutterwaveTransactionId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  paidAt: string | null;
+};
+
+export type Membership = {
+  id: string;
+  userId: string;
+  plan: MembershipPlan;
+  status: MembershipStatus;
+  paymentReference: string;
+  startsAt: string;
+  expiresAt: string;
+  updatedAt: string;
+};
 
 export type User = {
   id: string;
   fullName: string;
   email: string;
-  phoneNumber: string;
+  phoneNumber: string | null;
   passwordHash: string;
   referralCode: string;
   referrerId: string | null;
@@ -32,6 +60,10 @@ export type User = {
   status: AccountStatus;
   createdAt: string;
   updatedAt: string;
+  dateOfBirth?: string | null;
+  languagePreference?: "en" | "fr";
+  themePreference?: "light" | "dark" | "system";
+  profileImageKey?: string | null;
 };
 
 export type RegistrationAttempt = {
@@ -119,4 +151,7 @@ export type Database = {
   securityEvents: SecurityEvent[];
   notification: Message[];
   leads: Lead[];
+  membershipPayments: MembershipPayment[];
+  memberships: Membership[];
+  revokedSessions?: string[];
 };

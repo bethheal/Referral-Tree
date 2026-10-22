@@ -108,12 +108,15 @@ export function PressableScale({
   enterDelay,
   onPressIn,
   onPressOut,
+  onHoverIn,
+  onHoverOut,
   scaleTo = 0.97,
   style,
   ...rest
 }: PressableScaleProps) {
   const scale = useRef(new Animated.Value(1)).current;
   const [pressed, setPressed] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const entrance = useEntrance(enterDelay, 12);
 
   const spring = (toValue: number) => {
@@ -127,7 +130,7 @@ export function PressableScale({
     }).start();
   };
 
-  const resolvedStyle = typeof style === "function" ? style({ pressed }) : style;
+  const resolvedStyle = typeof style === "function" ? style({ pressed, hovered }) : style;
 
   return (
     <AnimatedPressable
@@ -141,6 +144,14 @@ export function PressableScale({
         setPressed(false);
         spring(1);
         onPressOut?.(event);
+      }}
+      onHoverIn={(event) => {
+        setHovered(true);
+        onHoverIn?.(event);
+      }}
+      onHoverOut={(event) => {
+        setHovered(false);
+        onHoverOut?.(event);
       }}
       style={[
         resolvedStyle,
