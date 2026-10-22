@@ -19,9 +19,9 @@ import { getOrders, Order, OrderStatus } from "./orderStore";
 /* -------------------------------------------------------------------------- */
 
 const C = {
-  bg: "#FFF8F2",
+  bg: "#FFFFFF",
   card: "#FFFFFF",
-  red: "#C23122",
+  red: "#192536",
   redSoft: "#FFF1EF",
   tint: "#FDE9E5",
   ink: "#1E3631",

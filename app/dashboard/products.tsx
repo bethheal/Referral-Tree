@@ -55,7 +55,7 @@ const getColumnCount = (width: number) => {
 };
 
 function AnimatedIconButton({
-  color = "#C23122",
+  color = "#192536",
   icon,
   onPress,
   rotateOnHover = false,
@@ -63,6 +63,7 @@ function AnimatedIconButton({
   style,
 }: AnimatedIconButtonProps) {
   const isHovered = useRef(false);
+  const [hovered, setHovered] = useState(false);
   const scale = useRef(new Animated.Value(1)).current;
   const rotate = useRef(new Animated.Value(0)).current;
 
@@ -98,10 +99,12 @@ function AnimatedIconButton({
       <Pressable
         onHoverIn={() => {
           isHovered.current = true;
+          setHovered(true);
           animateTo(1.14, 1);
         }}
         onHoverOut={() => {
           isHovered.current = false;
+          setHovered(false);
           animateTo(1, 0);
         }}
         onPress={onPress}
@@ -111,7 +114,7 @@ function AnimatedIconButton({
         }
         style={styles.iconOnlyButton}
       >
-        <FontAwesome6 name={icon as any} size={size} color={color} />
+        <FontAwesome6 name={icon as any} size={size} color={hovered ? "#FFB900" : color} />
       </Pressable>
     </Animated.View>
   );
@@ -119,6 +122,7 @@ function AnimatedIconButton({
 
 function AnimatedTextButton({ label, onPress }: AnimatedTextButtonProps) {
   const scale = useRef(new Animated.Value(1)).current;
+  const [hovered, setHovered] = useState(false);
 
   const animateTo = (value: number) => {
     Animated.spring(scale, {
@@ -132,14 +136,20 @@ function AnimatedTextButton({ label, onPress }: AnimatedTextButtonProps) {
   return (
     <Animated.View style={{ transform: [{ scale }] }}>
       <Pressable
-        onHoverIn={() => animateTo(1.12)}
-        onHoverOut={() => animateTo(1)}
+        onHoverIn={() => {
+          setHovered(true);
+          animateTo(1.12);
+        }}
+        onHoverOut={() => {
+          setHovered(false);
+          animateTo(1);
+        }}
         onPress={onPress}
         onPressIn={() => animateTo(0.96)}
         onPressOut={() => animateTo(1)}
         style={styles.sectionActionButton}
       >
-        <Text style={styles.sectionAction}>{label}</Text>
+        <Text style={[styles.sectionAction, hovered && styles.hoverText]}>{label}</Text>
       </Pressable>
     </Animated.View>
   );
@@ -337,7 +347,7 @@ export default function Products() {
                   priceRangeIndex !== 0 ||
                   sortOption !== "topRated"
                     ? "#FFFFFF"
-                    : "#C23122"
+                    : "#192536"
                 }
               />
             </TouchableOpacity>
@@ -407,7 +417,7 @@ export default function Products() {
                   onPress={() => router.replace("/dashboard/cart" as any)}
                   style={styles.cartPill}
                 >
-                  <FontAwesome6 name="cart-shopping" size={12} color="#C23122" />
+                  <FontAwesome6 name="cart-shopping" size={12} color="#192536" />
 
                   <Text style={styles.cartPillText}>{cartCount}</Text>
                 </TouchableOpacity>
@@ -461,7 +471,7 @@ export default function Products() {
                     <FontAwesome6
                       name={product.icon as any}
                       size={12}
-                      color="#C23122"
+                      color="#192536"
                     />
                   </View>
                 </TouchableOpacity>
@@ -515,7 +525,7 @@ export default function Products() {
 
           {filteredProducts.length === 0 ? (
             <View style={styles.emptyCard}>
-              <FontAwesome6 name="magnifying-glass" size={18} color="#C23122" />
+              <FontAwesome6 name="magnifying-glass" size={18} color="#192536" />
 
               <Text style={styles.emptyTitle}>No products found</Text>
 
@@ -757,7 +767,7 @@ export default function Products() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
   },
 
   screen: {
@@ -815,7 +825,7 @@ const styles = StyleSheet.create({
   },
 
   activeFilterButton: {
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
   },
 
   categoryList: {
@@ -833,8 +843,8 @@ const styles = StyleSheet.create({
   },
 
   activeCategoryChip: {
-    backgroundColor: "#C23122",
-    borderColor: "#C23122",
+    backgroundColor: "#192536",
+    borderColor: "#192536",
   },
 
   categoryText: {
@@ -873,7 +883,7 @@ const styles = StyleSheet.create({
   featuredBadge: {
     alignItems: "center",
     alignSelf: "flex-start",
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
     borderRadius: 11,
     flexDirection: "row",
     gap: 6,
@@ -912,7 +922,7 @@ const styles = StyleSheet.create({
 
   featuredButton: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 12,
     flexDirection: "row",
     gap: 8,
@@ -937,7 +947,7 @@ const styles = StyleSheet.create({
   },
 
   cartPillText: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 11,
   },
@@ -979,9 +989,13 @@ const styles = StyleSheet.create({
   },
 
   sectionAction: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 11,
+  },
+
+  hoverText: {
+    color: "#FFB900",
   },
 
   sectionActionButton: {
@@ -1074,7 +1088,7 @@ const styles = StyleSheet.create({
   },
 
   productPrice: {
-    color: "#C23122",
+    color: "#192536",
     flex: 1,
     fontFamily: "PoppinsBold",
     fontSize: 13,
@@ -1129,7 +1143,7 @@ const styles = StyleSheet.create({
   },
 
   modalCard: {
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 26,
     borderTopRightRadius: 26,
     padding: 20,
@@ -1160,7 +1174,7 @@ const styles = StyleSheet.create({
   },
 
   modalCategory: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 11,
     marginTop: 16,
@@ -1189,7 +1203,7 @@ const styles = StyleSheet.create({
   },
 
   modalPrice: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 20,
   },
@@ -1202,7 +1216,7 @@ const styles = StyleSheet.create({
 
   modalButton: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 15,
     flexDirection: "row",
     gap: 9,
@@ -1218,7 +1232,7 @@ const styles = StyleSheet.create({
   },
 
   filterCard: {
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 26,
     borderTopRightRadius: 26,
     padding: 20,
@@ -1285,14 +1299,14 @@ const styles = StyleSheet.create({
   },
 
   resetButtonText: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 12,
   },
 
   applyButton: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 14,
     flex: 1,
     justifyContent: "center",

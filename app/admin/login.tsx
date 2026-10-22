@@ -1,5 +1,6 @@
 import {
   backendAuthorizationRequirements,
+  finishAdminMfaLogin,
   loginAdminAccount,
 } from "@/components/adminAccess";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
@@ -23,6 +24,10 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [mfaStep, setMfaStep] = useState<"password" | "setup" | "verify" | "recovery">("password");
+  const [mfaSecret, setMfaSecret] = useState("");
+  const [mfaCode, setMfaCode] = useState("");
+  const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
 
   const handleLogin = async () => {
     if (!email.trim() || !password) {
@@ -37,6 +42,32 @@ export default function AdminLogin() {
 
     if (result.ok) {
       router.replace("/admin" as any);
+    } else if (result.step === "setup" || result.step === "verify") {
+      setMfaStep(result.step);
+      if (result.step === "setup") setMfaSecret(result.secret);
+    }
+  };
+
+  const handleVerifyMfa = async () => {
+    if (!mfaCode.trim()) {
+      setMessage("Enter the six-digit authenticator code or a recovery code.");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const { session, recoveryCodes } = await finishAdminMfaLogin(email.trim(), mfaCode.trim());
+      if (mfaStep === "setup") {
+        setRecoveryCodes(recoveryCodes);
+        setMfaStep("recovery");
+        setMessage("MFA is active. Save these recovery codes somewhere secure.");
+        return;
+      }
+      setMessage(`Welcome, ${session.name}.`);
+      router.replace("/admin" as any);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "MFA verification failed.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -73,7 +104,7 @@ export default function AdminLogin() {
             dashboard access.
           </Text>
 
-          <View style={styles.form}>
+          {mfaStep === "password" ? <View style={styles.form}>
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Email</Text>
               <TextInput
@@ -134,13 +165,48 @@ export default function AdminLogin() {
             </TouchableOpacity>
 
             {message ? <Text style={styles.message}>{message}</Text> : null}
-          </View>
+          </View> : null}
+
+          {mfaStep === "setup" || mfaStep === "verify" ? <View style={styles.form}>
+            {mfaStep === "setup" ? <View style={styles.mfaPanel}>
+              <Text style={styles.label}>Authenticator setup key</Text>
+              <Text selectable style={styles.secret}>{mfaSecret}</Text>
+              <Text style={styles.mfaHint}>Enter this key manually in an authenticator app, then enter the current six-digit code below.</Text>
+            </View> : null}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{mfaStep === "setup" ? "Authenticator code" : "Authenticator or recovery code"}</Text>
+              <TextInput
+                autoCapitalize="characters"
+                autoComplete="one-time-code"
+                keyboardType={mfaCode.includes("-") ? "default" : "number-pad"}
+                onChangeText={setMfaCode}
+                placeholder={mfaStep === "setup" ? "123456" : "Enter your code"}
+                placeholderTextColor="#A69A95"
+                style={styles.input}
+                value={mfaCode}
+              />
+            </View>
+            <TouchableOpacity activeOpacity={0.86} disabled={isLoading} onPress={() => void handleVerifyMfa()} style={styles.loginButton}>
+              <Text style={styles.loginButtonText}>{isLoading ? "Verifying..." : "Verify MFA"}</Text>
+            </TouchableOpacity>
+          </View> : null}
+
+          {mfaStep === "recovery" ? <View style={styles.form}>
+            <View style={styles.mfaPanel}>
+              <Text style={styles.label}>One-time recovery codes</Text>
+              {recoveryCodes.map((code) => <Text selectable key={code} style={styles.secret}>{code}</Text>)}
+              <Text style={styles.mfaHint}>Each code can only be used once. Store them securely; they will not be shown again.</Text>
+            </View>
+            <TouchableOpacity activeOpacity={0.86} onPress={() => router.replace("/admin" as any)} style={styles.loginButton}>
+              <Text style={styles.loginButtonText}>Continue to dashboard</Text>
+            </TouchableOpacity>
+          </View> : null}
 
           <View style={styles.securityPanel}>
             <Text style={styles.securityTitle}>Backend protection required</Text>
             {backendAuthorizationRequirements.map((item) => (
               <View key={item} style={styles.securityRow}>
-                <FontAwesome6 name="lock" size={10} color="#C23122" />
+                <FontAwesome6 name="lock" size={10} color="#192536" />
                 <Text style={styles.securityText}>{item}</Text>
               </View>
             ))}
@@ -153,7 +219,7 @@ export default function AdminLogin() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
     flex: 1,
   },
 
@@ -176,7 +242,7 @@ const styles = StyleSheet.create({
 
   brandBadge: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 24,
     height: 48,
     justifyContent: "center",
@@ -257,14 +323,14 @@ const styles = StyleSheet.create({
   },
 
   forgotText: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 13,
   },
 
   loginButton: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 16,
     marginTop: 22,
     minHeight: 54,
@@ -278,11 +344,36 @@ const styles = StyleSheet.create({
   },
 
   message: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 12,
     lineHeight: 18,
     marginTop: 14,
+  },
+
+  mfaPanel: {
+    backgroundColor: "#F7F8FA",
+    borderColor: "#D9DEE6",
+    borderRadius: 14,
+    borderWidth: 1,
+    marginBottom: 18,
+    padding: 16,
+  },
+
+  secret: {
+    color: "#192536",
+    fontFamily: "PoppinsBold",
+    fontSize: 15,
+    letterSpacing: 1,
+    marginTop: 5,
+  },
+
+  mfaHint: {
+    color: "#6C625F",
+    fontFamily: "PoppinsRegular",
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 8,
   },
 
   securityPanel: {

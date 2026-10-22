@@ -104,7 +104,7 @@ function ReferralNode({ node, compact }: ReferralNodeProps) {
             <FontAwesome6
               name={isExpanded ? "chevron-up" : "chevron-down"}
               size={9}
-              color="#C23122"
+              color="#192536"
             />
 
             <Text style={styles.childCountText}>
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
   },
 
   rootNodeCard: {
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
     borderColor: "#F0D6D0",
   },
 
@@ -235,12 +235,12 @@ const styles = StyleSheet.create({
   },
 
   rootAvatar: {
-    backgroundColor: "#C23122",
-    borderColor: "#C23122",
+    backgroundColor: "#192536",
+    borderColor: "#192536",
   },
 
   avatarText: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 12,
   },
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   },
 
   levelPillText: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 8,
   },

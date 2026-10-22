@@ -4,10 +4,32 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --experimental-strip-types src/server.ts",
-    "start": "node --experimental-strip-types src/server.ts",
-    "test": "node --experimental-strip-types tests/backend.test.ts"
+    "dev": "node --env-file-if-exists=.env --experimental-strip-types src/server.ts",
+    "dev:postgres": "node --env-file=.env.development.local --experimental-strip-types src/server.ts",
+    "start": "node --env-file-if-exists=.env --experimental-strip-types src/server.ts",
+    "test": "node --experimental-strip-types tests/backend.test.ts && node --experimental-strip-types tests/config.test.ts",
+    "test:postgres:dev": "node --env-file=.env.development.local --experimental-strip-types tests/postgres.integration.test.ts",
+    "prisma:check:dev": "node --env-file=.env.development.local --experimental-strip-types src/scripts/checkPrisma.ts",
+    "postinstall": "prisma generate --schema prisma/schema.prisma",
+    "db:check": "node --env-file-if-exists=../.env.local --env-file-if-exists=.env --experimental-strip-types src/scripts/checkNeon.ts",
+    "db:check:dev": "node --env-file=.env.development.local --experimental-strip-types src/scripts/checkNeon.ts",
+    "db:import:dry-run": "node --experimental-strip-types src/scripts/importJsonToPostgres.ts",
+    "admin:create": "node --env-file-if-exists=.env --env-file-if-exists=.env.development.local --experimental-strip-types src/scripts/createInitialSuperAdmin.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "prisma:validate": "prisma validate --schema prisma/schema.prisma",
+    "prisma:generate": "prisma generate --schema prisma/schema.prisma"
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.10.1",
+    "@prisma/client": "^7.10.1",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.23.1",
+    "prisma": "^7.10.1"
+  },
+  "allowScripts": {
+    "prisma@7.10.1": true,
+    "@prisma/engines@7.10.1": true
+  }
 }

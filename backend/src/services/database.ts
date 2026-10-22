@@ -9,6 +9,9 @@ const emptyDatabase = (): Database => ({
   cashOuts: [],
   leads: [],
   ledger: [],
+  membershipPayments: [],
+  memberships: [],
+  revokedSessions: [],
   notification: [],
   registrations: [],
   securityEvents: [],
@@ -66,7 +69,8 @@ export class JsonDatabase {
       return state;
     }
 
-    return JSON.parse(fs.readFileSync(this.filePath, "utf8")) as Database;
+    const loaded = JSON.parse(fs.readFileSync(this.filePath, "utf8")) as Partial<Database>;
+    return { ...emptyDatabase(), ...loaded };
   }
 }
 

@@ -45,7 +45,7 @@ export default function NotFound() {
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
     flex: 1,
   },
 
@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
   },
 
   errorCode: {
-    color: "#C23122",
+    color: "#192536",
     fontSize: 64,
     fontWeight: "800",
     marginBottom: 5,
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   },
 
   button: {
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 14,
     marginTop: 28,
     paddingHorizontal: 35,

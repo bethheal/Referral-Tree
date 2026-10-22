@@ -1,156 +1,813 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum Role {
   USER
   ADMIN
   SUPER_ADMIN
+  FINANCE_ADMIN
+  PRODUCT_MANAGER
+  ORDER_MANAGER
+  SUPPORT_ADMIN
+  AUDITOR
 }
 
 enum AccountStatus {
   PENDING_VERIFICATION
   ACTIVE
   SUSPENDED
+  DELETION_REQUESTED
+  DELETED
 }
 
-enum LedgerState {
-  POTENTIAL
+enum AdminPermission {
+  USER_READ
+  USER_MANAGE
+  ROLE_MANAGE
+  PRODUCT_READ
+  PRODUCT_MANAGE
+  ORDER_READ
+  ORDER_MANAGE
+  PAYMENT_READ
+  PAYMENT_RECONCILE
+  WITHDRAWAL_REVIEW
+  AUDIT_READ
+  SYSTEM_CONFIGURE
+}
+
+enum MfaMethod {
+  TOTP
+  PASSKEY
+}
+
+enum PlanCode {
+  FREE
+  SILVER
+  GOLD
+  PREMIUM
+}
+
+enum PlanStatus {
+  DRAFT
+  ACTIVE
+  RETIRED
+}
+
+enum PaymentProvider {
+  FLUTTERWAVE
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  CANCELLED
+  REFUND_PENDING
+  PARTIALLY_REFUNDED
+  REFUNDED
+  DISPUTED
+  REVERSED
+}
+
+enum PaymentTargetType {
+  MEMBERSHIP
+  PRODUCT_ORDER
+}
+
+enum PaymentEventStatus {
+  RECEIVED
+  VERIFIED
+  PROCESSING
+  PROCESSED
+  IGNORED
+  FAILED
+}
+
+enum MembershipStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  REVOKED
+}
+
+enum RegistrationStatus {
+  PENDING
+  VERIFIED
+  EXPIRED
+  LOCKED
+}
+
+enum OtpPurpose {
+  REGISTRATION
+  EMAIL_CHANGE
+  PHONE_CHANGE
+  PASSWORD_RESET
+  ADMIN_MFA
+}
+
+enum LedgerEntryType {
+  COMMISSION
+  POINTS
+  WITHDRAWAL_RESERVATION
+  WITHDRAWAL_RELEASE
+  WITHDRAWAL_PAYOUT
+  ADJUSTMENT
+  REVERSAL
+}
+
+enum LedgerEntryState {
   PENDING
   AVAILABLE
+  RESERVED
   PAID
   VOID
 }
 
-enum CashOutStatus {
+enum RewardPolicyStatus {
+  DRAFT
+  APPROVED
+  ACTIVE
+  RETIRED
+}
+
+enum WithdrawalStatus {
   REQUESTED
   UNDER_REVIEW
   APPROVED
+  REJECTED
   PROCESSING
   PAID
+  FAILED
+  REVERSED
+}
+
+enum AdminApprovalStatus {
+  PENDING
+  APPROVED
   REJECTED
+  EXECUTED
+  EXPIRED
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  PROCESSING
+  SHIPPED
+  READY_FOR_PICKUP
+  DELIVERED
+  CANCELLED
+  REFUND_PENDING
+  PARTIALLY_REFUNDED
+  REFUNDED
+}
+
+enum StockReservationStatus {
+  HELD
+  COMMITTED
+  RELEASED
+  EXPIRED
+}
+
+enum InvoiceStatus {
+  ISSUED
+  PAID
+  VOID
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum NotificationDeliveryStatus {
+  QUEUED
+  SENT
+  FAILED
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  CONVERTED
+  CLOSED
+}
+
+enum IdempotencyStatus {
+  IN_PROGRESS
+  COMPLETED
+  FAILED
 }
 
 model User {
-  id           String        @id @default(cuid())
-  fullName     String
-  email        String        @unique
-  phoneNumber  String        @unique
-  passwordHash String
-  referralCode String        @unique
-  referrerId   String?
-  referrer     User?         @relation("ReferralTree", fields: [referrerId], references: [id])
-  referrals    User[]        @relation("ReferralTree")
-  role         Role          @default(USER)
-  status       AccountStatus @default(PENDING_VERIFICATION)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id                String        @id @default(cuid())
+  fullName          String
+  email             String        @unique
+  phoneNumber       String?       @unique
+  emailVerifiedAt   DateTime?     @db.Timestamptz(6)
+  phoneVerifiedAt   DateTime?     @db.Timestamptz(6)
+  passwordHash      String
+  referralCode      String        @unique
+  sponsorId         String?
+  placementParentId String?
+  role              Role          @default(USER)
+  status            AccountStatus @default(PENDING_VERIFICATION)
+  createdAt         DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime      @updatedAt @db.Timestamptz(6)
+  deletedAt         DateTime?     @db.Timestamptz(6)
 
-  ledger          LedgerEntry[]
-  cashOutRequests CashOutRequest[]
-  securityEvents  SecurityEvent[]
-  ownedLeads      Lead[]
-  notification        Message[]
+  sponsor                User?                  @relation("ReferralSponsor", fields: [sponsorId], references: [id], onDelete: Restrict)
+  sponsoredUsers         User[]                 @relation("ReferralSponsor")
+  placementParent        User?                  @relation("PlacementTree", fields: [placementParentId], references: [id], onDelete: Restrict)
+  placementChildren      User[]                 @relation("PlacementTree")
+  profile                Profile?
+  preferences            UserPreferences?
+  sessions               Session[]
+  mfaFactors             MfaFactor[]
+  mfaRecoveryCodes       MfaRecoveryCode[]
+  otpChallenges          OtpChallenge[]
+  memberships            Membership[]
+  membershipPayments     MembershipPayment[]
+  payments               Payment[]
+  ledgerEntries          LedgerEntry[]
+  withdrawals            WithdrawalRequest[]
+  ownedLeads             Lead[]
+  notifications          Notification[]
+  notificationDeliveries NotificationDelivery[]
+  productOrders          ProductOrder[]
+  invoices               Invoice[]
+  auditActions           AuditLog[]             @relation("AuditActor")
+  auditTargets           AuditLog[]             @relation("AuditTarget")
+  securityEvents         SecurityEvent[]
+  rewardPolicyApprovals  RewardPolicy[]         @relation("RewardPolicyApprover")
+  withdrawalReviews      WithdrawalReview[]
+  productChanges         ProductChange[]
+  orderStatusChanges     OrderStatusHistory[]
+  adminApprovalRequests AdminActionApproval[] @relation("AdminApprovalRequester")
+  adminApprovalDecisions AdminActionApproval[] @relation("AdminApprovalApprover")
+
+  @@index([sponsorId, createdAt])
+  @@index([placementParentId, createdAt])
+  @@index([role, status])
+  @@index([status, createdAt])
+}
+
+model Profile {
+  userId          String    @id
+  dateOfBirth     DateTime? @db.Date
+  profileImageKey String?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserPreferences {
+  userId    String   @id
+  language  String   @default("en") @db.VarChar(5)
+  theme     String   @default("system") @db.VarChar(10)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([language])
+}
+
+model Session {
+  id            String    @id @default(cuid())
+  userId        String
+  tokenHash     String    @unique
+  createdAt     DateTime  @default(now()) @db.Timestamptz(6)
+  expiresAt     DateTime  @db.Timestamptz(6)
+  lastSeenAt    DateTime? @db.Timestamptz(6)
+  revokedAt     DateTime? @db.Timestamptz(6)
+  userAgent     String?
+  ipAddress     String?
+  mfaVerifiedAt DateTime? @db.Timestamptz(6)
+  rotatedFromId String?   @unique
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rotatedFrom   Session?  @relation("SessionRotation", fields: [rotatedFromId], references: [id], onDelete: SetNull)
+  rotatedTo     Session?  @relation("SessionRotation")
+
+  @@index([userId, expiresAt])
+  @@index([userId, revokedAt])
+}
+
+model MfaFactor {
+  id               String    @id @default(cuid())
+  userId           String
+  method           MfaMethod
+  label            String?
+  secretCiphertext String?
+  credentialId     String?   @unique
+  publicKey        String?
+  verifiedAt       DateTime? @db.Timestamptz(6)
+  lastUsedAt       DateTime? @db.Timestamptz(6)
+  createdAt        DateTime  @default(now()) @db.Timestamptz(6)
+  revokedAt        DateTime? @db.Timestamptz(6)
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+}
+
+model MfaRecoveryCode {
+  id        String    @id @default(cuid())
+  userId    String
+  codeHash  String    @unique
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  usedAt    DateTime? @db.Timestamptz(6)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, usedAt])
+}
+
+model RolePermission {
+  id         String          @id @default(cuid())
+  role       Role
+  permission AdminPermission
+  createdAt  DateTime        @default(now()) @db.Timestamptz(6)
+
+  @@unique([role, permission])
+  @@index([permission, role])
 }
 
 model RegistrationAttempt {
-  id                String   @id @default(cuid())
+  id                String             @id @default(cuid())
   fullName          String
   email             String
-  phoneNumber       String
+  phoneNumber       String?
   passwordHash      String
   referralCode      String?
   otpHash           String
-  otpExpiresAt      DateTime
-  otpAttempts       Int      @default(0)
-  resendAvailableAt DateTime
-  createdAt         DateTime @default(now())
+  purpose           OtpPurpose         @default(REGISTRATION)
+  status            RegistrationStatus @default(PENDING)
+  otpExpiresAt      DateTime           @db.Timestamptz(6)
+  otpAttempts       Int                @default(0)
+  resendAvailableAt DateTime           @db.Timestamptz(6)
+  createdAt         DateTime           @default(now()) @db.Timestamptz(6)
+  verifiedAt        DateTime?          @db.Timestamptz(6)
 
-  @@index([phoneNumber])
-  @@index([email])
+  @@index([email, status])
+  @@index([phoneNumber, status])
+  @@index([otpExpiresAt])
+}
+
+model OtpChallenge {
+  id          String     @id @default(cuid())
+  userId      String?
+  destination String
+  purpose     OtpPurpose
+  codeHash    String
+  expiresAt   DateTime   @db.Timestamptz(6)
+  attempts    Int        @default(0)
+  maxAttempts Int        @default(5)
+  consumedAt  DateTime?  @db.Timestamptz(6)
+  createdAt   DateTime   @default(now()) @db.Timestamptz(6)
+  user        User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([destination, purpose, expiresAt])
+  @@index([userId, purpose, expiresAt])
+}
+
+model MembershipPlan {
+  id             String              @id @default(cuid())
+  code           PlanCode
+  version        Int                 @default(1)
+  displayName    String
+  priceMinor     BigInt
+  currency       String              @default("GHS") @db.Char(3)
+  durationDays   Int?
+  benefits       Json                @default("{}")
+  status         PlanStatus          @default(DRAFT)
+  effectiveFrom  DateTime?           @db.Timestamptz(6)
+  effectiveUntil DateTime?           @db.Timestamptz(6)
+  createdAt      DateTime            @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime            @updatedAt @db.Timestamptz(6)
+  memberships    Membership[]
+  payments       MembershipPayment[]
+
+  @@unique([code, version])
+  @@index([code, status, effectiveFrom])
+}
+
+model Membership {
+  id                  String             @id @default(cuid())
+  userId              String
+  planId              String
+  status              MembershipStatus   @default(PENDING)
+  membershipPaymentId String?            @unique
+  startsAt            DateTime?          @db.Timestamptz(6)
+  expiresAt           DateTime?          @db.Timestamptz(6)
+  createdAt           DateTime           @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime           @updatedAt @db.Timestamptz(6)
+  user                User               @relation(fields: [userId], references: [id], onDelete: Restrict)
+  plan                MembershipPlan     @relation(fields: [planId], references: [id], onDelete: Restrict)
+  membershipPayment   MembershipPayment? @relation(fields: [membershipPaymentId], references: [id], onDelete: Restrict)
+
+  @@index([userId, status, expiresAt])
+  @@index([planId, status])
+}
+
+model MembershipPayment {
+  id         String         @id @default(cuid())
+  userId     String
+  planId     String
+  createdAt  DateTime       @default(now()) @db.Timestamptz(6)
+  user       User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  plan       MembershipPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+  payment    Payment?
+  membership Membership?
+
+  @@index([userId, createdAt])
+}
+
+model Payment {
+  id                    String             @id @default(cuid())
+  userId                String
+  targetType            PaymentTargetType
+  membershipPaymentId   String?            @unique
+  productOrderId        String?
+  provider              PaymentProvider    @default(FLUTTERWAVE)
+  reference             String             @unique
+  providerTransactionId String?            @unique
+  amountMinor           BigInt
+  currency              String             @db.Char(3)
+  status                PaymentStatus      @default(PENDING)
+  idempotencyKey        String?            @unique
+  createdAt             DateTime           @default(now()) @db.Timestamptz(6)
+  updatedAt             DateTime           @updatedAt @db.Timestamptz(6)
+  paidAt                DateTime?          @db.Timestamptz(6)
+  user                  User               @relation(fields: [userId], references: [id], onDelete: Restrict)
+  membershipPayment     MembershipPayment? @relation(fields: [membershipPaymentId], references: [id], onDelete: Restrict)
+  productOrder          ProductOrder?      @relation(fields: [productOrderId], references: [id], onDelete: Restrict)
+  events                PaymentEvent[]
+
+  @@index([userId, status, createdAt])
+  @@index([targetType, createdAt])
+  @@index([productOrderId])
+}
+
+model PaymentEvent {
+  id                String             @id @default(cuid())
+  provider          PaymentProvider
+  providerEventId   String
+  paymentId         String?
+  eventType         String
+  transactionId     String?
+  payloadHash       String
+  signatureVerified Boolean            @default(false)
+  processingStatus  PaymentEventStatus @default(RECEIVED)
+  receivedAt        DateTime           @default(now()) @db.Timestamptz(6)
+  processedAt       DateTime?          @db.Timestamptz(6)
+  payment           Payment?           @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+
+  @@unique([provider, providerEventId])
+  @@index([paymentId, receivedAt])
+  @@index([processingStatus, receivedAt])
+}
+
+model IdempotencyKey {
+  id           String            @id @default(cuid())
+  scope        String
+  key          String
+  requestHash  String
+  status       IdempotencyStatus @default(IN_PROGRESS)
+  responseCode Int?
+  resourceType String?
+  resourceId   String?
+  createdAt    DateTime          @default(now()) @db.Timestamptz(6)
+  expiresAt    DateTime          @db.Timestamptz(6)
+
+  @@unique([scope, key])
+  @@index([expiresAt])
+  @@index([status, createdAt])
+}
+
+model RewardPolicy {
+  id               String             @id @default(cuid())
+  version          Int                @unique
+  status           RewardPolicyStatus @default(DRAFT)
+  enabled          Boolean            @default(false)
+  configuration    Json               @default("{}")
+  approvedByUserId String?
+  approvedAt       DateTime?          @db.Timestamptz(6)
+  effectiveFrom    DateTime?          @db.Timestamptz(6)
+  effectiveUntil   DateTime?          @db.Timestamptz(6)
+  createdAt        DateTime           @default(now()) @db.Timestamptz(6)
+  approver         User?              @relation("RewardPolicyApprover", fields: [approvedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([status, enabled, effectiveFrom])
 }
 
 model LedgerEntry {
-  id          String      @id @default(cuid())
-  userId      String
-  user        User        @relation(fields: [userId], references: [id])
-  type        String
-  state       LedgerState
-  amount      Decimal
-  currency    String
-  description String
-  referenceId String      @unique
-  createdAt   DateTime    @default(now())
+  id                    String             @id @default(cuid())
+  userId                String
+  type                  LedgerEntryType
+  state                 LedgerEntryState
+  amountMinor           BigInt
+  currency              String             @db.VarChar(6)
+  description           String
+  referenceId           String             @unique
+  sourceType            String?            @db.VarChar(40)
+  sourceId              String?
+  policyVersion         Int?
+  reversalOfId          String?            @unique
+  payoutEligible        Boolean            @default(false)
+  createdAt             DateTime           @default(now()) @db.Timestamptz(6)
+  user                  User               @relation(fields: [userId], references: [id], onDelete: Restrict)
+  reversalOf            LedgerEntry?       @relation("LedgerReversal", fields: [reversalOfId], references: [id], onDelete: Restrict)
+  reversedBy            LedgerEntry?       @relation("LedgerReversal")
+  withdrawalReservation WithdrawalRequest? @relation("WithdrawalReservation")
 
-  @@index([userId, state])
+  @@index([userId, state, createdAt])
+  @@index([sourceType, sourceId])
 }
 
-model CashOutRequest {
-  id            String        @id @default(cuid())
-  userId        String
-  user          User          @relation(fields: [userId], references: [id])
-  amount        Decimal
-  currency      String
-  status        CashOutStatus @default(REQUESTED)
-  ledgerEntryId String        @unique
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+model WithdrawalRequest {
+  id                   String             @id @default(cuid())
+  userId               String
+  amountMinor          BigInt
+  feeMinor             BigInt             @default(0)
+  currency             String             @default("GHS") @db.Char(3)
+  status               WithdrawalStatus   @default(REQUESTED)
+  payoutProvider       String?
+  payoutDestinationRef String?
+  reservationEntryId   String?            @unique
+  idempotencyKey       String?            @unique
+  createdAt            DateTime           @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime           @updatedAt @db.Timestamptz(6)
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Restrict)
+  reviews              WithdrawalReview[]
+  reservationEntry     LedgerEntry?       @relation("WithdrawalReservation", fields: [reservationEntryId], references: [id], onDelete: Restrict)
 
-  @@index([userId, status])
+  @@index([userId, status, createdAt])
+  @@index([status, createdAt])
+}
+
+model WithdrawalReview {
+  id             String            @id @default(cuid())
+  withdrawalId   String
+  reviewerUserId String
+  decision       WithdrawalStatus
+  reason         String
+  createdAt      DateTime          @default(now()) @db.Timestamptz(6)
+  withdrawal     WithdrawalRequest @relation(fields: [withdrawalId], references: [id], onDelete: Restrict)
+  reviewer       User              @relation(fields: [reviewerUserId], references: [id], onDelete: Restrict)
+
+  @@index([withdrawalId, createdAt])
+  @@index([reviewerUserId, createdAt])
+}
+
+model Lead {
+  id             String     @id @default(cuid())
+  ownerUserId    String
+  displayName    String
+  status         LeadStatus @default(NEW)
+  potentialMinor BigInt?
+  currency       String?    @db.Char(3)
+  createdAt      DateTime   @default(now()) @db.Timestamptz(6)
+  owner          User       @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+
+  @@index([ownerUserId, status, createdAt])
+}
+
+model Notification {
+  id         String                 @id @default(cuid())
+  userId     String
+  title      String
+  body       String
+  createdAt  DateTime               @default(now()) @db.Timestamptz(6)
+  readAt     DateTime?              @db.Timestamptz(6)
+  user       User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deliveries NotificationDelivery[]
+
+  @@index([userId, createdAt])
+  @@index([userId, readAt, createdAt])
+}
+
+model NotificationDelivery {
+  id             String                     @id @default(cuid())
+  notificationId String
+  userId         String
+  channel        String                     @db.VarChar(24)
+  status         NotificationDeliveryStatus @default(QUEUED)
+  providerRef    String?
+  attemptCount   Int                        @default(0)
+  lastErrorCode  String?
+  createdAt      DateTime                   @default(now()) @db.Timestamptz(6)
+  sentAt         DateTime?                  @db.Timestamptz(6)
+  notification   Notification               @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  user           User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
+}
+
+model Product {
+  id             String             @id @default(cuid())
+  sku            String             @unique
+  name           String
+  description    String             @default("")
+  imageKey       String?
+  priceMinor     BigInt
+  currency       String             @default("GHS") @db.Char(3)
+  inventoryCount Int                @default(0)
+  status         ProductStatus      @default(DRAFT)
+  createdAt      DateTime           @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime           @updatedAt @db.Timestamptz(6)
+  archivedAt     DateTime?          @db.Timestamptz(6)
+  orderItems     ProductOrderItem[]
+  reservations   StockReservation[]
+  changes        ProductChange[]
+
+  @@index([status, name])
+}
+
+model ProductChange {
+  id          String   @id @default(cuid())
+  productId   String
+  actorUserId String
+  oldValue    Json?
+  newValue    Json
+  reason      String?
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  actor       User     @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@index([productId, createdAt])
+  @@index([actorUserId, createdAt])
+}
+
+model ProductOrder {
+  id             String               @id @default(cuid())
+  userId         String
+  orderNumber    String               @unique
+  status         OrderStatus          @default(PENDING_PAYMENT)
+  currency       String               @default("GHS") @db.Char(3)
+  subtotalMinor  BigInt
+  taxMinor       BigInt               @default(0)
+  discountMinor  BigInt               @default(0)
+  shippingMinor  BigInt               @default(0)
+  totalMinor     BigInt
+  idempotencyKey String?              @unique
+  createdAt      DateTime             @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime             @updatedAt @db.Timestamptz(6)
+  user           User                 @relation(fields: [userId], references: [id], onDelete: Restrict)
+  items          ProductOrderItem[]
+  reservations   StockReservation[]
+  payments       Payment[]
+  invoices       Invoice[]
+  statusHistory  OrderStatusHistory[]
+
+  @@index([userId, status, createdAt])
+  @@index([status, createdAt])
+}
+
+model ProductOrderItem {
+  id             String       @id @default(cuid())
+  orderId        String
+  productId      String?
+  skuSnapshot    String
+  nameSnapshot   String
+  quantity       Int
+  unitPriceMinor BigInt
+  taxMinor       BigInt       @default(0)
+  discountMinor  BigInt       @default(0)
+  lineTotalMinor BigInt
+  currency       String       @db.Char(3)
+  createdAt      DateTime     @default(now()) @db.Timestamptz(6)
+  order          ProductOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product        Product?     @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model StockReservation {
+  id        String                 @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  status    StockReservationStatus @default(HELD)
+  expiresAt DateTime               @db.Timestamptz(6)
+  createdAt DateTime               @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime               @updatedAt @db.Timestamptz(6)
+  order     ProductOrder           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product                @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@unique([orderId, productId])
+  @@index([status, expiresAt])
+  @@index([productId, status])
+}
+
+model OrderStatusHistory {
+  id          String       @id @default(cuid())
+  orderId     String
+  actorUserId String?
+  oldStatus   OrderStatus?
+  newStatus   OrderStatus
+  reason      String?
+  createdAt   DateTime     @default(now()) @db.Timestamptz(6)
+  order       ProductOrder @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  actor       User?        @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([orderId, createdAt])
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  userId        String
+  orderId       String?
+  status        InvoiceStatus @default(ISSUED)
+  currency      String        @db.Char(3)
+  subtotalMinor BigInt
+  taxMinor      BigInt        @default(0)
+  discountMinor BigInt        @default(0)
+  shippingMinor BigInt        @default(0)
+  totalMinor    BigInt
+  issuedAt      DateTime      @default(now()) @db.Timestamptz(6)
+  paidAt        DateTime?     @db.Timestamptz(6)
+  metadata      Json          @default("{}")
+  user          User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  order         ProductOrder? @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  @@index([userId, issuedAt])
+  @@index([orderId])
+  @@index([status, issuedAt])
 }
 
 model AuditLog {
   id           String   @id @default(cuid())
   actorUserId  String?
   targetUserId String?
-  action       String
+  targetType   String?  @db.VarChar(40)
+  targetId     String?  @db.VarChar(120)
+  action       String   @db.VarChar(80)
   oldValue     Json?
   newValue     Json?
   reason       String?
-  createdAt    DateTime @default(now())
+  requestId    String?
+  ipAddress    String?
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+  actor        User?    @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  target       User?    @relation("AuditTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
 
-  @@index([actorUserId])
-  @@index([targetUserId])
+  @@index([actorUserId, createdAt])
+  @@index([targetUserId, createdAt])
+  @@index([targetType, targetId, createdAt])
+  @@index([action, createdAt])
+}
+
+model AdminActionApproval {
+  id                 String               @id @default(cuid())
+  action             String               @db.VarChar(80)
+  targetType         String               @db.VarChar(40)
+  targetId           String               @db.VarChar(120)
+  payload            Json
+  reason             String               @db.VarChar(500)
+  status             AdminApprovalStatus  @default(PENDING)
+  requestedByUserId  String
+  approvedByUserId   String?
+  requestIpAddress   String?
+  approvalIpAddress  String?
+  requestId          String?
+  requestedAt        DateTime             @default(now()) @db.Timestamptz(6)
+  decidedAt          DateTime?            @db.Timestamptz(6)
+  requester          User                 @relation("AdminApprovalRequester", fields: [requestedByUserId], references: [id], onDelete: Restrict)
+  approver           User?                @relation("AdminApprovalApprover", fields: [approvedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([status, requestedAt])
+  @@index([action, status, requestedAt])
+  @@index([targetType, targetId, requestedAt])
 }
 
 model SecurityEvent {
   id        String   @id @default(cuid())
   userId    String?
-  user      User?    @relation(fields: [userId], references: [id])
-  type      String
+  type      String   @db.VarChar(60)
   ipAddress String?
   userAgent String?
   metadata  Json?
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-  @@index([userId, type])
+  @@index([userId, type, createdAt])
+  @@index([type, createdAt])
 }
 
-model Lead {
-  id             String   @id @default(cuid())
-  ownerUserId    String
-  owner          User     @relation(fields: [ownerUserId], references: [id])
-  displayName    String
-  status         String
-  potentialValue Decimal
-  createdAt      DateTime @default(now())
-
-  @@index([ownerUserId, status])
-}
-
-model Message {
-  id        String    @id @default(cuid())
-  userId    String
-  user      User      @relation(fields: [userId], references: [id])
-  title     String
-  body      String
-  createdAt DateTime  @default(now())
-  readAt    DateTime?
-
-  @@index([userId, createdAt])
+model LegacyRevokedToken {
+  tokenHash String   @id
+  revokedAt DateTime @default(now()) @db.Timestamptz(6)
 }

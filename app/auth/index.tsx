@@ -72,7 +72,7 @@ export default function Auth() {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    backgroundColor: "#fff8f2",
+    backgroundColor: "#FFFFFF",
   },
 
   backgroundImage: {
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   },
 
   brand: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 16,
   },
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
 
   primaryButton: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 16,
     paddingVertical: 16,
   },
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   },
 
   secondaryButtonText: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 16,
   },

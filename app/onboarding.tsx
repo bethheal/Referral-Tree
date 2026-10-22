@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
 
     textTransform: "uppercase",
 
-    color: "#C23122",
+    color: "#192536",
   },
 
   description: {
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
   ------------------------- */
 
   button: {
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
 
     paddingVertical: 15,
 

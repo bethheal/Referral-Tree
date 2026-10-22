@@ -43,7 +43,7 @@ const INITIAL_EARNINGS_ROWS = 8;
 const topInvites = [
   { id: "1", name: "Aisha", earns: 420, rank: 2, color: "#3A8B5D" },
   { id: "2", name: "Rupali", earns: 520, rank: 1, color: "#D7B126" },
-  { id: "3", name: "Sandy", earns: 180, rank: 3, color: "#C23122" },
+  { id: "3", name: "Sandy", earns: 180, rank: 3, color: "#192536" },
 ];
 
 /* -------------------------------------------------------------------------- */
@@ -264,7 +264,7 @@ function ReferralOutlineNode({
           <FontAwesome6
             name={isOpen ? "chevron-down" : "chevron-right"}
             size={11}
-            color={isOpen ? "#C23122" : "#8B7F7A"}
+            color={isOpen ? "#192536" : "#8B7F7A"}
           />
         </View>
 
@@ -688,7 +688,7 @@ export default function MyReferrals() {
           <View style={styles.summaryCard}>
             <View style={styles.summaryHeader}>
               <View style={styles.summaryHeaderIcon}>
-                <FontAwesome6 name="chart-line" size={15} color="#C23122" />
+                <FontAwesome6 name="chart-line" size={15} color="#192536" />
               </View>
 
               <View style={styles.summaryHeaderCopy}>
@@ -713,7 +713,7 @@ export default function MyReferrals() {
                       <FontAwesome6
                         name={metric.icon}
                         size={14}
-                        color={metric.key === "earnings" ? "#FFFFFF" : "#C23122"}
+                        color={metric.key === "earnings" ? "#FFFFFF" : "#192536"}
                       />
                     </View>
                     <Text style={styles.metricTileLabel}>{metric.label}</Text>
@@ -758,7 +758,7 @@ export default function MyReferrals() {
             <View style={styles.shareSection}>
               <View style={styles.shareSectionHeader}>
                 <View style={styles.shareSectionIcon}>
-                  <FontAwesome6 name="user-plus" size={14} color="#C23122" />
+                  <FontAwesome6 name="user-plus" size={14} color="#192536" />
                 </View>
 
                 <View style={styles.shareSectionCopy}>
@@ -814,7 +814,7 @@ export default function MyReferrals() {
                   <FontAwesome6
                     name="share-nodes"
                     size={13}
-                    color="#C23122"
+                    color="#192536"
                   />
                 </View>
                 <Text style={styles.shareButtonText}>Share Referral Link</Text>
@@ -827,7 +827,7 @@ export default function MyReferrals() {
           <View style={styles.earningCard}>
             <View style={styles.earningHeader}>
               <View style={styles.rewardIcon}>
-                <FontAwesome6 name="wallet" size={15} color="#C23122" />
+                <FontAwesome6 name="wallet" size={15} color="#192536" />
               </View>
 
               <Text style={styles.earningTitle}>Referral Earnings</Text>
@@ -970,7 +970,7 @@ export default function MyReferrals() {
                 <View style={[styles.progressFill, { flex: progress }]} />
                 <View style={{ flex: 1 - progress }} />
                 <View style={styles.progressGift}>
-                  <FontAwesome6 name="gift" size={8} color="#C23122" />
+                  <FontAwesome6 name="gift" size={8} color="#192536" />
                 </View>
               </View>
 
@@ -1146,7 +1146,7 @@ export default function MyReferrals() {
                 <FontAwesome6
                   name="filter"
                   size={11}
-                  color={showFilters || activeFilterCount > 0 ? "#C23122" : "#8B7F7A"}
+                  color={showFilters || activeFilterCount > 0 ? "#192536" : "#8B7F7A"}
                 />
                 <Text
                   style={[
@@ -1243,7 +1243,7 @@ export default function MyReferrals() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
     flex: 1,
   },
 
@@ -1279,7 +1279,7 @@ const styles = StyleSheet.create({
   },
 
   activeHeaderButton: {
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
   },
 
   pressed: {
@@ -1356,7 +1356,7 @@ const styles = StyleSheet.create({
   },
 
   sectionEyebrow: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 9,
     letterSpacing: 1.2,
@@ -1415,7 +1415,7 @@ const styles = StyleSheet.create({
   },
 
   metricIconAccent: {
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
   },
 
   metricTileLabel: {
@@ -1520,44 +1520,8 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
 
-  codeCard: {
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderColor: "#EEDBD5",
-    borderRadius: 13,
-    borderWidth: 1,
-    flexDirection: "row",
-    minHeight: 58,
-    paddingLeft: 14,
-    paddingRight: 7,
-  },
-
   codeInfo: {
     flex: 1,
-  },
-
-  codeLabel: {
-    color: "#9A8E89",
-    fontFamily: "PoppinsBold",
-    fontSize: 8,
-    letterSpacing: 0.7,
-  },
-
-  codeValue: {
-    color: "#1E3631",
-    fontFamily: "PoppinsBold",
-    fontSize: 18,
-    letterSpacing: 1.5,
-    marginTop: 2,
-  },
-
-  copyButton: {
-    alignItems: "center",
-    backgroundColor: "#F5EFEC",
-    borderRadius: 10,
-    height: 42,
-    justifyContent: "center",
-    width: 42,
   },
 
   copyButtonSuccess: {
@@ -1571,24 +1535,6 @@ const styles = StyleSheet.create({
     marginTop: 7,
   },
 
-  copyFeedback: {
-    color: "#3A8B5D",
-    fontFamily: "PoppinsBold",
-    fontSize: 9,
-  },
-
-  shareButton: {
-    alignItems: "center",
-    backgroundColor: "#C23122",
-    borderRadius: 12,
-    flexDirection: "row",
-    gap: 9,
-    justifyContent: "center",
-    marginTop: 10,
-    minHeight: 45,
-    paddingHorizontal: 12,
-  },
-
   shareButtonIcon: {
     alignItems: "center",
     backgroundColor: "#FFFFFF",
@@ -1596,14 +1542,6 @@ const styles = StyleSheet.create({
     height: 25,
     justifyContent: "center",
     width: 25,
-  },
-
-  shareButtonText: {
-    color: "#FFFFFF",
-    flex: 1,
-    fontFamily: "PoppinsBold",
-    fontSize: 12,
-    textAlign: "center",
   },
 
   /* Earnings */
@@ -1639,7 +1577,7 @@ const styles = StyleSheet.create({
   },
 
   secondaryButton: {
-    borderColor: "#C23122",
+    borderColor: "#192536",
     borderRadius: 10,
     borderWidth: 1,
     paddingHorizontal: 12,
@@ -1647,7 +1585,7 @@ const styles = StyleSheet.create({
   },
 
   secondaryButtonText: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 10,
   },
@@ -1690,7 +1628,7 @@ const styles = StyleSheet.create({
   },
 
   periodRow: {
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
     borderRadius: 10,
     flexDirection: "row",
     marginTop: 14,
@@ -1723,7 +1661,7 @@ const styles = StyleSheet.create({
 
   withdrawButton: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 12,
     columnGap: 10,
     flexDirection: "row",
@@ -1800,7 +1738,7 @@ const styles = StyleSheet.create({
   },
 
   showMoreText: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 11,
   },
@@ -1842,7 +1780,7 @@ const styles = StyleSheet.create({
   },
 
   progressFill: {
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     height: "100%",
     minWidth: 78,
   },
@@ -1860,7 +1798,7 @@ const styles = StyleSheet.create({
 
   progressText: {
     alignSelf: "center",
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
     borderRadius: 9,
     color: "#8B7F7A",
     fontFamily: "PoppinsRegular",
@@ -1876,7 +1814,7 @@ const styles = StyleSheet.create({
   },
 
   heroTitle: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 28,
     lineHeight: 38,
@@ -1898,7 +1836,7 @@ const styles = StyleSheet.create({
 
   codeCard: {
     alignItems: "center",
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
     borderColor: "#F0D6D0",
     borderRadius: 12,
     borderWidth: 1,
@@ -1941,7 +1879,7 @@ const styles = StyleSheet.create({
 
   shareButton: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 12,
     flexDirection: "row",
     gap: 10,
@@ -1958,7 +1896,7 @@ const styles = StyleSheet.create({
 
   topBanner: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 12,
     flexDirection: "row",
     marginTop: 22,
@@ -2083,7 +2021,7 @@ const styles = StyleSheet.create({
 
   countPill: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 10,
     height: 20,
     justifyContent: "center",
@@ -2099,7 +2037,7 @@ const styles = StyleSheet.create({
   },
 
   friendList: {
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
   },
 
   friendRow: {
@@ -2127,7 +2065,7 @@ const styles = StyleSheet.create({
   },
 
   friendInitial: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 15,
   },
@@ -2220,8 +2158,8 @@ const styles = StyleSheet.create({
   },
 
   filterPillActive: {
-    backgroundColor: "#C23122",
-    borderColor: "#C23122",
+    backgroundColor: "#192536",
+    borderColor: "#192536",
   },
 
   filterPillActiveText: {
@@ -2266,7 +2204,7 @@ const styles = StyleSheet.create({
 
   searchBox: {
     alignItems: "center",
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
     borderColor: "#F0D6D0",
     borderRadius: 10,
     borderWidth: 1,
@@ -2299,7 +2237,7 @@ const styles = StyleSheet.create({
 
   filterButtonActive: {
     backgroundColor: "#FFF1EF",
-    borderColor: "#C23122",
+    borderColor: "#192536",
   },
 
   filterButtonText: {
@@ -2309,11 +2247,11 @@ const styles = StyleSheet.create({
   },
 
   filterButtonTextActive: {
-    color: "#C23122",
+    color: "#192536",
   },
 
   filterPanel: {
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
     borderColor: "#F0D6D0",
     borderRadius: 10,
     borderWidth: 1,
@@ -2350,8 +2288,8 @@ const styles = StyleSheet.create({
   },
 
   chipSelected: {
-    backgroundColor: "#C23122",
-    borderColor: "#C23122",
+    backgroundColor: "#192536",
+    borderColor: "#192536",
   },
 
   chipText: {
@@ -2370,7 +2308,7 @@ const styles = StyleSheet.create({
   },
 
   clearFiltersText: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 11,
   },
@@ -2428,7 +2366,7 @@ const styles = StyleSheet.create({
   },
 
   selectedOutlineRow: {
-    borderColor: "#C23122",
+    borderColor: "#192536",
   },
 
   outlineRowOpen: {
@@ -2508,10 +2446,10 @@ const styles = StyleSheet.create({
   },
 
   inlineDetailCard: {
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
     borderBottomLeftRadius: 10,
     borderBottomRightRadius: 10,
-    borderColor: "#C23122",
+    borderColor: "#192536",
     borderTopWidth: 0,
     borderWidth: 1,
     marginBottom: 6,

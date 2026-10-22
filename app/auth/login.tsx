@@ -1,5 +1,6 @@
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-import { loginWithPassword, saveAuthSession } from "@/components/backendApi";
+import { clearAdminSession, verifyAndStoreAdminSession } from "@/components/adminAccess";
+import { ApiError, loginWithPassword, saveAuthSession } from "@/components/backendApi";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
@@ -52,8 +53,19 @@ export default function Login() {
       setIsSubmitting(true);
       const auth = await loginWithPassword({ email, password });
       await saveAuthSession(auth);
-      showToast("Login successful");
-      setTimeout(() => router.replace("/dashboard"), 500);
+      try {
+        const adminSession = await verifyAndStoreAdminSession(auth.user.email);
+        showToast(`Welcome, ${adminSession.name}`);
+        setTimeout(() => router.replace("/admin"), 350);
+      } catch (accessError) {
+        await clearAdminSession();
+        if (accessError instanceof ApiError && accessError.status === 403) {
+          showToast("Login successful");
+          setTimeout(() => router.replace("/dashboard"), 350);
+        } else {
+          showToast("Signed in, but account access could not be checked. Try again.");
+        }
+      }
     } catch (error) {
       showToast(error instanceof Error ? error.message : "Login failed");
     } finally {
@@ -316,7 +328,7 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
   },
 
   keyboardView: {
@@ -441,7 +453,7 @@ const styles = StyleSheet.create({
   },
 
   forgotText: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 13,
   },
@@ -452,7 +464,7 @@ const styles = StyleSheet.create({
 
   primaryButton: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 16,
     marginTop: 8,
     paddingVertical: 16,
@@ -529,7 +541,7 @@ const styles = StyleSheet.create({
   },
 
   footerLink: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 14,
   },

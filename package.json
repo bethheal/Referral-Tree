@@ -4,12 +4,14 @@
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
+    "build": "expo export --platform web && npm run backend:typecheck",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
     "backend:dev": "npm run dev --prefix backend",
+    "backend:db:check": "npm run db:check --prefix backend",
     "backend:test": "npm run test --prefix backend",
     "backend:typecheck": "npx tsc --noEmit -p backend/tsconfig.json"
   },
@@ -19,6 +21,8 @@
     "@expo-google-fonts/roboto-slab": "^0.4.2",
     "@expo/vector-icons": "^15.0.3",
     "@lottiefiles/dotlottie-react": "^0.13.5",
+    "@neon/config": "^1.9.3",
+    "@neon/env": "^1.6.4",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.6.3",

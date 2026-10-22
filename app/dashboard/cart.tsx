@@ -21,12 +21,10 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { placeOrder } from "./orderStore";
 
 export default function Cart() {
   const { width } = useWindowDimensions();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [placing, setPlacing] = useState(false);
 
   const horizontalPadding = width >= 620 ? 22 : 18;
   const isWide = width >= 760;
@@ -63,31 +61,6 @@ export default function Cart() {
   const removeItem = async (name: string) => {
     const items = await removeCartItem(name);
     setCartItems(items);
-  };
-
-  const checkout = async () => {
-    if (placing || hydratedCartItems.length === 0) return;
-    setPlacing(true);
-
-    try {
-      await placeOrder(
-        hydratedCartItems.map((item) => ({
-          name: item.name,
-          quantity: item.quantity,
-        })),
-        total
-      );
-
-      // clear the cart
-      for (const item of cartItems) {
-        await removeCartItem(item.name);
-      }
-      setCartItems([]);
-
-      router.push("/dashboard/orders" as any);
-    } finally {
-      setPlacing(false);
-    }
   };
 
   return (
@@ -151,7 +124,7 @@ export default function Cart() {
                             }
                             style={styles.quantityButton}
                           >
-                            <FontAwesome6 name="minus" size={10} color="#C23122" />
+                            <FontAwesome6 name="minus" size={10} color="#192536" />
                           </TouchableOpacity>
 
                           <Text style={styles.quantityText}>{item.quantity}</Text>
@@ -163,7 +136,7 @@ export default function Cart() {
                             }
                             style={styles.quantityButton}
                           >
-                            <FontAwesome6 name="plus" size={10} color="#C23122" />
+                            <FontAwesome6 name="plus" size={10} color="#192536" />
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -178,7 +151,7 @@ export default function Cart() {
                           onPress={() => removeItem(product.name)}
                           style={styles.removeButton}
                         >
-                          <FontAwesome6 name="trash" size={12} color="#C23122" />
+                          <FontAwesome6 name="trash" size={12} color="#192536" />
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -188,7 +161,7 @@ export default function Cart() {
 
               <View style={styles.summaryCard}>
                 <View style={styles.summaryIcon}>
-                  <FontAwesome6 name="receipt" size={16} color="#C23122" />
+                  <FontAwesome6 name="receipt" size={16} color="#192536" />
                 </View>
 
                 <Text style={styles.summaryTitle}>Order Summary</Text>
@@ -215,22 +188,22 @@ export default function Cart() {
 
                 <TouchableOpacity
                   activeOpacity={0.85}
-                  disabled={placing}
-                  onPress={checkout}
-                  style={[styles.checkoutButton, placing && { opacity: 0.6 }]}
+                  disabled
+                  style={[styles.checkoutButton, { opacity: 0.55 }]}
                 >
                   <Text style={styles.checkoutButtonText}>
-                    {placing ? "Placing order..." : "Proceed to Checkout"}
+                    Secure checkout unavailable
                   </Text>
-
-                  <FontAwesome6 name="arrow-right" size={12} color="#FFFFFF" />
                 </TouchableOpacity>
+                <Text style={styles.checkoutNotice}>
+                  Orders are not connected to a server-side Flutterwave checkout yet. Your cart is saved and no order or payment will be created.
+                </Text>
               </View>
             </View>
           ) : (
             <View style={styles.emptyCartCard}>
               <View style={styles.emptyIcon}>
-                <FontAwesome6 name="cart-shopping" size={22} color="#C23122" />
+                <FontAwesome6 name="cart-shopping" size={22} color="#192536" />
               </View>
 
               <Text style={styles.emptyTitle}>Your cart is empty</Text>
@@ -260,7 +233,7 @@ export default function Cart() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
   },
 
   screen: {
@@ -352,7 +325,7 @@ const styles = StyleSheet.create({
   },
 
   itemPrice: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 12,
     marginTop: 6,
@@ -473,14 +446,14 @@ const styles = StyleSheet.create({
   },
 
   totalValue: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 20,
   },
 
   checkoutButton: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 14,
     flexDirection: "row",
     gap: 9,
@@ -493,6 +466,14 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontFamily: "PoppinsBold",
     fontSize: 12,
+  },
+  checkoutNotice: {
+    color: "#8B7F7A",
+    fontFamily: "PoppinsRegular",
+    fontSize: 10,
+    lineHeight: 15,
+    marginTop: 10,
+    textAlign: "center",
   },
 
   emptyCartCard: {
@@ -529,7 +510,7 @@ const styles = StyleSheet.create({
 
   shopButton: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 14,
     flexDirection: "row",
     gap: 8,

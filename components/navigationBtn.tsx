@@ -52,7 +52,7 @@ export default function NavigationButtons({
           <FontAwesome6
             name="arrow-left"
             size={18}
-            color="#C23122"
+            color="#192536"
           />
         </TouchableOpacity>
       ) : (
@@ -84,7 +84,7 @@ export default function NavigationButtons({
           <FontAwesome6
             name="arrow-right"
             size={18}
-            color="#C23122"
+            color="#192536"
           />
         </TouchableOpacity>
       ) : (
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
   },
 
   skipText: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 14,
   },

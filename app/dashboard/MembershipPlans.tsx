@@ -2,146 +2,93 @@ import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
+  Modal,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from "react-native";
-import { describeAccount } from "./PaymentAccounts";
-import {PLANS } from "./accountServices"
+import type { MembershipApiState } from "@/components/backendApi";
+import { PLANS } from "./accountServices";
 
 type PlanKey = (typeof PLANS)[number]["key"];
 
-type PaymentAccount = Parameters<typeof describeAccount>[0];
-
 const formatGhs = (value: number) =>
-  `GH₵${value.toLocaleString("en-GH", { maximumFractionDigits: 2 })}`;
-
-const commissionDue = (plan: (typeof PLANS)[number], earnings: number) => {
-  const fee = plan.monthlyFee;
-  const percentage = (earnings * plan.commissionRate) / 100;
-  return { fee, percentage, total: fee + percentage };
-};
+  `GHS ${value.toLocaleString("en-GH", { maximumFractionDigits: 2 })}`;
 
 const getPlan = (key: PlanKey) =>
   PLANS.find((plan) => plan.key === key) ?? PLANS[0];
-const accountKindLabel = (kind: PaymentAccount["kind"]) =>
-  String(kind)
-    .replace(/[_-]+/g, " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
-
 type Props = {
-  accounts: PaymentAccount[];
-  billingAccountId: string | null;
   currentPlan: PlanKey;
+  membership: MembershipApiState["membership"];
+  latestPayment: MembershipApiState["latestPayment"];
   loading: boolean;
-  /** Earnings for the current calendar month, or null if the data has no dates. */
-  monthEarnings: number | null;
-  onChange: (plan: PlanKey, billingAccountId: string | null) => Promise<void>;
-  onAddAccount: () => void;
+  onChange: (plan: PlanKey, expectedAmount: number) => Promise<void>;
 };
 
 export default function MembershipPlans({
-  accounts,
-  billingAccountId,
   currentPlan,
+  membership,
+  latestPayment,
   loading,
-  monthEarnings,
-  onAddAccount,
   onChange,
 }: Props) {
   const [selected, setSelected] = useState<PlanKey>(currentPlan);
-  const [billingId, setBillingId] = useState<string | null>(billingAccountId);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
 
   // Follow the stored plan once it has loaded.
   useEffect(() => setSelected(currentPlan), [currentPlan]);
-
-  // Default the billing account to the stored one, else the default account.
-  useEffect(() => {
-    const stillExists = accounts.some((account) => account.id === billingId);
-    if (stillExists) return;
-
-    const fallback =
-      accounts.find((account) => account.id === billingAccountId) ??
-      accounts.find((account) => account.isDefault) ??
-      accounts[0];
-
-    setBillingId(fallback?.id ?? null);
-  }, [accounts, billingAccountId, billingId]);
 
   const plan = getPlan(selected);
   const current = getPlan(currentPlan);
   const isCurrent = selected === currentPlan;
   const needsAccount = plan.monthlyFee > 0;
-  const missingAccount = needsAccount && !billingId;
+  const paidPlanActive = membership?.status === "ACTIVE" && membership.expiresAt && Date.parse(membership.expiresAt) > Date.now();
+  const freePlanUnavailable = selected === "free" && !!paidPlanActive;
 
-  const due = commissionDue(plan, monthEarnings ?? 0);
-  const currentDue = commissionDue(current, monthEarnings ?? 0);
-
-  const nextBilling = (() => {
-    const now = new Date();
-    return new Date(
-      now.getFullYear(),
-      now.getMonth() + 1,
-      1,
-    ).toLocaleDateString(undefined, {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  })();
+  const accessStatus = membership?.status === "ACTIVE"
+    ? "Active"
+    : membership?.status === "EXPIRED"
+      ? "Expired"
+      : "Free plan";
+  const paymentStatus = membership?.plan === selected
+    ? membership.status === "ACTIVE" ? "PAID" : "EXPIRED"
+    : latestPayment?.plan === selected
+      ? latestPayment.status
+      : "NOT_PAID";
+  const expiryLabel = membership?.expiresAt
+    ? new Date(membership.expiresAt).toLocaleDateString()
+    : null;
 
   const confirm = () => {
-    if (isCurrent || busy) return;
-
-    if (missingAccount) {
-      setError("Add a payment account to choose a paid plan.");
-      return;
-    }
+    if (isCurrent || busy || !needsAccount) return;
 
     setError(null);
 
-    const billing = accounts.find((account) => account.id === billingId);
+    setConfirming(true);
+  };
 
-    Alert.alert(
-      `Switch to ${plan.label}?`,
-      `${plan.label}: ${formatGhs(plan.monthlyFee)}/month + ${plan.commissionRate}% commission on monthly earnings.` +
-        (billing
-          ? `\nBilled to ${accountKindLabel(billing.kind)} ${describeAccount(billing)}.`
-          : "") +
-        `\nNext billing date: ${nextBilling}.`,
-      [
-        { style: "cancel", text: "Cancel" },
-        {
-          onPress: async () => {
-            setBusy(true);
-            try {
-              await onChange(
-                selected,
-                needsAccount ? billingId : null,
-              );
-              setNotice(`You're now on the ${plan.label} plan`);
-              setTimeout(() => setNotice(null), 3000);
-            } catch {
-              setError("We couldn't change your plan. Please try again.");
-            } finally {
-              setBusy(false);
-            }
-          },
-          text: "Confirm",
-        },
-      ],
-    );
+  const payForPlan = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await onChange(selected, plan.monthlyFee);
+      setConfirming(false);
+      setNotice("Flutterwave checkout opened. Plan access starts after payment verification.");
+      setTimeout(() => setNotice(null), 5000);
+    } catch (cause) {
+      setConfirming(false);
+      setError(cause instanceof Error ? cause.message : "Checkout could not be started. No payment was taken.");
+    } finally { setBusy(false); }
   };
 
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color="#C23122" />
+        <ActivityIndicator color="#192536" />
       </View>
     );
   }
@@ -158,14 +105,21 @@ export default function MembershipPlans({
           </View>
           <View style={styles.currentRight}>
             <Text style={styles.currentLabel}>
-              Estimated commission this month
+            Monthly membership price
             </Text>
             <Text style={styles.currentAmount}>
-              {formatGhs(currentDue.total)}
+              {formatGhs(current.monthlyFee)}
             </Text>
           </View>
         </View>
-        <Text style={styles.currentMeta}>Next billing date: {nextBilling}</Text>
+        <Text style={styles.currentMeta}>
+          Membership access: {accessStatus}{expiryLabel ? ` - until ${expiryLabel}` : ""}
+        </Text>
+        {membership?.status === "ACTIVE" ? (
+          <Text style={styles.currentMeta}>
+            Payment status: Paid - Reference {membership.paymentReference}
+          </Text>
+        ) : null}
       </View>
 
       {notice ? (
@@ -183,7 +137,7 @@ export default function MembershipPlans({
           return (
             <Pressable
               key={item.key}
-              accessibilityLabel={`${item.label} plan, ${formatGhs(item.monthlyFee)} per month, ${item.commissionRate} percent commission`}
+              accessibilityLabel={`${item.label} plan, ${formatGhs(item.monthlyFee)} per month`}
               accessibilityRole="radio"
               accessibilityState={{ selected: isSelected }}
               onPress={() => {
@@ -220,11 +174,11 @@ export default function MembershipPlans({
 
               <Text style={styles.planName}>{item.label}</Text>
               <Text style={styles.planPrice}>
-                {item.monthlyFee === 0 ? "GH₵0" : formatGhs(item.monthlyFee)}
+                {item.monthlyFee === 0 ? "GHS 0" : formatGhs(item.monthlyFee)}
                 <Text style={styles.planPer}> /month</Text>
               </Text>
               <Text style={styles.planRate}>
-                + {item.commissionRate}% of monthly earnings
+                {item.monthlyFee === 0 ? "No membership fee" : "One-time monthly payment"}
               </Text>
             </Pressable>
           );
@@ -232,90 +186,48 @@ export default function MembershipPlans({
       </View>
 
       <View style={styles.summary}>
-        <Text style={styles.summaryTitle}>
-          {plan.label} monthly commission to us
-        </Text>
+        <Text style={styles.summaryTitle}>{plan.label} monthly membership</Text>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Monthly fee</Text>
-          <Text style={styles.summaryValue}>{formatGhs(due.fee)}</Text>
+          <Text style={styles.summaryValue}>{formatGhs(plan.monthlyFee)}</Text>
         </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>
-            {plan.commissionRate}% of this month's earnings
-          </Text>
-          <Text style={styles.summaryValue}>
-            {monthEarnings === null ? "—" : formatGhs(due.percentage)}
-          </Text>
-        </View>
-        <View style={[styles.summaryRow, styles.summaryTotal]}>
-          <Text style={styles.summaryTotalLabel}>Estimated total</Text>
-          <Text style={styles.summaryTotalValue}>{formatGhs(due.total)}</Text>
-        </View>
-        {monthEarnings === null ? (
-          <Text style={styles.note}>
-            Commission on earnings can't be estimated because your earnings
-            records have no dates.
-          </Text>
-        ) : (
-          <Text style={styles.note}>
-            Based on {formatGhs(monthEarnings)} earned this month. The final
-            amount is calculated at billing.
-          </Text>
-        )}
+        <Text style={styles.note}>
+          Pay securely with Mastercard or Ghana Mobile Money through Flutterwave.
+          This one-time payment covers one month and does not renew automatically.
+        </Text>
       </View>
-
-      {needsAccount ? (
-        <View style={styles.billing}>
-          <Text style={styles.billingTitle}>Pay commission from</Text>
-          {accounts.length === 0 ? (
-            <Pressable onPress={onAddAccount} style={styles.addAccount}>
-              <FontAwesome6 name="plus" size={11} color="#C23122" />
-              <Text style={styles.addAccountText}>Add a payment account</Text>
-            </Pressable>
-          ) : (
-            accounts.map((account) => {
-              const active = account.id === billingId;
-
-              return (
-                <Pressable
-                  key={account.id}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected: active }}
-                  onPress={() => setBillingId(account.id)}
-                  style={[styles.billingRow, active && styles.billingRowActive]}
-                >
-                  <FontAwesome6
-                    name={active ? "circle-dot" : "circle"}
-                    size={14}
-                    color={active ? "#C23122" : "#C9BDB8"}
-                  />
-                  <View style={styles.billingCopy}>
-                    <Text style={styles.billingName}>
-                      {accountKindLabel(account.kind)}
-                    </Text>
-                    <Text style={styles.billingMeta}>
-                      {describeAccount(account)}
-                    </Text>
-                  </View>
-                  {account.isDefault ? (
-                    <Text style={styles.defaultText}>Default</Text>
-                  ) : null}
-                </Pressable>
-              );
-            })
-          )}
-        </View>
-      ) : null}
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
+      {!isCurrent && needsAccount ? (
+        <View style={styles.paymentStatus} accessibilityLiveRegion="polite">
+          <Text style={styles.paymentStatusTitle}>
+            Payment status: {paymentStatus === "PAID" ? "Paid" : paymentStatus === "PENDING" ? "Pending verification" : paymentStatus === "FAILED" ? "Failed" : "Not paid"}
+          </Text>
+          <Text style={styles.paymentStatusCopy}>
+            {paymentStatus === "PAID"
+              ? `${plan.label} access is active until ${expiryLabel ?? "the end of the paid month"}.`
+              : paymentStatus === "EXPIRED"
+                ? `${plan.label} access expired. Renew with a verified payment to restore access.`
+              : paymentStatus === "PENDING"
+                ? "Flutterwave is confirming your payment. Access will activate when verification succeeds."
+                : paymentStatus === "FAILED"
+                  ? "Payment was not completed. Your current membership access has not changed."
+                  : `${plan.label} benefits and access start only after Flutterwave verifies payment.`}
+          </Text>
+          {latestPayment?.plan === selected ? (
+            <Text style={styles.paymentStatusCopy}>Reference: {latestPayment.reference}</Text>
+          ) : null}
+        </View>
+      ) : null}
+
       <Pressable
-        accessibilityState={{ busy, disabled: isCurrent || busy }}
-        disabled={isCurrent || busy}
+        accessibilityState={{ busy, disabled: isCurrent || busy || freePlanUnavailable }}
+        disabled={isCurrent || busy || freePlanUnavailable}
         onPress={confirm}
         style={({ pressed }) => [
           styles.button,
-          (isCurrent || busy) && styles.buttonDisabled,
+          (isCurrent || busy || freePlanUnavailable) && styles.buttonDisabled,
           pressed && styles.pressed,
         ]}
       >
@@ -323,10 +235,28 @@ export default function MembershipPlans({
           <ActivityIndicator color="#FFFFFF" />
         ) : (
           <Text style={styles.buttonText}>
-            {isCurrent ? `You're on ${plan.label}` : `Switch to ${plan.label}`}
+            {isCurrent ? `You're on ${plan.label}` : freePlanUnavailable ? `Available after ${current.label} ends` : plan.monthlyFee > 0 ? `Pay for ${plan.label}` : `Continue with ${plan.label}`}
           </Text>
         )}
       </Pressable>
+
+      <Modal visible={confirming} transparent animationType="fade" onRequestClose={() => setConfirming(false)}>
+        <View style={styles.confirmOverlay}>
+          <View style={styles.confirmCard}>
+            <Text style={styles.confirmTitle}>Continue to secure checkout?</Text>
+            <Text style={styles.confirmBody}>{plan.label} membership · {formatGhs(plan.monthlyFee)} for one month. This is a one-time payment and will not renew automatically.</Text>
+            <View style={styles.confirmMethods}>
+              <FontAwesome6 name="credit-card" size={15} color="#192536" />
+              <Text style={styles.confirmBody}>Choose card or Ghana Mobile Money on Flutterwave.</Text>
+            </View>
+            <Text style={styles.confirmFoot}>Your membership changes only after the payment provider confirms the transaction.</Text>
+            <View style={styles.confirmActions}>
+              <Pressable accessibilityRole="button" disabled={busy} onPress={() => setConfirming(false)} style={styles.cancelButton}><Text style={styles.cancelText}>Cancel</Text></Pressable>
+              <Pressable accessibilityRole="button" disabled={busy} onPress={() => void payForPlan()} style={styles.confirmButton}>{busy ? <ActivityIndicator color="#192536" /> : <Text style={styles.confirmButtonText}>Continue</Text>}</Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -336,7 +266,7 @@ const styles = StyleSheet.create({
   centered: { alignItems: "center", paddingVertical: 24 },
 
   currentCard: {
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
     borderColor: "#F0D6D0",
     borderRadius: 12,
     borderWidth: 1,
@@ -434,7 +364,7 @@ const styles = StyleSheet.create({
   },
 
   summary: {
-    backgroundColor: "#FFF8F2",
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
     marginTop: 14,
     padding: 14,
@@ -470,7 +400,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   summaryTotalValue: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsBold",
     fontSize: 16,
   },
@@ -481,6 +411,17 @@ const styles = StyleSheet.create({
     lineHeight: 14,
     marginTop: 8,
   },
+  confirmOverlay: { alignItems: "center", backgroundColor: "rgba(12,24,38,0.48)", flex: 1, justifyContent: "center", padding: 20 },
+  confirmCard: { backgroundColor: "#FFFFFF", borderRadius: 18, gap: 12, maxWidth: 420, padding: 20, width: "100%" },
+  confirmTitle: { color: "#192536", fontFamily: "PoppinsBold", fontSize: 16 },
+  confirmBody: { color: "#314640", flex: 1, fontFamily: "PoppinsRegular", fontSize: 11, lineHeight: 17 },
+  confirmMethods: { alignItems: "center", backgroundColor: "#FFF8E4", borderRadius: 11, flexDirection: "row", gap: 9, padding: 11 },
+  confirmFoot: { color: "#8B7F7A", fontFamily: "PoppinsRegular", fontSize: 10, lineHeight: 15 },
+  confirmActions: { flexDirection: "row", gap: 10, justifyContent: "flex-end", marginTop: 4 },
+  cancelButton: { alignItems: "center", borderColor: "#E7DDD9", borderRadius: 11, borderWidth: 1, justifyContent: "center", minHeight: 44, paddingHorizontal: 18 },
+  cancelText: { color: "#192536", fontFamily: "PoppinsBold", fontSize: 11 },
+  confirmButton: { alignItems: "center", backgroundColor: "#FFB900", borderRadius: 11, justifyContent: "center", minHeight: 44, minWidth: 110, paddingHorizontal: 18 },
+  confirmButtonText: { color: "#192536", fontFamily: "PoppinsBold", fontSize: 11 },
 
   billing: { marginTop: 14 },
   billingTitle: {
@@ -501,14 +442,14 @@ const styles = StyleSheet.create({
     minHeight: 48,
     paddingHorizontal: 12,
   },
-  billingRowActive: { backgroundColor: "#FFF1EF", borderColor: "#C23122" },
+  billingRowActive: { backgroundColor: "#FFF1EF", borderColor: "#192536" },
   billingCopy: { flex: 1 },
   billingName: { color: "#1E3631", fontFamily: "PoppinsBold", fontSize: 11 },
   billingMeta: { color: "#8B7F7A", fontFamily: "PoppinsRegular", fontSize: 10 },
   defaultText: { color: "#2F7C50", fontFamily: "PoppinsBold", fontSize: 9 },
   addAccount: {
     alignItems: "center",
-    borderColor: "#C23122",
+    borderColor: "#192536",
     borderRadius: 10,
     borderStyle: "dashed",
     borderWidth: 1,
@@ -517,17 +458,37 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     minHeight: 44,
   },
-  addAccountText: { color: "#C23122", fontFamily: "PoppinsBold", fontSize: 11 },
+  addAccountText: { color: "#192536", fontFamily: "PoppinsBold", fontSize: 11 },
 
   error: {
-    color: "#C23122",
+    color: "#192536",
     fontFamily: "PoppinsRegular",
     fontSize: 11,
     marginTop: 10,
   },
+  paymentStatus: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#D9C9C4",
+    borderRadius: 10,
+    borderWidth: 1,
+    marginTop: 12,
+    padding: 12,
+  },
+  paymentStatusTitle: {
+    color: "#192536",
+    fontFamily: "PoppinsBold",
+    fontSize: 11,
+  },
+  paymentStatusCopy: {
+    color: "#8B7F7A",
+    fontFamily: "PoppinsRegular",
+    fontSize: 10,
+    lineHeight: 15,
+    marginTop: 4,
+  },
   button: {
     alignItems: "center",
-    backgroundColor: "#C23122",
+    backgroundColor: "#192536",
     borderRadius: 12,
     justifyContent: "center",
     marginTop: 14,
