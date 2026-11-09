@@ -1,31 +1,7 @@
 import { Pool } from "pg";
+import { validateDatabaseEnvironment } from "../utils/databaseSafety.ts";
 
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  throw new Error("DATABASE_URL is required. Run `neon env pull` or configure it in the backend environment.");
-}
-
-const target = process.env.DATABASE_TARGET;
-const branch = process.env.NEON_BRANCH;
-const endpointId = process.env.NEON_ENDPOINT_ID;
-const host = new URL(connectionString).hostname;
-if (branch === "production" || target === "production") {
-  throw new Error("Database connectivity checks are blocked for production.");
-}
-if (target === "local" && host !== "localhost" && host !== "127.0.0.1") {
-  throw new Error("DATABASE_TARGET=local requires a localhost PostgreSQL URL.");
-}
-if (
-  target === "angelfoods-dev" &&
-  (branch !== "angelfoods-dev" ||
-    !endpointId ||
-    !(host.startsWith(`${endpointId}.`) || host.startsWith(`${endpointId}-pooler.`)))
-) {
-  throw new Error("Neon URL does not match the approved angelfoods-dev endpoint.");
-}
-if (target !== "local" && target !== "angelfoods-dev") {
-  throw new Error("Set DATABASE_TARGET=local or angelfoods-dev before checking connectivity.");
-}
+const { databaseUrl: connectionString, target, endpointId } = validateDatabaseEnvironment();
 
 const pool = new Pool({
   connectionString,
@@ -45,7 +21,8 @@ try {
   console.log(JSON.stringify({
     event: "neon_database_connected",
     database: row.database,
-    branch: process.env.NEON_BRANCH ?? null,
+    target,
+    endpointId,
     serverTime: row.serverTime.toISOString(),
   }));
 } finally {

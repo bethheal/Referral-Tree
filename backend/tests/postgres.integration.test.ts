@@ -5,15 +5,10 @@ import { createServer } from "../src/server.ts";
 import { prisma } from "../src/services/prismaClient.ts";
 import { createId, hashPassword, hashSessionToken, signToken } from "../src/utils/crypto.ts";
 import { decryptTotpSecret, generateTotpCode, hashRecoveryCode } from "../src/utils/totp.ts";
+import { validateDatabaseEnvironment } from "../src/utils/databaseSafety.ts";
 
-if (process.env.DATABASE_TARGET !== "angelfoods-dev" || process.env.NEON_BRANCH !== "angelfoods-dev") {
-  throw new Error("PostgreSQL integration tests may run only against angelfoods-dev.");
-}
-const endpointId = process.env.NEON_ENDPOINT_ID;
-const databaseUrl = process.env.DATABASE_URL;
-if (!endpointId || !databaseUrl || !new URL(databaseUrl).hostname.startsWith(`${endpointId}-pooler.`)) {
-  throw new Error("PostgreSQL integration tests require the approved Neon pooled endpoint.");
-}
+const database = validateDatabaseEnvironment();
+if (database.target !== "angelfoods-dev") throw new Error("PostgreSQL integration tests may run only against angelfoods-dev.");
 
 const userId = createId("integration-user");
 const referralCode = `IT${randomUUID().replaceAll("-", "").slice(0, 12).toUpperCase()}`;
@@ -25,11 +20,17 @@ const financeAdminId = createId("integration-finance-admin");
 const financeAdminReferralCode = `IT${randomUUID().replaceAll("-", "").slice(0, 12).toUpperCase()}`;
 const otherUserId = createId("integration-other-user");
 const otherReferralCode = `IT${randomUUID().replaceAll("-", "").slice(0, 12).toUpperCase()}`;
+const bootstrapUserId = createId("integration-bootstrap-user");
+const bootstrapReferralCode = `IT${randomUUID().replaceAll("-", "").slice(0, 12).toUpperCase()}`;
 const orderId = createId("integration-order");
 const invoiceId = createId("integration-invoice");
 const orderNumber = `IT-${randomUUID()}`;
 const invoiceNumber = `ITI-${randomUUID()}`;
 const email = `integration-${randomUUID()}@example.invalid`;
+const signupEmail = `integration-signup-${randomUUID()}@example.invalid`;
+// Ghana mobile numbers require a valid allocated prefix; a raw timestamp can
+// start with an invalid prefix and makes this integration test flaky.
+const signupPhone = `+23324${String(Date.now()).slice(-7)}`;
 const adminEmail = `integration-admin-${randomUUID()}@example.invalid`;
 const superAdminEmail = `integration-super-admin-${randomUUID()}@example.invalid`;
 const financeAdminEmail = `integration-finance-admin-${randomUUID()}@example.invalid`;
@@ -41,6 +42,7 @@ const token = signToken({ sub: userId, role: "USER" });
 const otherToken = signToken({ sub: otherUserId, role: "USER" });
 let server: ReturnType<typeof createServer> | undefined;
 let restartProbe: ChildProcess | undefined;
+let signupUserId: string | undefined;
 
 const startRestartProbe = () => new Promise<number>((resolve, reject) => {
   const child = spawn(process.execPath, ["--experimental-strip-types", "tests/postgresRestartProbe.ts"], {
@@ -84,6 +86,14 @@ const run = async () => {
       sessions: { create: { tokenHash: hashSessionToken(token), expiresAt: new Date(Date.now() + 60 * 60 * 1000) } },
     },
   });
+  await prisma.mfaFactor.create({ data: {
+    id: createId("integration-mfa-factor"), userId, method: "TOTP",
+    secretCiphertext: "sensitive-mfa-secret-sentinel", verifiedAt: new Date(),
+  } });
+  await prisma.mfaRecoveryCode.create({ data: {
+    id: createId("integration-recovery-code"), userId,
+    codeHash: "sensitive-recovery-hash-sentinel",
+  } });
   await prisma.user.create({
     data: { id: adminId, fullName: "Integration Test Admin", email: adminEmail, passwordHash: hashPassword(adminPassword), referralCode: adminReferralCode, role: "ADMIN", status: "ACTIVE", profile: { create: {} }, preferences: { create: {} } },
   });
@@ -95,6 +105,9 @@ const run = async () => {
   });
   await prisma.user.create({
     data: { id: otherUserId, fullName: "Integration Other User", email: `integration-other-${randomUUID()}@example.invalid`, passwordHash: hashPassword(password), referralCode: otherReferralCode, role: "USER", status: "ACTIVE", profile: { create: {} }, preferences: { create: {} }, sessions: { create: { tokenHash: hashSessionToken(otherToken), expiresAt: new Date(Date.now() + 60 * 60 * 1000) } } },
+  });
+  await prisma.user.create({
+    data: { id: bootstrapUserId, fullName: "Integration Bootstrap User", email: `integration-bootstrap-${randomUUID()}@example.invalid`, passwordHash: hashPassword(password), referralCode: bootstrapReferralCode, role: "USER", status: "ACTIVE", profile: { create: {} }, preferences: { create: {} } },
   });
   await prisma.productOrder.create({ data: {
     id: orderId, userId, orderNumber, status: "PENDING_PAYMENT", currency: "GHS",
@@ -124,6 +137,37 @@ const run = async () => {
   assert.equal((await ready.json() as { storage: string }).storage, "postgresql-prisma");
 
   const auth = { Authorization: `Bearer ${token}` };
+  const registrationRequest = await request("/api/auth/register/request-otp", {
+    method: "POST",
+    body: JSON.stringify({ fullName: "Integration Signup User", email: signupEmail, phoneNumber: signupPhone, password: `signup-${randomUUID()}-Pass!` }),
+  });
+  assert.equal(registrationRequest.status, 201);
+  const registration = await registrationRequest.json() as { registrationId: string; otp: string };
+  assert.match(registration.otp, /^\d{6}$/);
+  const invalidOtp = await request("/api/auth/register/verify", {
+    method: "POST",
+    body: JSON.stringify({ registrationId: registration.registrationId, otp: registration.otp === "000000" ? "000001" : "000000" }),
+  });
+  assert.equal(invalidOtp.status, 400);
+  const registrationVerify = await request("/api/auth/register/verify", {
+    method: "POST",
+    body: JSON.stringify({ registrationId: registration.registrationId, otp: registration.otp }),
+  });
+  assert.equal(registrationVerify.status, 201);
+  const registered = await registrationVerify.json() as { user: { id: string; email: string }; token: string };
+  signupUserId = registered.user.id;
+  assert.equal(registered.user.email, signupEmail);
+  const signupProfile = await request("/api/me/profile", { headers: { Authorization: `Bearer ${registered.token}` } });
+  assert.equal(signupProfile.status, 200);
+  assert.equal((await signupProfile.json() as { email: string }).email, signupEmail);
+
+  const checkoutDisabled = await request("/api/me/membership/checkout", { method: "POST", headers: auth, body: JSON.stringify({ plan: "silver", amount: 1 }) });
+  assert.equal(checkoutDisabled.status, 503);
+  assert.equal((await checkoutDisabled.json() as { code: string }).code, "PAYMENTS_NOT_CONFIGURED");
+  const cashOutDisabled = await request("/api/me/cash-outs", { method: "POST", headers: auth, body: JSON.stringify({ amount: 10 }) });
+  assert.equal(cashOutDisabled.status, 503);
+  assert.equal((await cashOutDisabled.json() as { code: string }).code, "FINANCIAL_RULES_UNCONFIGURED");
+
   const profileResponse = await request("/api/me/profile", { headers: auth });
   assert.equal(profileResponse.status, 200);
   const profile = await profileResponse.json() as { fullName: string; membershipTier: string };
@@ -250,6 +294,15 @@ const run = async () => {
     const result = await request(path, { headers: challengeHeaders });
     assert.equal(result.status, 200, `Expected admin read access for ${path}`);
   }
+  const userDetailResponse = await request(`/api/admin/users/${userId}`, { headers: challengeHeaders });
+  assert.equal(userDetailResponse.status, 200);
+  const userDetailJson = JSON.stringify(await userDetailResponse.json());
+  for (const sensitiveValue of [
+    "passwordHash", "secretCiphertext", "sensitive-mfa-secret-sentinel",
+    "codeHash", "sensitive-recovery-hash-sentinel", "tokenHash", token,
+  ]) {
+    assert.equal(userDetailJson.includes(sensitiveValue), false, `User detail must not expose ${sensitiveValue}`);
+  }
   const adminSecurityDenied = await request("/api/admin/security", { headers: challengeHeaders });
   assert.equal(adminSecurityDenied.status, 403, "Admin without SYSTEM_CONFIGURE must not read security administration.");
   const adminCannotGrantRole = await request(`/api/admin/users/${userId}/role`, { method: "PATCH", headers: challengeHeaders, body: JSON.stringify({ role: "ADMIN", reason: "Test unauthorized role grant" }) });
@@ -276,6 +329,53 @@ const run = async () => {
   assert.equal(superVerifyResponse.status, 200);
   const securityOverview = await request("/api/admin/security", { headers: superHeaders });
   assert.equal(securityOverview.status, 200);
+
+  for (const [suffix, body] of [
+    ["role", { role: "ADMIN", reason: "Reject self role modification" }],
+    ["status", { status: "SUSPENDED", reason: "Reject self status modification" }],
+  ] as const) {
+    const selfMutation = await request(`/api/admin/users/${superAdminId}/${suffix}`, {
+      method: "PATCH", headers: superHeaders, body: JSON.stringify(body),
+    });
+    assert.equal(selfMutation.status, 400, `Super Admin must not modify own ${suffix}`);
+  }
+
+  // A different Super Admin is protected from both role and status changes.
+  await prisma.user.update({ where: { id: adminId }, data: { role: "SUPER_ADMIN" } });
+  for (const [suffix, body] of [
+    ["role", { role: "USER", reason: "Reject Super Admin demotion" }],
+    ["status", { status: "SUSPENDED", reason: "Reject Super Admin suspension" }],
+  ] as const) {
+    const protectedMutation = await request(`/api/admin/users/${adminId}/${suffix}`, {
+      method: "PATCH", headers: superHeaders, body: JSON.stringify(body),
+    });
+    assert.equal(protectedMutation.status, 403, `Super Admin must be protected from ${suffix} changes`);
+  }
+  const protectedTarget = await prisma.user.findUniqueOrThrow({ where: { id: adminId }, select: { role: true, status: true } });
+  assert.deepEqual(protectedTarget, { role: "SUPER_ADMIN", status: "ACTIVE" });
+  await prisma.user.update({ where: { id: adminId }, data: { role: "ADMIN" } });
+
+  // The bootstrap exception is limited to a SUPER_ADMIN promoting a USER to
+  // ADMIN when they are the only active administrator.
+  await prisma.user.updateMany({ where: { id: { in: [adminId, financeAdminId] } }, data: { status: "SUSPENDED" } });
+  const bootstrapPromotion = await request(`/api/admin/users/${bootstrapUserId}/role`, {
+    method: "PATCH", headers: superHeaders,
+    body: JSON.stringify({ role: "ADMIN", reason: "Verify first admin bootstrap exception" }),
+  });
+  assert.equal(bootstrapPromotion.status, 200);
+  assert.equal((await bootstrapPromotion.json() as { user: { role: string } }).user.role, "ADMIN");
+
+  // Even with only one active administrator, demoting a suspended ADMIN does
+  // not qualify for the USER-to-ADMIN bootstrap exception and needs approval.
+  await prisma.user.update({ where: { id: bootstrapUserId }, data: { status: "SUSPENDED" } });
+  const outsideBootstrapConditions = await request(`/api/admin/users/${bootstrapUserId}/role`, {
+    method: "PATCH", headers: superHeaders,
+    body: JSON.stringify({ role: "USER", reason: "Verify approval outside bootstrap" }),
+  });
+  assert.equal(outsideBootstrapConditions.status, 202);
+  assert.equal((await outsideBootstrapConditions.json() as { approvalRequired: boolean }).approvalRequired, true);
+  await prisma.user.updateMany({ where: { id: { in: [adminId, financeAdminId, bootstrapUserId] } }, data: { status: "ACTIVE" } });
+
   for (const [path, method, body] of [
     ["/api/admin/payment-events/test/reconcile", "POST", {}],
     ["/api/admin/orders/test/status", "PATCH", { status: "DELIVERED" }],
@@ -291,6 +391,11 @@ const run = async () => {
   const roleRequest = await roleRequestResponse.json() as { approvalRequired: boolean; approval: { id: string; status: string } };
   assert.equal(roleRequest.approvalRequired, true);
   assert.equal(roleRequest.approval.status, "PENDING");
+  const requesterCannotApprove = await request(`/api/admin/approvals/${roleRequest.approval.id}`, {
+    method: "PATCH", headers: superHeaders,
+    body: JSON.stringify({ decision: "APPROVED", reason: "Requester cannot approve own role request" }),
+  });
+  assert.equal(requesterCannotApprove.status, 403);
   const approvalAudit = await prisma.auditLog.findFirstOrThrow({ where: { targetUserId: userId, action: "ADMIN_ROLE_CHANGE_REQUESTED" } });
   assert.ok(approvalAudit.ipAddress, "Approval request audit row did not capture request IP.");
   assert.equal(approvalAudit.targetType, "USER");
@@ -316,6 +421,9 @@ const run = async () => {
 
   const revokeResponse = await request(`/api/admin/users/${otherUserId}/sessions/revoke`, { method: "POST", headers: superHeaders, body: JSON.stringify({ reason: "Integration force session revocation" }) });
   assert.equal(revokeResponse.status, 200);
+  const revokeAudit = await prisma.auditLog.findFirstOrThrow({ where: { targetUserId: otherUserId, action: "ADMIN_USER_SESSIONS_REVOKED" } });
+  assert.equal(revokeAudit.oldValue && typeof revokeAudit.oldValue === "object" && "activeSessions" in revokeAudit.oldValue ? revokeAudit.oldValue.activeSessions : undefined, 1);
+  assert.equal(revokeAudit.newValue && typeof revokeAudit.newValue === "object" && "activeSessions" in revokeAudit.newValue ? revokeAudit.newValue.activeSessions : undefined, 0);
   const otherSessionRevoked = await request("/api/me/profile", { headers: otherAuth });
   assert.equal(otherSessionRevoked.status, 401);
 
@@ -352,7 +460,7 @@ const run = async () => {
   restartProbe?.kill("SIGTERM");
   await new Promise<void>((resolve) => restartProbe?.once("exit", () => resolve()));
   restartProbe = undefined;
-  console.log("PostgreSQL integration passed: admin module RBAC, role/MFA/recovery/session persistence, second-admin approval and concurrent duplicate denial, target/IP-filterable audit, ordinary-user denial on admin routes, order/invoice ownership, fail-closed financial actions, and logout revocation.");
+  console.log("PostgreSQL integration passed: signup/OTP, profile/session persistence, order/invoice ownership, fail-closed membership/cash-out actions, admin RBAC/MFA/recovery, audit, concurrent approval, and logout revocation.");
 };
 
 try {
@@ -362,7 +470,10 @@ try {
   if (restartProbe && restartProbe.exitCode === null) restartProbe.kill("SIGTERM");
   await prisma.invoice.deleteMany({ where: { id: invoiceId } });
   await prisma.productOrder.deleteMany({ where: { id: orderId } });
+  await prisma.membership.deleteMany({ where: { userId: { in: [userId, adminId, superAdminId, financeAdminId, otherUserId, bootstrapUserId, ...(signupUserId ? [signupUserId] : [])] } } });
+  if (signupUserId) await prisma.user.deleteMany({ where: { id: signupUserId } });
+  await prisma.registrationAttempt.deleteMany({ where: { email: signupEmail } });
   await prisma.adminActionApproval.deleteMany({ where: { OR: [{ requestedByUserId: { in: [adminId, superAdminId] } }, { approvedByUserId: { in: [adminId, superAdminId] } }] } });
-  await prisma.user.deleteMany({ where: { id: { in: [userId, adminId, superAdminId, financeAdminId, otherUserId] } } });
+  await prisma.user.deleteMany({ where: { id: { in: [userId, adminId, superAdminId, financeAdminId, otherUserId, bootstrapUserId] } } });
   await prisma.$disconnect();
 }

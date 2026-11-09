@@ -1,8 +1,11 @@
 import PageHeader from "@/components/pageHeader";
+import { ApiError, getAllCustomerOrders, getCustomerOrder, type CustomerOrderDetail } from "@/components/backendApi";
+import { orderHistoryTab, orderStatusLabel, toCustomerOrderHistoryRow, type CustomerOrderHistoryRow, type OrderHistoryTab } from "@/components/customerOrderHistory";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { useFocusEffect } from "@react-navigation/native";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Animated,
   Easing,
   Pressable,
@@ -10,9 +13,10 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
-import { getOrders, Order, OrderStatus } from "./orderStore";
+import { getOrders, type Order as LegacyOrder } from "./orderStore";
 
 /* -------------------------------------------------------------------------- */
 /* Theme                                                                      */
@@ -37,29 +41,46 @@ const C = {
 /* -------------------------------------------------------------------------- */
 
 /** Loads saved orders every time the screen gains focus. */
-function useOrders(): { loading: boolean; orders: Order[] } {
-  const [orders, setOrders] = useState<Order[]>([]);
+function useOrders(): { loading: boolean; error: string; orders: CustomerOrderHistoryRow[]; legacyOrders: LegacyOrder[]; retry: () => void } {
+  const [orders, setOrders] = useState<CustomerOrderHistoryRow[]>([]);
+  const [legacyOrders, setLegacyOrders] = useState<LegacyOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useFocusEffect(
     useCallback(() => {
-      getOrders().then((data) => {
-        setOrders(data);
-        setLoading(false);
-      });
-    }, [])
+      let active = true;
+      setLoading(true);
+      setError("");
+      void (async () => {
+        const savedLocally = await getOrders();
+        if (active) setLegacyOrders(savedLocally);
+        try {
+          const serverOrders = await getAllCustomerOrders();
+          if (active) setOrders(serverOrders.map(toCustomerOrderHistoryRow));
+        } catch (loadError) {
+          if (active) setError(loadError instanceof ApiError && loadError.status === 401
+            ? "Your session has expired. Sign in again to load your AngelFoods orders."
+            : "We couldn't connect to your account to load orders. Check your connection and retry.");
+        } finally {
+          if (active) setLoading(false);
+        }
+      })();
+      return () => { active = false; };
+    }, [refreshKey])
   );
 
-  return { loading, orders };
+  return { loading, error, orders, legacyOrders, retry: () => setRefreshKey((value) => value + 1) };
 }
 
-const TABS: { key: OrderStatus; label: string }[] = [
+const TABS: { key: OrderHistoryTab; label: string }[] = [
   { key: "requested", label: "Requested" },
   { key: "completed", label: "Completed" },
   { key: "cancelled", label: "Cancelled" },
 ];
 
-const EMPTY_COPY: Record<OrderStatus, { title: string; text: string }> = {
+const EMPTY_COPY: Record<OrderHistoryTab, { title: string; text: string }> = {
   requested: {
     title: "No orders yet",
     text: "When you place an Angel Foods order, you can track it here.",
@@ -74,8 +95,11 @@ const EMPTY_COPY: Record<OrderStatus, { title: string; text: string }> = {
   },
 };
 
-const formatGhs = (value: number) => `GH₵${value.toLocaleString("en-GH")}`;
-const formatDate = (time: number) => new Date(time).toLocaleDateString();
+const formatMoney = (value: number, currency: string) => {
+  try { return new Intl.NumberFormat("en-GH", { style: "currency", currency }).format(value); }
+  catch { return `${currency} ${Number.isFinite(value) ? value.toFixed(2) : "—"}`; }
+};
+const formatDate = (time: string | number) => new Date(time).toLocaleDateString();
 
 /* -------------------------------------------------------------------------- */
 /* "No orders" animation                                                      */
@@ -169,41 +193,56 @@ function EmptyOrders({ text, title }: { text: string; title: string }) {
 function OrderCard({
   onPress,
   order,
-  selected,
 }: {
   onPress: () => void;
-  order: Order;
-  selected: boolean;
+  order: CustomerOrderHistoryRow;
 }) {
   return (
     <Pressable
       accessibilityRole="button"
       onPress={onPress}
-      style={({ pressed }) => [styles.orderCard, selected && styles.orderCardSelected, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.orderCard, pressed && styles.pressed]}
     >
       <View style={styles.orderTop}>
         <Text numberOfLines={1} style={styles.orderTitle}>
-          {order.title}
+          {order.orderNumber}
         </Text>
-        <Text style={styles.orderId}>Id {order.id}</Text>
+        <Text style={styles.orderStatus}>{order.statusLabel}</Text>
       </View>
 
       <View style={styles.orderMetaRow}>
         <View style={styles.orderMetaCol}>
           <Text style={styles.metaLabel}>Items</Text>
           <Text numberOfLines={1} style={styles.metaValue}>
-            {order.items}
+            {order.itemsSummary}
           </Text>
         </View>
         <View style={styles.metaDivider} />
         <View style={styles.orderMetaCol}>
-          <Text style={styles.metaLabel}>{order.scheduledFor ? "Schedule" : "Placed"}</Text>
+          <Text style={styles.metaLabel}>Placed</Text>
           <Text numberOfLines={1} style={styles.metaValue}>
-            {order.scheduledFor ?? formatDate(order.placedAt)}
+            {formatDate(order.createdAt)}
           </Text>
         </View>
       </View>
+      <Text style={styles.orderTotal}>{formatMoney(order.total, order.currency)}</Text>
     </Pressable>
+  );
+}
+
+function LocalOrderCard({ order }: { order: LegacyOrder }) {
+  return (
+    <View style={styles.localOrderCard}>
+      <View style={styles.orderTop}>
+        <Text numberOfLines={1} style={styles.orderTitle}>{order.title}</Text>
+        <Text style={styles.localOrderStatus}>Device only · not confirmed</Text>
+      </View>
+      <Text style={styles.localOrderItems}>{order.items}</Text>
+      <View style={styles.localOrderFooter}>
+        <Text style={styles.metaValue}>{formatDate(order.placedAt)}</Text>
+        <Text style={styles.metaValue}>{formatMoney(order.total, "GHS")}</Text>
+      </View>
+    </View>
   );
 }
 
@@ -211,30 +250,7 @@ function OrderCard({
 /* Order summary (timeline)                                                   */
 /* -------------------------------------------------------------------------- */
 
-function OrderSummary({ onBack, order }: { onBack: () => void; order: Order }) {
-  const placed = formatDate(order.placedAt);
-
-  const steps = useMemo(() => {
-    if (order.status === "cancelled") {
-      return [
-        { label: `Order placed on ${placed}`, state: "done" as const },
-        { label: "Order cancelled", state: "current" as const },
-      ];
-    }
-
-    const labels = [
-      `Order placed on ${placed}`,
-      "Order accepted",
-      "Processing order and assigning rider",
-      "Completed",
-    ];
-
-    return labels.map((label, index) => ({
-      label,
-      state: index < order.stage ? ("done" as const) : index === order.stage ? ("current" as const) : ("todo" as const),
-    }));
-  }, [order, placed]);
-
+function OrderSummary({ onBack, order }: { onBack: () => void; order: CustomerOrderDetail }) {
   return (
     <View style={styles.summary}>
       <Pressable accessibilityLabel="Back to orders" hitSlop={10} onPress={onBack} style={styles.backButton}>
@@ -242,26 +258,20 @@ function OrderSummary({ onBack, order }: { onBack: () => void; order: Order }) {
       </Pressable>
 
       <Text style={styles.summaryTitle}>Order Summary</Text>
+      <Text style={styles.summaryOrderNumber}>{order.orderNumber} · {orderStatusLabel(order.status)}</Text>
 
       <View style={styles.timeline}>
-        {steps.map((step, index) => {
-          const isLast = index === steps.length - 1;
+        {[{ label: `Order placed · ${formatDate(order.createdAt)}`, key: `placed-${order.id}` }, ...order.statusHistory.map((entry) => ({ label: `${orderStatusLabel(entry.status)} · ${formatDate(entry.createdAt)}`, key: `${entry.createdAt}-${entry.status}` }))].map((step, index, events) => {
+          const isLast = index === events.length - 1;
           return (
-            <View key={step.label} style={styles.stepRow}>
+            <View key={step.key} style={styles.stepRow}>
               <View style={styles.stepRail}>
-                <View
-                  style={[
-                    styles.dot,
-                    step.state !== "todo" && styles.dotOn,
-                    step.state === "current" && styles.dotCurrent,
-                    order.status === "cancelled" && step.state === "current" && styles.dotCancelled,
-                  ]}
-                />
+                <View style={[styles.dot, styles.dotOn, isLast && styles.dotCurrent, order.status === "CANCELLED" && isLast && styles.dotCancelled]} />
                 {!isLast ? (
-                  <View style={[styles.railLine, step.state === "done" && styles.railLineOn]} />
+                  <View style={[styles.railLine, styles.railLineOn]} />
                 ) : null}
               </View>
-              <Text style={[styles.stepLabel, step.state === "todo" && styles.stepLabelOff]}>{step.label}</Text>
+              <Text style={styles.stepLabel}>{step.label}</Text>
             </View>
           );
         })}
@@ -269,29 +279,32 @@ function OrderSummary({ onBack, order }: { onBack: () => void; order: Order }) {
 
       <View style={styles.requirementCard}>
         <Text style={styles.metaLabel}>Order</Text>
-        <Text style={styles.requirementValue}>{order.title}</Text>
+        <Text style={styles.requirementValue}>{order.orderNumber}</Text>
         <View style={styles.requirementDivider} />
 
         <View style={styles.requirementRow}>
           <View style={{ flex: 1 }}>
             <Text style={styles.metaLabel}>Items</Text>
-            <Text style={styles.requirementSub}>{order.items}</Text>
+            <Text style={styles.requirementSub}>{order.items.map((item) => `${item.name} ×${item.quantity}`).join(", ") || "No items"}</Text>
           </View>
           <View style={styles.requirementRight}>
             <Text style={styles.metaLabel}>Total</Text>
-            <Text style={styles.requirementSub}>{formatGhs(order.total)}</Text>
+            <Text style={styles.requirementSub}>{formatMoney(order.total, order.currency)}</Text>
           </View>
         </View>
 
         <View style={[styles.requirementRow, { marginTop: 14 }]}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.metaLabel}>Assigned rider</Text>
-            <Text style={styles.requirementSub}>{order.assignedTo ?? "Not assigned yet"}</Text>
+            <Text style={styles.metaLabel}>Order status</Text>
+            <Text style={styles.requirementSub}>{orderStatusLabel(order.status)}</Text>
           </View>
           <View style={styles.requirementRight}>
             <Text style={styles.metaLabel}>Order Id</Text>
             <Text style={styles.requirementSub}>{order.id}</Text>
           </View>
+        </View>
+        <View style={styles.serverItems}>
+          {order.items.map((item) => <View key={item.id} style={styles.serverItemRow}><Text style={styles.serverItemName}>{item.name} ×{item.quantity}</Text><Text style={styles.serverItemPrice}>{formatMoney(item.lineTotal, item.currency)}</Text></View>)}
         </View>
       </View>
     </View>
@@ -303,20 +316,42 @@ function OrderSummary({ onBack, order }: { onBack: () => void; order: Order }) {
 /* -------------------------------------------------------------------------- */
 
 export default function Orders() {
-  const { loading, orders } = useOrders();
-  const [tab, setTab] = useState<OrderStatus>("requested");
+  const { loading, error, orders, legacyOrders, retry } = useOrders();
+  const [tab, setTab] = useState<OrderHistoryTab>("requested");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<CustomerOrderDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState("");
+  const [detailRetryKey, setDetailRetryKey] = useState(0);
+
+  useEffect(() => {
+    if (!selectedId) { setSelectedOrder(null); setDetailError(""); return; }
+    let active = true;
+    setDetailLoading(true);
+    setDetailError("");
+    setSelectedOrder(null);
+    void getCustomerOrder(selectedId).then((detail) => {
+      if (active) setSelectedOrder(detail);
+    }).catch((loadError: unknown) => {
+      if (!active) return;
+      setDetailError(loadError instanceof ApiError && loadError.status === 404
+        ? "This order isn't available in your account."
+        : loadError instanceof ApiError && loadError.status === 401
+          ? "Your session has expired. Sign in again to view order details."
+          : "We couldn't load this order's details. Check your connection and retry.");
+    }).finally(() => { if (active) setDetailLoading(false); });
+    return () => { active = false; };
+  }, [selectedId, detailRetryKey]);
 
   const shown = orders
-    .filter((order) => order.status === tab)
-    .sort((a, b) => b.placedAt - a.placedAt);
-  const selected = orders.find((order) => order.id === selectedId) ?? null;
+    .filter((order) => orderHistoryTab(order.status) === tab)
+    .sort((a, b) => b.createdAt - a.createdAt);
 
-  if (selected) {
+  if (selectedId) {
     return (
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.summaryScroll} showsVerticalScrollIndicator={false}>
-          <OrderSummary onBack={() => setSelectedId(null)} order={selected} />
+          {detailLoading ? <View style={styles.detailState}><ActivityIndicator color={C.red} /><Text style={styles.loading}>Loading order details…</Text></View> : detailError ? <View style={styles.detailState}><Text style={styles.errorText}>{detailError}</Text><TouchableOpacity accessibilityRole="button" onPress={() => setDetailRetryKey((value) => value + 1)} style={styles.retryButton}><Text style={styles.retryButtonText}>Retry</Text></TouchableOpacity><TouchableOpacity accessibilityRole="button" onPress={() => setSelectedId(null)} style={styles.backTextButton}><Text style={styles.retryButtonText}>Back to orders</Text></TouchableOpacity></View> : selectedOrder ? <OrderSummary onBack={() => setSelectedId(null)} order={selectedOrder} /> : null}
         </ScrollView>
       </SafeAreaView>
     );
@@ -341,22 +376,11 @@ export default function Orders() {
           ))}
         </View>
 
-        {loading ? (
-          <Text style={styles.loading}>Loading your orders…</Text>
-        ) : shown.length === 0 ? (
-          <EmptyOrders text={EMPTY_COPY[tab].text} title={EMPTY_COPY[tab].title} />
-        ) : (
-          <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
-            {shown.map((order) => (
-              <OrderCard
-                key={order.id}
-                onPress={() => setSelectedId(order.id)}
-                order={order}
-                selected={order.id === selectedId}
-              />
-            ))}
-          </ScrollView>
-        )}
+        <ScrollView contentContainerStyle={styles.historyContent} showsVerticalScrollIndicator={false}>
+          {error ? <View style={styles.errorCard}><Text style={styles.errorText}>{error}</Text><TouchableOpacity accessibilityRole="button" onPress={retry} style={styles.retryButton}><Text style={styles.retryButtonText}>Retry</Text></TouchableOpacity></View> : null}
+          {loading && orders.length === 0 ? <View style={styles.detailState}><ActivityIndicator color={C.red} /><Text style={styles.loading}>Loading your orders…</Text></View> : !error && shown.length === 0 ? <EmptyOrders text={EMPTY_COPY[tab].text} title={EMPTY_COPY[tab].title} /> : shown.length > 0 ? <View style={styles.list}>{shown.map((order) => <OrderCard key={order.id} onPress={() => setSelectedId(order.id)} order={order} />)}</View> : null}
+          {legacyOrders.length > 0 ? <View style={styles.localHistory}><Text style={styles.localHistoryTitle}>Saved on this device</Text><Text style={styles.localHistoryNotice}>These older records are local history only. They were not confirmed or placed with AngelFoods.</Text>{legacyOrders.map((order) => <LocalOrderCard key={`local-${order.id}`} order={order} />)}</View> : null}
+        </ScrollView>
       </View>
     </SafeAreaView>
   );
@@ -380,6 +404,7 @@ const styles = StyleSheet.create({
   loading: { color: C.muted, fontFamily: "PoppinsRegular", fontSize: 12, marginTop: 24, textAlign: "center" },
 
   /* List */
+  historyContent: { flexGrow: 1, paddingBottom: 40 },
   list: { paddingBottom: 40, rowGap: 12 },
   orderCard: {
     backgroundColor: C.card,
@@ -392,6 +417,26 @@ const styles = StyleSheet.create({
   orderTop: { alignItems: "center", flexDirection: "row", justifyContent: "space-between" },
   orderTitle: { color: C.ink, flex: 1, fontFamily: "PoppinsBold", fontSize: 14 },
   orderId: { color: C.muted, fontFamily: "PoppinsRegular", fontSize: 9, marginLeft: 8 },
+  orderStatus: { color: C.red, fontFamily: "PoppinsBold", fontSize: 9, marginLeft: 8 },
+  orderTotal: { color: C.ink, fontFamily: "PoppinsBold", fontSize: 12, marginTop: 12, textAlign: "right" },
+  errorCard: { backgroundColor: "#FFF5F3", borderRadius: 14, marginBottom: 12, padding: 14 },
+  errorText: { color: "#7A2B22", fontFamily: "PoppinsRegular", fontSize: 11, lineHeight: 17, textAlign: "center" },
+  retryButton: { alignSelf: "center", backgroundColor: C.red, borderRadius: 12, marginTop: 10, paddingHorizontal: 18, paddingVertical: 9 },
+  retryButtonText: { color: "#FFFFFF", fontFamily: "PoppinsBold", fontSize: 11 },
+  backTextButton: { alignSelf: "center", backgroundColor: C.body, borderRadius: 12, marginTop: 10, paddingHorizontal: 18, paddingVertical: 9 },
+  detailState: { alignItems: "center", justifyContent: "center", padding: 24 },
+  summaryOrderNumber: { color: C.body, fontFamily: "PoppinsRegular", fontSize: 12, marginTop: 5 },
+  serverItems: { borderTopColor: C.line, borderTopWidth: 1, marginTop: 14, paddingTop: 10 },
+  serverItemRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 5 },
+  serverItemName: { color: C.body, flex: 1, fontFamily: "PoppinsRegular", fontSize: 11, paddingRight: 10 },
+  serverItemPrice: { color: C.ink, fontFamily: "PoppinsBold", fontSize: 11 },
+  localHistory: { borderTopColor: C.line, borderTopWidth: 1, marginTop: 16, paddingTop: 14, rowGap: 9 },
+  localHistoryTitle: { color: C.ink, fontFamily: "PoppinsBold", fontSize: 13 },
+  localHistoryNotice: { color: C.body, fontFamily: "PoppinsRegular", fontSize: 10, lineHeight: 15 },
+  localOrderCard: { backgroundColor: "#FFF8E5", borderRadius: 12, padding: 12 },
+  localOrderStatus: { color: "#705A16", fontFamily: "PoppinsBold", fontSize: 8, marginLeft: 8 },
+  localOrderItems: { color: C.body, fontFamily: "PoppinsRegular", fontSize: 10, marginTop: 8 },
+  localOrderFooter: { flexDirection: "row", justifyContent: "space-between", marginTop: 8 },
   orderMetaRow: { flexDirection: "row", marginTop: 12 },
   orderMetaCol: { flex: 1, minWidth: 0 },
   metaDivider: { backgroundColor: C.line, marginHorizontal: 12, width: 1 },

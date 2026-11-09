@@ -210,3 +210,17 @@ Additional implementation-pass evidence:
 - **Backup/restore:** No strategy or restore drill was verified; documentation says none has occurred.
 - **Operational readiness:** No verified monitoring, alerting, runbooks or recovery procedure.
 - **Recommendation: RED (NOT AT ALL).** Do not launch this working tree in production. Reassess after P0/P1 acceptance criteria are met and end-to-end staging, security, migration and restore evidence is available.
+
+## 10. Follow-up implementation on 2026-10-22
+
+The evidence above records the earlier audit pass. A later authorized follow-up completed development-only persistence work; the production recommendation remains **RED**.
+
+- The existing shared Prisma client in `backend/src/services/prismaClient.ts` was confirmed as the runtime client. Backend `npm run dev` now loads `.env.development.local` and selects the configured development PostgreSQL target; JSON mode remains available explicitly as `npm run dev:json`.
+- The import dry-run now reports policy exclusions and unsupported collections. Applying is stopped if product, product-order, or invoice records are present because those collections are not supported by the importer.
+- The guarded import was applied only to `angelfoods-dev`. It created 1 user, profile, and preferences; 1 audit row; 19 security events; and 1 revoked-session hash. It excluded 1 administrator account and 3 pending OTP registrations. The source JSON was preserved, and its pre-import backup SHA-256 was verified to match.
+- `npm run db:reconcile:dev` reported all source-backed user/audit/security/revocation rows matched. There were no legacy ledger/wallet or order rows, so those comparisons were empty and matched.
+- `prisma migrate status` reported all 5 repository migrations applied and the development schema up to date.
+- The guarded PostgreSQL integration suite passed with signup/OTP, profile/session persistence, order/invoice ownership, fail-closed membership/cash-out requests, and existing admin security cases. It emitted a `pg` deprecation warning and an expected serialization-conflict log from the concurrent approval case.
+- Backend unit/config tests, backend typecheck, and Prisma schema validation passed after the changes. No production host, production database, live payment, backup restore, or release build was attempted.
+
+The remaining production blockers are unchanged: no host or public HTTPS API endpoint is configured; production startup remains intentionally blocked; real OTP delivery, membership payment/webhook processing, order creation/checkout, withdrawal rules/payouts, distributed rate limiting, monitoring, backup restore, and device release verification still require implementation or environment-specific configuration. Do not remove the production guard until those gates have passed on staging.

@@ -6,6 +6,15 @@ info:
 servers:
   - url: http://localhost:3001
 paths:
+  /api/products:
+    get:
+      summary: Browse active products
+      parameters:
+        - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 50 } }
+        - { in: query, name: offset, schema: { type: integer, minimum: 0 } }
+        - { in: query, name: search, schema: { type: string, maxLength: 100 } }
+      responses:
+        '200': { description: Paginated active product catalog; prices are integer minor currency units as strings }
   /health:
     get:
       summary: Liveness check
@@ -15,7 +24,7 @@ paths:
     get:
       summary: Development readiness status
       responses:
-        '200': { description: Reports development JSON storage; productionReady is false }
+        '200': { description: Reports configured storage; PostgreSQL mode also verifies a database query succeeds }
   /api/auth/register/request-otp:
     post:
       summary: Create or refresh a registration challenge

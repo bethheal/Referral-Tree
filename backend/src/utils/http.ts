@@ -51,7 +51,7 @@ export const sendJson = (
   payload: unknown
 ) => {
   response.writeHead(status, {
-    "Access-Control-Allow-Headers": "Authorization, Content-Type",
+    "Access-Control-Allow-Headers": "Authorization, Content-Type, Idempotency-Key",
     "Content-Type": "application/json",
     "X-Content-Type-Options": "nosniff",
     "Cache-Control": "no-store",

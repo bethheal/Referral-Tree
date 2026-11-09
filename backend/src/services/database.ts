@@ -74,4 +74,21 @@ export class JsonDatabase {
   }
 }
 
-export const db = new JsonDatabase();
+let jsonDatabase: JsonDatabase | undefined;
+const getJsonDatabase = () => {
+  if (env.storageMode !== "json" || !["development", "test"].includes(env.environment)) {
+    throw new Error("JSON storage is only available when explicitly selected in development or test.");
+  }
+  jsonDatabase ??= new JsonDatabase();
+  return jsonDatabase;
+};
+
+// Defer file creation until a JSON route actually accesses the store. Importing
+// the router in PostgreSQL mode must not create or read a local JSON database.
+export const db = new Proxy({} as JsonDatabase, {
+  get(_target, property) {
+    const database = getJsonDatabase();
+    const value = Reflect.get(database, property, database);
+    return typeof value === "function" ? value.bind(database) : value;
+  },
+});

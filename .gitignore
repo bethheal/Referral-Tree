@@ -31,8 +31,11 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
+.env.production
 .env*.local
 backend/.env
+backend/.env.production
 backend/data/
 backend/src/generated/prisma/
 

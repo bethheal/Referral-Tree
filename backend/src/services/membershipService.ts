@@ -23,6 +23,7 @@ type FlutterwaveTransaction = {
 const requirePaymentConfig = (plan: MembershipPlan) => {
   const amount = env.membershipPricesGhs[plan];
   if (
+    !env.paymentsEnabled ||
     !env.flutterwaveSecretKey ||
     !env.flutterwaveSecretHash ||
     !env.paymentRedirectUrl.startsWith("https://") ||

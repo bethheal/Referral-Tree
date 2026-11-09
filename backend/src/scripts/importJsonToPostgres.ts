@@ -3,6 +3,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Prisma, PrismaClient } from "../generated/prisma/client.ts";
+import { applyRevokedSessionMigrationTimestamp, isImportableLegacyRole, isSkippedAdministratorRole, mapAuditLogs, mapRevokedSessions } from "./jsonImportMappers.ts";
+import { requireDevelopmentImportConfirmation, requireDevelopmentImportDatabase } from "./jsonImportSafety.ts";
+import { validateDatabaseEnvironment } from "../utils/databaseSafety.ts";
 
 type LegacyRow = Record<string, unknown>;
 type LegacyData = Record<string, LegacyRow[] | string[] | undefined>;
@@ -11,6 +14,13 @@ const sourcePath = path.resolve(
   process.env.DATABASE_FILE ?? path.join(process.cwd(), "data", "dev-db.json"),
 );
 const apply = process.argv.includes("--apply");
+
+try {
+  requireDevelopmentImportConfirmation(apply, process.env.CONFIRM_DB_MIGRATION);
+} catch (error) {
+  console.error(error instanceof Error ? error.message : "Import stopped: development confirmation is required.");
+  process.exit(1);
+}
 
 const fail = (message: string): never => {
   console.error(message);
@@ -51,12 +61,6 @@ const normalizePlan = (value: unknown) => {
   return plan as "FREE" | "SILVER" | "GOLD" | "PREMIUM";
 };
 
-const normalizeRole = (value: unknown) => {
-  if (value === "USER") return "USER" as const;
-  // Existing administrator credentials are never copied into development.
-  return null;
-};
-
 const normalizeStatus = (value: unknown) => {
   if (["ACTIVE", "SUSPENDED", "PENDING_VERIFICATION"].includes(String(value))) return String(value);
   return "PENDING_VERIFICATION";
@@ -71,6 +75,10 @@ const safeJson = (value: unknown) => {
 const readRows = (data: LegacyData, key: string): LegacyRow[] => {
   const value = data[key];
   return Array.isArray(value) ? (value.filter((row) => row && typeof row === "object") as LegacyRow[]) : [];
+};
+const readValues = (data: LegacyData, key: string): unknown[] => {
+  const value = data[key];
+  return Array.isArray(value) ? value : [];
 };
 
 if (!fs.existsSync(sourcePath)) fail(`JSON import source was not found: ${sourcePath}`);
@@ -87,30 +95,39 @@ const users = readRows(legacy!, "users");
 const registrations = readRows(legacy!, "registrations");
 const ledger = readRows(legacy!, "ledger");
 const cashOuts = readRows(legacy!, "cashOuts");
-const auditLogs = readRows(legacy!, "auditLogs");
+// Preserve all entries and their original positions so malformed rows are
+// reported by mapAuditLogs instead of disappearing during object filtering.
+const auditLogs = readValues(legacy!, "auditLogs");
 const securityEvents = readRows(legacy!, "securityEvents");
 const notifications = [...readRows(legacy!, "notification"), ...readRows(legacy!, "messages")];
 const leads = readRows(legacy!, "leads");
 const membershipPayments = readRows(legacy!, "membershipPayments");
 const memberships = readRows(legacy!, "memberships");
-const revokedSessions = Array.isArray(legacy!.revokedSessions)
-  ? (legacy!.revokedSessions.filter((value): value is string => typeof value === "string"))
-  : [];
+const products = readRows(legacy!, "products");
+const productOrders = readRows(legacy!, "productOrders");
+const invoices = readRows(legacy!, "invoices");
+const revokedSessionValues: unknown[] = Array.isArray(legacy!.revokedSessions) ? legacy!.revokedSessions : [];
+const revokedSessionMapping = mapRevokedSessions(revokedSessionValues);
+const revokedSessions = revokedSessionMapping.rows;
 
 const importedUserRows: LegacyRow[] = [];
-const skippedAdminCount = users.filter((row) => normalizeRole(row.role) === null).length;
+const skippedAdminCount = users.filter((row) => !isImportableLegacyRole(row.role)).length;
+const skippedAdministratorIds = new Set(users.flatMap((row) =>
+  isSkippedAdministratorRole(row.role) && typeof row.id === "string" && row.id.trim()
+    ? [row.id]
+    : [],
+));
 const invalidRows: Record<string, number> = {};
 const countInvalid = (entity: string) => { invalidRows[entity] = (invalidRows[entity] ?? 0) + 1; };
 const userIds = new Set<string>();
 
 for (const row of users) {
-  if (normalizeRole(row.role) === null) continue;
+  if (!isImportableLegacyRole(row.role)) continue;
   try {
     const id = requiredString(row, "id");
     const email = requiredString(row, "email").trim().toLowerCase();
     const referralCode = requiredString(row, "referralCode").trim().toUpperCase();
     const passwordHash = requiredString(row, "passwordHash");
-    userIds.add(id);
     importedUserRows.push({
       id,
       fullName: requiredString(row, "fullName").trim(),
@@ -127,6 +144,7 @@ for (const row of users) {
       createdAt: dateValue(row.createdAt),
       updatedAt: dateValue(row.updatedAt ?? row.createdAt),
     });
+    userIds.add(id);
   } catch (error) {
     countInvalid(`users:${error instanceof Error ? error.message : "invalid"}`);
   }
@@ -136,6 +154,7 @@ for (const row of users) {
 // must be restarted through the verified production delivery channel.
 const skippedRegistrationCount = registrations.length;
 const usableRegistrations = 0;
+const auditMapping = mapAuditLogs(auditLogs, userIds, skippedAdministratorIds);
 const knownPlans = new Set<string>();
 for (const row of membershipPayments) {
   try { knownPlans.add(normalizePlan(row.plan)); } catch { countInvalid("membershipPayments:invalid_plan"); }
@@ -163,12 +182,34 @@ const report = {
     membershipPayments: membershipPayments.length,
     memberships: memberships.length,
     revokedSessionHashes: revokedSessions.length,
-    products: 0,
-    productOrders: 0,
-    invoices: 0,
+    revokedSessionsWithHistoricalTimestamp: revokedSessions.filter((row) => row.revokedAt !== null).length,
+    revokedSessionsWithoutHistoricalTimestamp: revokedSessions.filter((row) => row.revokedAt === null).length,
+    products: products.length,
+    productOrders: productOrders.length,
+    invoices: invoices.length,
+  },
+  skippedByPolicy: {
+    administratorAccounts: skippedAdminCount,
+    registrationAttemptsWithOtpMaterial: skippedRegistrationCount,
+  },
+  unsupportedCollections: {
+    products: products.length,
+    productOrders: productOrders.length,
+    invoices: invoices.length,
   },
   draftPlanPlaceholdersNeeded: [...knownPlans],
   invalidRows,
+  invalidRecords: {
+    auditLogs: auditMapping.invalidRows,
+    revokedSessions: revokedSessionMapping.invalidRows,
+  },
+  unresolvedAuditReferences: {
+    actorRows: auditMapping.missingActorReferenceRows,
+    targetRows: auditMapping.missingTargetReferenceRows,
+  },
+  historicalSkippedAdministratorTargetRows: auditMapping.historicalAdministratorTargetRows,
+  revokedTimestampPolicy: "Legacy hash-only entries have no historical revocation time. On apply, missing timestamps receive one clearly reported migration timestamp; it is not the original revocation time.",
+  revokedMigrationTimestamp: null as string | null,
 };
 
 if (!apply) {
@@ -176,27 +217,22 @@ if (!apply) {
   process.exit(0);
 }
 
-const target = process.env.DATABASE_TARGET;
-const neonBranch = process.env.NEON_BRANCH;
-const databaseUrl = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
-if (target === "production" || neonBranch === "production") {
-  fail("Import requires an explicitly configured local or non-production Neon target.");
-}
-if (!databaseUrl) {
-  throw new Error("Import requires an explicitly configured local or non-production Neon target.");
+if (products.length || productOrders.length || invoices.length) {
+  fail("Import stopped: products, productOrders, and invoices are not supported by this legacy importer. Resolve these records before applying.");
 }
 
-const databaseHost = new URL(databaseUrl).hostname;
-if (target === "local") {
-  if (databaseHost !== "localhost" && databaseHost !== "127.0.0.1") fail("Local import target must use localhost.");
-} else if (target === "angelfoods-dev") {
-  const expectedEndpoint = process.env.NEON_ENDPOINT_ID;
-  if (neonBranch !== "angelfoods-dev" || !expectedEndpoint || !databaseHost.startsWith(`${expectedEndpoint}.`)) {
-    fail("Neon import target does not match the approved angelfoods-dev branch.");
-  }
-} else {
-  fail("DATABASE_TARGET must be local or angelfoods-dev.");
+if (auditMapping.invalidRows.length || revokedSessionMapping.invalidRows.length) {
+  fail(`Import stopped before database access: ${auditMapping.invalidRows.length} invalid audit record(s) and ${revokedSessionMapping.invalidRows.length} invalid revoked-session record(s). Review invalidRecords in the dry-run report.`);
 }
+
+const database = validateDatabaseEnvironment();
+try {
+  requireDevelopmentImportDatabase(database.target, database.endpointId);
+} catch (error) {
+  fail(error instanceof Error ? error.message : "Import stopped: only the validated development database is allowed.");
+}
+const target = database.target;
+const databaseUrl = database.directUrl;
 
 const backupPath = `${sourcePath}.pre-postgres-import`;
 if (!fs.existsSync(backupPath)) fs.copyFileSync(sourcePath, backupPath, fs.constants.COPYFILE_EXCL);
@@ -215,6 +251,7 @@ const main = async () => {
   }
 
   const created: Record<string, number> = {};
+  let revokedMigrationTimestampOutput: string | null = null;
   await prisma.$transaction(async (tx) => {
   const run = async (entity: string, create: (transaction: Prisma.TransactionClient) => Promise<{ count: number }>) => {
     created[entity] = (await create(tx)).count;
@@ -371,24 +408,7 @@ const main = async () => {
   });
   await run("withdrawals", (tx) => tx.withdrawalRequest.createMany({ data: withdrawalRows as never, skipDuplicates: true }));
 
-  const auditRows = auditLogs.flatMap((row) => {
-    try {
-      return [{
-        id: requiredString(row, "id"),
-        actorUserId: typeof row.actorUserId === "string" && userIds.has(row.actorUserId) ? row.actorUserId : null,
-        targetUserId: typeof row.targetUserId === "string" && userIds.has(row.targetUserId) ? row.targetUserId : null,
-        action: requiredString(row, "action"),
-        ...(safeJson(row.oldValue) ? { oldValue: safeJson(row.oldValue) } : {}),
-        ...(safeJson(row.newValue) ? { newValue: safeJson(row.newValue) } : {}),
-        ...(typeof row.reason === "string" ? { reason: row.reason } : {}),
-        createdAt: dateValue(row.createdAt),
-      }];
-    } catch (error) {
-      countInvalid(`auditLogs:${error instanceof Error ? error.message : "invalid"}`);
-      return [];
-    }
-  });
-  await run("auditLogs", (tx) => tx.auditLog.createMany({ data: auditRows as never, skipDuplicates: true }));
+  await run("auditLogs", (tx) => tx.auditLog.createMany({ data: auditMapping.rows as never, skipDuplicates: true }));
 
   const eventRows = securityEvents.flatMap((row) => {
     try {
@@ -441,15 +461,18 @@ const main = async () => {
   });
   await run("leads", (tx) => tx.lead.createMany({ data: leadRows as never, skipDuplicates: true }));
 
+  const migrationTimestamp = new Date();
+  const revokedRows = applyRevokedSessionMigrationTimestamp(revokedSessions, migrationTimestamp);
+  revokedMigrationTimestampOutput = revokedRows.missingTimestampCount ? migrationTimestamp.toISOString() : null;
   await run("legacyRevokedTokens", (tx) => tx.legacyRevokedToken.createMany({
-    data: revokedSessions.map((tokenHash) => ({ tokenHash, revokedAt: new Date() })) as never,
+    data: revokedRows.rows as never,
     skipDuplicates: true,
   }));
   });
 
   const after = hashFile(fs.readFileSync(sourcePath));
   if (after !== hashFile(originalBytes)) throw new Error("JSON source changed; original file must be restored and reconciliation reviewed.");
-  console.log(JSON.stringify({ ...report, dryRun: false, created }, null, 2));
+  console.log(JSON.stringify({ ...report, dryRun: false, revokedMigrationTimestamp: revokedMigrationTimestampOutput, created }, null, 2));
 };
 
 if (!apply) {

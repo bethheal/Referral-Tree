@@ -52,12 +52,7 @@ export default function Signup() {
         });
 
         setRegistrationId(result.registrationId);
-        if (result.otp) {
-          setOtp(result.otp);
-          showToast(`Testing OTP: ${result.otp}`, 30000);
-        } else {
-          showToast("OTP sent. Enter the code to continue.");
-        }
+        showToast("If SMS delivery is configured, enter the code sent to you.");
         return;
       }
 
@@ -125,12 +120,12 @@ export default function Signup() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Phone number</Text>
+            <Text style={styles.label}>Phone number (Ghana by default)</Text>
             <TextInput
               autoComplete="tel"
               keyboardType="phone-pad"
               onChangeText={setPhoneNumber}
-              placeholder="+233 55 000 0000"
+              placeholder="055 000 0000 or +233 55 000 0000"
               placeholderTextColor="#A69A95"
               style={styles.input}
               value={phoneNumber}

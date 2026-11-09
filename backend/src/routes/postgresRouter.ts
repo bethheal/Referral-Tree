@@ -5,11 +5,18 @@ import { Prisma } from "../generated/prisma/client.ts";
 import { env } from "../config/env.ts";
 import { enforceRateLimit } from "../middleware/rateLimit.ts";
 import { prisma } from "../services/prismaClient.ts";
-import { createId, createOtp, hashOtp, hashPassword, hashSessionToken, nowIso, signToken, verifyPassword, verifyToken } from "../utils/crypto.ts";
+import { createId, createOtp, hashOtp, hashPassword, hashSessionToken, nowIso, signToken, verifyOtpHash, verifyPassword, verifyToken } from "../utils/crypto.ts";
 import { getRequestContext, HttpError, parsePagination, readJson, sendJson } from "../utils/http.ts";
 import { createReferralCode } from "../services/referralService.ts";
+import { customerProductWhere, toCustomerProduct } from "../services/productCatalogService.ts";
+import { createCustomerOrder, OrderServiceError, type OrderDatabase } from "../services/orderService.ts";
+import { prismaOrderDatabase } from "../services/prismaOrderDatabase.ts";
+import { assertSmsDeliveryAvailable, deliverRegistrationOtp, getSmsProvider } from "../services/smsProvider.ts";
 import { normalizePhoneNumber } from "../validators/phone.ts";
 import { createRecoveryCodes, createTotpSecret, decryptTotpSecret, encryptTotpSecret, hashRecoveryCode, verifyTotp } from "../utils/totp.ts";
+import { resolveMembershipAccess } from "../services/membershipAccess.ts";
+
+const freePlanId = "system-plan-free-v1";
 
 const send = (response: ServerResponse, status: number, payload: unknown) => sendJson(response, status, payload);
 const ok = (response: ServerResponse, payload: unknown) => send(response, 200, payload);
@@ -159,6 +166,12 @@ const membershipState = async (userId: string) => {
     prisma.membership.findFirst({ where: { userId }, include: { plan: true }, orderBy: { createdAt: "desc" } }),
     prisma.payment.findFirst({ where: { userId, targetType: "MEMBERSHIP" }, include: { membershipPayment: { include: { plan: true } } }, orderBy: { createdAt: "desc" } }),
   ]);
+  const access = resolveMembershipAccess(membership ? [{
+    code: membership.plan.code,
+    status: membership.status,
+    startsAt: membership.startsAt,
+    expiresAt: membership.expiresAt,
+  }] : []);
   return {
     membership: membership ? {
       id: membership.id, userId, plan: membership.plan.code.toLowerCase(), status: membership.status,
@@ -172,7 +185,35 @@ const membershipState = async (userId: string) => {
       reference: payment.reference,
       status: payment.status,
     } : null,
+    access: {
+      state: access.state,
+      canPurchase: access.canPurchase,
+      expiresAt: access.expiresAt?.toISOString() ?? null,
+    },
   };
+};
+
+const requirePurchasingMembership = async (userId: string) => {
+  const memberships = await prisma.membership.findMany({
+    where: { userId },
+    include: { plan: { select: { code: true } } },
+    orderBy: { startsAt: "desc" },
+  });
+  const access = resolveMembershipAccess(memberships.map((membership) => ({
+    code: membership.plan.code,
+    status: membership.status,
+    startsAt: membership.startsAt,
+    expiresAt: membership.expiresAt,
+  })));
+  if (!access.canPurchase) {
+    throw new HttpError(
+      access.state === "FREE_EXPIRED"
+        ? "Your Free access has expired. Upgrade to purchase packages."
+        : "Upgrade to a paid membership before purchasing packages.",
+      403,
+      "MEMBERSHIP_PURCHASE_RESTRICTED",
+    );
+  }
 };
 
 const requireDevOtp = () => {
@@ -183,6 +224,8 @@ const requireDevOtp = () => {
 
 const registerOtp = async (request: IncomingMessage, response: ServerResponse) => {
   requireDevOtp();
+  const smsProvider = getSmsProvider();
+  assertSmsDeliveryAvailable(smsProvider);
   const input = await readJson<{ email?: unknown; fullName?: unknown; password?: unknown; phoneNumber?: unknown; referralCode?: unknown }>(request);
   if (typeof input.fullName !== "string" || typeof input.email !== "string" || typeof input.password !== "string" || typeof input.phoneNumber !== "string") {
     throw new HttpError("Registration details are invalid.");
@@ -190,34 +233,52 @@ const registerOtp = async (request: IncomingMessage, response: ServerResponse) =
   if (input.fullName.length > 120 || input.email.length > 254 || input.password.length > 256) throw new HttpError("Registration details exceed the allowed length.");
   const fullName = validateName(input.fullName);
   const email = input.email.trim().toLowerCase();
+  const password = input.password;
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new HttpError("Enter a valid email address.");
   if (input.password.length < 8) throw new HttpError("Password must be at least 8 characters.");
   const phoneNumber = normalizePhoneNumber(input.phoneNumber);
   const referralCode = typeof input.referralCode === "string" && input.referralCode.trim() ? input.referralCode.trim().toUpperCase() : null;
   if (input.referralCode !== undefined && typeof input.referralCode !== "string") throw new HttpError("Referral code is invalid.");
-  const [emailExists, phoneExists, referrer] = await Promise.all([
-    prisma.user.findUnique({ where: { email }, select: { id: true } }),
-    prisma.user.findUnique({ where: { phoneNumber }, select: { id: true } }),
-    referralCode ? prisma.user.findUnique({ where: { referralCode }, select: { id: true } }) : Promise.resolve(null),
-  ]);
-  if (emailExists) throw new HttpError("This email is already registered.", 409, "EMAIL_EXISTS");
-  if (phoneExists) throw new HttpError("This phone number is already registered.", 409, "PHONE_EXISTS");
-  if (referralCode && !referrer) throw new HttpError("Referral code was not found.", 404, "REFERRAL_NOT_FOUND");
-  const active = await prisma.registrationAttempt.findFirst({ where: { OR: [{ email }, { phoneNumber }], purpose: "REGISTRATION", status: "PENDING" }, orderBy: { createdAt: "desc" } });
-  if (active && active.resendAvailableAt.getTime() > Date.now()) throw new HttpError("Please wait before requesting another OTP.", 429, "OTP_COOLDOWN");
   const otp = createOtp();
-  const now = new Date();
-  const attemptId = active?.id ?? createId("registration");
-  const attemptData = {
-    fullName, email, phoneNumber, passwordHash: hashPassword(input.password), referralCode, otpHash: hashOtp(otp),
-    purpose: "REGISTRATION" as const, status: "PENDING" as const, otpAttempts: 0,
-    otpExpiresAt: new Date(now.getTime() + env.otpTtlSeconds * 1000),
-    resendAvailableAt: new Date(now.getTime() + env.otpResendCooldownSeconds * 1000),
-    createdAt: now, verifiedAt: null,
-  };
-  if (active) await prisma.registrationAttempt.update({ where: { id: active.id }, data: attemptData });
-  else await prisma.registrationAttempt.create({ data: { id: attemptId, ...attemptData } });
-  created(response, { registrationId: attemptId, otp });
+  const registrationId = await prisma.$transaction(async (tx) => {
+    // These transaction locks serialize concurrent requests sharing either identity.
+    // Sorting gives every request the same lock order and avoids deadlocks.
+    const lockKeys = [`registration:email:${email}`, `registration:phone:${phoneNumber}`].sort();
+    for (const lockKey of lockKeys) {
+      // pg_advisory_xact_lock returns PostgreSQL void; execute it rather than
+      // asking Prisma to deserialize a result set.
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
+    }
+
+    const [emailExists, phoneExists, referrer] = await Promise.all([
+      tx.user.findUnique({ where: { email }, select: { id: true } }),
+      tx.user.findUnique({ where: { phoneNumber }, select: { id: true } }),
+      referralCode ? tx.user.findUnique({ where: { referralCode }, select: { id: true } }) : Promise.resolve(null),
+    ]);
+    if (emailExists) throw new HttpError("This email is already registered.", 409, "EMAIL_EXISTS");
+    if (phoneExists) throw new HttpError("This phone number is already registered.", 409, "PHONE_EXISTS");
+    if (referralCode && !referrer) throw new HttpError("Referral code was not found.", 404, "REFERRAL_NOT_FOUND");
+    const active = await tx.registrationAttempt.findFirst({ where: { OR: [{ email }, { phoneNumber }], purpose: "REGISTRATION", status: "PENDING" }, orderBy: { createdAt: "desc" } });
+    if (active && active.resendAvailableAt.getTime() > Date.now()) {
+      throw new HttpError("Please wait before requesting another OTP.", 429, "OTP_COOLDOWN");
+    }
+    const now = new Date();
+    const attemptId = active?.id ?? createId("registration");
+    const attemptData = {
+      fullName, email, phoneNumber, passwordHash: hashPassword(password), referralCode, otpHash: hashOtp(otp),
+      purpose: "REGISTRATION" as const, status: "PENDING" as const, otpAttempts: 0,
+      otpExpiresAt: new Date(now.getTime() + env.otpTtlSeconds * 1000),
+      resendAvailableAt: new Date(now.getTime() + env.otpResendCooldownSeconds * 1000),
+      createdAt: now, verifiedAt: null,
+    };
+    if (active) await tx.registrationAttempt.update({ where: { id: active.id }, data: attemptData });
+    else await tx.registrationAttempt.create({ data: { id: attemptId, ...attemptData } });
+    return attemptId;
+  });
+  await deliverRegistrationOtp(smsProvider, phoneNumber, otp, env.otpTtlSeconds);
+  // The guarded development integration runner needs the mock OTP to complete
+  // registration. Production rejects OTP_DEV_MODE during configuration.
+  created(response, { registrationId, ...(env.otpDevMode ? { otp } : {}) });
 };
 
 const completeRegistration = async (request: IncomingMessage, response: ServerResponse) => {
@@ -226,16 +287,35 @@ const completeRegistration = async (request: IncomingMessage, response: ServerRe
   if (typeof input.registrationId !== "string" || input.registrationId.length > 100 || typeof input.otp !== "string" || !/^\d{6}$/.test(input.otp)) {
     throw new HttpError("Registration verification details are invalid.");
   }
-  const attempt = await prisma.registrationAttempt.findFirst({ where: { id: input.registrationId, purpose: "REGISTRATION", status: "PENDING" } });
-  if (!attempt) throw new HttpError("Registration was not found.", 404, "NOT_FOUND");
-  if (attempt.otpExpiresAt.getTime() < Date.now()) throw new HttpError("OTP has expired.", 400, "OTP_EXPIRED");
-  if (attempt.otpAttempts >= env.otpMaxAttempts) throw new HttpError("Too many incorrect OTP attempts.", 429, "OTP_ATTEMPTS_EXCEEDED");
-  if (attempt.otpHash !== hashOtp(input.otp)) {
-    await prisma.registrationAttempt.updateMany({ where: { id: attempt.id, status: "PENDING", otpAttempts: { lt: env.otpMaxAttempts } }, data: { otpAttempts: { increment: 1 } } });
-    throw new HttpError("Incorrect OTP.", 400, "OTP_INVALID");
-  }
+  const registrationId = input.registrationId;
+  const otp = input.otp;
   const context = getRequestContext(request);
   const result = await prisma.$transaction(async (tx) => {
+    // Lock and re-read the challenge on the transaction connection. Concurrent
+    // verifications serialize here; the successful transaction consumes it once.
+    await tx.$queryRaw`SELECT "id" FROM "RegistrationAttempt" WHERE "id" = ${registrationId} FOR UPDATE`;
+    const attempt = await tx.registrationAttempt.findUnique({ where: { id: registrationId } });
+    if (!attempt || attempt.purpose !== "REGISTRATION") return { error: "NOT_FOUND" as const };
+    if (attempt.status === "LOCKED") return { error: "OTP_ATTEMPTS_EXCEEDED" as const };
+    if (attempt.status === "EXPIRED") return { error: "OTP_EXPIRED" as const };
+    if (attempt.status !== "PENDING") return { error: "NOT_FOUND" as const };
+    if (attempt.otpExpiresAt.getTime() <= Date.now()) {
+      await tx.registrationAttempt.update({ where: { id: attempt.id }, data: { status: "EXPIRED" } });
+      return { error: "OTP_EXPIRED" as const };
+    }
+    const maxAttempts = Math.min(env.otpMaxAttempts, 5);
+    if (attempt.otpAttempts >= maxAttempts) {
+      await tx.registrationAttempt.update({ where: { id: attempt.id }, data: { status: "LOCKED" } });
+      return { error: "OTP_ATTEMPTS_EXCEEDED" as const };
+    }
+    if (!verifyOtpHash(otp, attempt.otpHash)) {
+      const attempts = attempt.otpAttempts + 1;
+      await tx.registrationAttempt.update({
+        where: { id: attempt.id },
+        data: { otpAttempts: attempts, ...(attempts >= maxAttempts ? { status: "LOCKED" as const } : {}) },
+      });
+      return { error: "OTP_INVALID" as const };
+    }
     const [emailExists, phoneExists, referrer, codes] = await Promise.all([
       tx.user.findUnique({ where: { email: attempt.email }, select: { id: true } }),
       attempt.phoneNumber ? tx.user.findUnique({ where: { phoneNumber: attempt.phoneNumber }, select: { id: true } }) : null,
@@ -246,12 +326,21 @@ const completeRegistration = async (request: IncomingMessage, response: ServerRe
     if (phoneExists) throw new HttpError("This phone number is already registered.", 409, "PHONE_EXISTS");
     if (attempt.referralCode && !referrer) throw new HttpError("Referral code was not found.", 404, "REFERRAL_NOT_FOUND");
     const now = new Date();
+    const freePlan = await tx.membershipPlan.findFirst({
+      where: { id: freePlanId, code: "FREE", status: "ACTIVE", effectiveFrom: { lte: now } },
+      select: { id: true },
+    });
+    if (!freePlan) throw new HttpError("Free membership configuration is unavailable. Please try again later.", 503, "FREE_PLAN_UNAVAILABLE");
     const id = createId("user");
     const referralCode = createReferralCode(attempt.fullName, new Set(codes.map((row) => row.referralCode)));
     const user = await tx.user.create({ data: {
       id, fullName: attempt.fullName, email: attempt.email, phoneNumber: attempt.phoneNumber, phoneVerifiedAt: now,
       passwordHash: attempt.passwordHash, referralCode, sponsorId: referrer?.id ?? null, placementParentId: referrer?.id ?? null,
       role: "USER", status: "ACTIVE", createdAt: now,
+      memberships: { create: {
+        id: createId("membership"), planId: freePlan.id, status: "ACTIVE",
+        startsAt: now, expiresAt: new Date(now.getTime() + env.freeTrialDays * 24 * 60 * 60 * 1000),
+      } },
     } });
     await Promise.all([
       tx.profile.create({ data: { userId: id } }),
@@ -261,7 +350,13 @@ const completeRegistration = async (request: IncomingMessage, response: ServerRe
     ]);
     const token = await issueSession(tx, user, context);
     return { token, user: publicUser(user) };
-  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  });
+  if ("error" in result) {
+    if (result.error === "NOT_FOUND") throw new HttpError("Registration was not found.", 404, "NOT_FOUND");
+    if (result.error === "OTP_EXPIRED") throw new HttpError("OTP has expired.", 400, "OTP_EXPIRED");
+    if (result.error === "OTP_ATTEMPTS_EXCEEDED") throw new HttpError("Too many incorrect OTP attempts.", 429, "OTP_ATTEMPTS_EXCEEDED");
+    throw new HttpError("Incorrect OTP.", 400, "OTP_INVALID");
+  }
   created(response, result);
 };
 
@@ -766,13 +861,26 @@ const mutateAdminProduct = async (request: IncomingMessage, actor: Awaited<Retur
   });
 };
 
-export const postgresRoute = async (request: IncomingMessage, response: ServerResponse, url: URL, requestId: string) => {
+export type PostgresRouteDependencies = { orderDatabase?: OrderDatabase };
+
+export const postgresRoute = async (request: IncomingMessage, response: ServerResponse, url: URL, requestId: string, dependencies: PostgresRouteDependencies = {}) => {
   const context = getRequestContext(request);
   try {
     if (request.method === "GET" && url.pathname === "/health") return ok(response, { status: "ok", timestamp: nowIso() });
     if (request.method === "GET" && url.pathname === "/ready") {
       const health = await prisma.$queryRaw<Array<{ database: string }>>`SELECT current_database() AS database`;
-      return ok(response, { status: "ready", database: health[0]?.database, storage: "postgresql-prisma", productionReady: false });
+      return ok(response, { status: "ready", database: health[0]?.database, storage: "postgresql-prisma", productionReady: env.environment === "production" });
+    }
+    if (request.method === "GET" && url.pathname === "/api/products") {
+      const { limit, offset } = parsePagination(url.searchParams);
+      const search = url.searchParams.get("search")?.trim();
+      if (search && search.length > 100) throw new HttpError("Search query is too long.", 400, "INVALID_SEARCH");
+      const where = customerProductWhere(search || undefined);
+      const [count, products] = await Promise.all([
+        prisma.product.count({ where }),
+        prisma.product.findMany({ where, orderBy: { name: "asc" }, skip: offset, take: limit }),
+      ]);
+      return ok(response, { count, limit, offset, rows: products.map(toCustomerProduct) });
     }
     if (request.method === "POST" && url.pathname === "/api/auth/register/request-otp") return await registerOtp(request, response);
     if (request.method === "POST" && url.pathname === "/api/auth/register/verify") return await completeRegistration(request, response);
@@ -843,6 +951,29 @@ export const postgresRoute = async (request: IncomingMessage, response: ServerRe
       const { user } = await authenticate(request);
       const rows = await prisma.withdrawalRequest.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 100 });
       return ok(response, rows.map((row) => ({ id: row.id, amount: Number(row.amountMinor) / 100, currency: row.currency, date: row.createdAt.toISOString(), reference: row.reservationEntryId ?? row.id, status: row.status, type: "CASH_OUT" })));
+    }
+    if (request.method === "POST" && url.pathname === "/api/me/orders") {
+      const { user } = await authenticate(request);
+      await requirePurchasingMembership(user.id);
+      enforceRateLimit(`customer-order:${user.id}`, 10, 60_000);
+      const body = await readJson<{ items?: unknown }>(request);
+      if (!body || typeof body !== "object" || Array.isArray(body) || Object.keys(body).some((key) => key !== "items")) {
+        throw new HttpError("Only order items are accepted.", 400, "INVALID_ORDER_FIELDS");
+      }
+      const idempotencyHeader = request.headers["idempotency-key"];
+      const idempotencyKey = typeof idempotencyHeader === "string" ? idempotencyHeader : "";
+      const result = await createCustomerOrder({
+        db: dependencies.orderDatabase ?? prismaOrderDatabase,
+        userId: user.id,
+        idempotencyKey,
+        items: body.items,
+        requestId,
+        ipAddress: context.ipAddress ?? null,
+        createId,
+      });
+      const order = result.order as { id: string; orderNumber: string; status: string; currency: string; totalMinor: bigint; items?: Array<{ productId: string | null; skuSnapshot?: string; nameSnapshot?: string; quantity: number; unitPriceMinor: bigint; lineTotalMinor?: bigint; currency: string }> };
+      const payload = { id: order.id, orderNumber: order.orderNumber, status: order.status, currency: order.currency, totalMinor: order.totalMinor.toString(), replayed: result.replayed, items: (order.items ?? []).map((item) => ({ productId: item.productId, sku: item.skuSnapshot, name: item.nameSnapshot, quantity: item.quantity, unitPriceMinor: item.unitPriceMinor.toString(), lineTotalMinor: item.lineTotalMinor?.toString(), currency: item.currency })) };
+      return send(response, result.replayed ? 200 : 201, payload);
     }
     if (request.method === "GET" && url.pathname === "/api/me/orders") {
       const { user } = await authenticate(request);
@@ -1056,6 +1187,7 @@ export const postgresRoute = async (request: IncomingMessage, response: ServerRe
     if (request.method === "POST" && url.pathname.startsWith("/api/webhooks/flutterwave")) throw new HttpError("Flutterwave sandbox processing is not configured for PostgreSQL runtime.", 503, "PAYMENTS_NOT_CONFIGURED");
     throw new HttpError("Not found.", 404, "NOT_FOUND");
   } catch (error) {
+    if (error instanceof OrderServiceError) return send(response, error.status, { error: error.message, code: error.code, requestId });
     if (error instanceof HttpError) throw error;
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") throw new HttpError("A record with those details already exists.", 409, "CONFLICT");
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2034") throw new HttpError("This record changed concurrently. Refresh and retry.", 409, "CONCURRENT_UPDATE");

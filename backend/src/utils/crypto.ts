@@ -46,6 +46,13 @@ export const createOtp = () =>
 export const hashOtp = (otp: string) =>
   crypto.createHmac("sha256", env.otpPepper).update(otp).digest("hex");
 
+export const verifyOtpHash = (otp: string, storedHash: string) => {
+  if (!/^[a-f0-9]{64}$/i.test(storedHash)) return false;
+  const expected = Buffer.from(storedHash, "hex");
+  const actual = Buffer.from(hashOtp(otp), "hex");
+  return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
+};
+
 export const signToken = (payload: Record<string, unknown>) => {
   const header = base64Url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
   const body = base64Url(

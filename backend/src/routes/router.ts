@@ -36,7 +36,7 @@ import {
   updateManagedUserRole,
   updateManagedUserStatus,
 } from "../services/adminService.ts";
-import { postgresRoute } from "./postgresRouter.ts";
+import { postgresRoute, type PostgresRouteDependencies } from "./postgresRouter.ts";
 import { postgresRuntimeEnabled } from "../services/prismaClient.ts";
 
 const ok = (response: ServerResponse, payload: unknown) =>
@@ -48,6 +48,7 @@ const created = (response: ServerResponse, payload: unknown) =>
 export const route = async (
   request: IncomingMessage,
   response: ServerResponse,
+  postgresDependencies?: PostgresRouteDependencies,
 ) => {
   const url = new URL(request.url ?? "/", "http://localhost");
   const requestId = createId("req");
@@ -87,8 +88,15 @@ export const route = async (
     }
 
     if (postgresRuntimeEnabled()) {
-      await postgresRoute(request, response, url, requestId);
+      await postgresRoute(request, response, url, requestId, postgresDependencies);
       return;
+    }
+
+    // Administrative authentication, reads, and mutations rely on the
+    // PostgreSQL MFA, permission, approval, and audit model. Never fall back to
+    // the weaker legacy JSON administrator routes.
+    if (url.pathname === "/api/admin" || url.pathname.startsWith("/api/admin/")) {
+      throw new HttpError("Administrator operations require PostgreSQL storage.", 503, "POSTGRES_REQUIRED_FOR_ADMIN_OPERATIONS");
     }
 
     if (request.method === "POST" && url.pathname === "/api/webhooks/flutterwave") {
@@ -151,7 +159,7 @@ export const route = async (
       request.method === "POST" &&
       url.pathname === "/api/auth/register/request-otp"
     ) {
-      const result = requestRegistrationOtp(
+      const result = await requestRegistrationOtp(
         db.data,
         await readJson<{
           email: string;

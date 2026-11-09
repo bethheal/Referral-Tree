@@ -2,6 +2,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
+import { loadAllPages } from "./customerOrderHistory";
+import type { CustomerOrder, CustomerOrderDetail, CustomerOrderStatus } from "./customerOrderHistory";
+export type { CustomerOrder, CustomerOrderDetail, CustomerOrderStatus } from "./customerOrderHistory";
 
 const configuredApiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 const expoHostUri = Constants.expoConfig?.hostUri;
@@ -39,7 +42,7 @@ type ApiOptions = RequestInit & {
 };
 
 export class ApiError extends Error {
-  constructor(message: string, readonly status: number) {
+  constructor(message: string, readonly status: number, readonly code?: string, readonly details?: unknown) {
     super(message);
     this.name = "ApiError";
   }
@@ -66,7 +69,7 @@ const apiRequest = async <T>(path: string, options: ApiOptions = {}) => {
   const body = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new ApiError(body.error ?? "Request failed.", response.status);
+    throw new ApiError(body.error ?? "Request failed.", response.status, body.code, body.details);
   }
 
   return body as T;
@@ -134,6 +137,9 @@ export type AdminPage<T = Record<string, unknown>> = PaginatedResponse<T>;
 export type AdminModule = "memberships" | "payments" | "payment-events" | "referrals" | "ledger" | "withdrawals" | "products" | "orders" | "invoices" | "notifications" | "security" | "approvals";
 export type AdminApproval = { id: string; action: string; targetType: string; targetId: string; payload: unknown; reason: string; status: string; requestedAt: string; requester: { id: string; fullName: string; email: string; role: string } };
 export type AdminProduct = { id: string; sku: string; name: string; description: string; imageKey: string | null; priceMinor: string; currency: string; inventoryCount: number; status: "DRAFT" | "ACTIVE" | "ARCHIVED"; createdAt: string; updatedAt: string; archivedAt: string | null };
+export type CustomerProduct = { id: string; sku: string; name: string; description: string; imageKey: string | null; priceMinor: string; currency: string; inStock: boolean };
+export type CreateCustomerOrderInput = { items: Array<{ productId: string; quantity: number }> };
+export type CreateCustomerOrderResponse = { id: string; orderNumber: string; status: "PENDING_PAYMENT"; currency: string; totalMinor: string; replayed: boolean; items: Array<{ productId: string; sku: string; name: string; quantity: number; unitPriceMinor: string; lineTotalMinor: string; currency: string }> };
 
 export type ProfileResponse = {
   dateOfBirth: string | null;
@@ -313,6 +319,44 @@ export const getAdminResource = <T = Record<string, unknown>>(module: AdminModul
   return apiRequest<AdminPage<T>>(`/api/admin/${module}?${params.toString()}`, { auth: true });
 };
 
+export const getCustomerProducts = (input: { limit?: number; offset?: number; search?: string } = {}) => {
+  const query = new URLSearchParams({ limit: String(input.limit ?? 20), offset: String(input.offset ?? 0) });
+  if (input.search?.trim()) query.set("search", input.search.trim());
+  return apiRequest<{ count: number; limit: number; offset: number; rows: CustomerProduct[] }>(`/api/products?${query.toString()}`);
+};
+
+export const getAllCustomerProducts = async () => {
+  const pageSize = 50;
+  const firstPage = await getCustomerProducts({ limit: pageSize, offset: 0 });
+  const rows = [...firstPage.rows];
+  while (rows.length < firstPage.count) {
+    const page = await getCustomerProducts({ limit: pageSize, offset: rows.length });
+    if (page.rows.length === 0) break;
+    rows.push(...page.rows);
+  }
+  return { count: firstPage.count, rows };
+};
+
+export const getCustomerOrdersPage = (input: { limit?: number; offset?: number } = {}) => {
+  const query = new URLSearchParams({ limit: String(input.limit ?? 50), offset: String(input.offset ?? 0) });
+  return apiRequest<{ count: number; limit: number; offset: number; rows: CustomerOrder[] }>(`/api/me/orders?${query.toString()}`, { auth: true });
+};
+
+export const getAllCustomerOrders = async () => {
+  return loadAllPages(({ limit, offset }) => getCustomerOrdersPage({ limit, offset }));
+};
+
+export const getCustomerOrder = (id: string) =>
+  apiRequest<CustomerOrderDetail>(`/api/me/orders/${encodeURIComponent(id)}`, { auth: true });
+
+export const createCustomerOrder = (input: CreateCustomerOrderInput, idempotencyKey: string) =>
+  apiRequest<CreateCustomerOrderResponse>("/api/me/orders", {
+    auth: true,
+    body: JSON.stringify({ items: input.items.map(({ productId, quantity }) => ({ productId, quantity })) }),
+    headers: { "Idempotency-Key": idempotencyKey },
+    method: "POST",
+  });
+
 export const getAdminUserDetail = (id: string) => apiRequest<{ user: Record<string, unknown> }>(`/api/admin/users/${encodeURIComponent(id)}`, { auth: true });
 export const revokeAdminUserSessions = (id: string, reason: string) => apiRequest<{ user: { id: string; fullName: string; email: string }; revokedSessions: number }>(`/api/admin/users/${encodeURIComponent(id)}/sessions/revoke`, { auth: true, body: JSON.stringify({ reason }), method: "POST" });
 export const decideAdminApproval = (id: string, decision: "APPROVED" | "REJECTED", reason: string) => apiRequest<{ id: string; status: string; targetUserId?: string; role?: string }>(`/api/admin/approvals/${encodeURIComponent(id)}`, { auth: true, body: JSON.stringify({ decision, reason }), method: "PATCH" });
@@ -331,7 +375,7 @@ export const requestRegistrationOtp = (input: {
   phoneNumber: string;
   referralCode?: string;
 }) =>
-  apiRequest<{ otp?: string; registrationId: string }>(
+  apiRequest<{ registrationId: string }>(
     "/api/auth/register/request-otp",
     {
       body: JSON.stringify(input),

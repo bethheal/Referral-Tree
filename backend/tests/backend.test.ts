@@ -4,6 +4,14 @@ import os from "node:os";
 import path from "node:path";
 
 const dbFile = path.join(os.tmpdir(), `angelfoods-backend-${Date.now()}.json`);
+process.env.NODE_ENV = "test";
+process.env.STORAGE_MODE = "json";
+for (const name of ["DATABASE_URL", "DIRECT_URL", "DATABASE_TARGET", "NEON_ENDPOINT_ID"]) {
+  delete process.env[name];
+}
+for (const name of ["SMS_PROVIDER", "SMS_LIVE_DELIVERY_ENABLED", "HUBTEL_CLIENT_ID", "HUBTEL_CLIENT_SECRET", "HUBTEL_SENDER_ID", "HUBTEL_API_BASE_URL"]) {
+  delete process.env[name];
+}
 process.env.DATABASE_FILE = dbFile;
 process.env.JWT_SECRET = "test-secret-with-enough-length";
 process.env.OTP_DEV_MODE = "true";
@@ -12,6 +20,16 @@ process.env.MIN_CASH_OUT = "10";
 
 const { createServer } = await import("../src/server.ts");
 const { db } = await import("../src/services/database.ts");
+const { setSmsProviderForTests } = await import("../src/services/smsProvider.ts");
+const deliveredCodes = new Map<string, string>();
+setSmsProviderForTests({
+  assertAvailable() {},
+  async send(message) {
+    const code = message.content.match(/verification code: (\d{6})/i)?.[1];
+    assert.ok(code);
+    deliveredCodes.set(message.to, code);
+  },
+});
 
 const server = createServer();
 
@@ -41,11 +59,29 @@ const request = async (
   return { body, response };
 };
 
+const withCapturedLogs = async <T>(action: () => Promise<T>) => {
+  const logs: string[] = [];
+  const original = { log: console.log, info: console.info, warn: console.warn, error: console.error };
+  const capture = (...args: unknown[]) => logs.push(args.map(String).join(" "));
+  console.log = capture;
+  console.info = capture;
+  console.warn = capture;
+  console.error = capture;
+  try {
+    return { result: await action(), logs: logs.join("\n") };
+  } finally {
+    console.log = original.log;
+    console.info = original.info;
+    console.warn = original.warn;
+    console.error = original.error;
+  }
+};
+
 const port = await listen();
 const baseUrl = `http://127.0.0.1:${port}`;
 
 try {
-  const firstOtp = await request(baseUrl, "/api/auth/register/request-otp", {
+  const { result: firstOtp, logs: firstOtpLogs } = await withCapturedLogs(() => request(baseUrl, "/api/auth/register/request-otp", {
     body: JSON.stringify({
       email: "jennifer@example.com",
       fullName: "Jennifer Angel",
@@ -54,13 +90,16 @@ try {
       role: "ADMIN",
     }),
     method: "POST",
-  });
+  }));
   assert.equal(firstOtp.response.status, 201);
-  assert.equal(typeof firstOtp.body.otp, "string");
+  assert.equal(firstOtp.body.otp, undefined, "OTP must never be exposed in the API response");
+  const firstOtpCode = deliveredCodes.get("+233550000001");
+  assert.match(firstOtpCode ?? "", /^\d{6}$/);
+  assert.equal(firstOtpLogs.includes(firstOtpCode!), false, "application logs must not expose OTPs");
 
   const firstRegistration = await request(baseUrl, "/api/auth/register/verify", {
     body: JSON.stringify({
-      otp: firstOtp.body.otp,
+      otp: firstOtpCode,
       registrationId: firstOtp.body.registrationId,
     }),
     method: "POST",
@@ -101,10 +140,11 @@ try {
     method: "POST",
   });
   assert.equal(secondOtp.response.status, 201);
+  assert.equal(secondOtp.body.otp, undefined, "OTP must never be exposed in the API response");
 
   const secondRegistration = await request(baseUrl, "/api/auth/register/verify", {
     body: JSON.stringify({
-      otp: secondOtp.body.otp,
+      otp: deliveredCodes.get("+233550000002"),
       registrationId: secondOtp.body.registrationId,
     }),
     method: "POST",
@@ -124,7 +164,8 @@ try {
     body: JSON.stringify({ email: "jennifer@example.com", password: "Password123!" }),
     method: "POST",
   });
-  assert.equal(deniedAdminLogin.response.status, 403);
+  assert.equal(deniedAdminLogin.response.status, 503);
+  assert.equal(deniedAdminLogin.body.code, "POSTGRES_REQUIRED_FOR_ADMIN_OPERATIONS");
 
   const dashboard = await request(baseUrl, "/api/me/dashboard", {
     headers: { Authorization: `Bearer ${firstToken}` },
@@ -244,7 +285,8 @@ try {
   const adminAccess = await request(baseUrl, "/api/admin/access", {
     headers: { Authorization: `Bearer ${firstToken}` },
   });
-  assert.equal(adminAccess.response.status, 403);
+  assert.equal(adminAccess.response.status, 503);
+  assert.equal(adminAccess.body.code, "POSTGRES_REQUIRED_FOR_ADMIN_OPERATIONS");
 
   db.data.ledger.push({
     id: "test-available-ledger",
@@ -305,12 +347,13 @@ try {
     }),
     method: "POST",
   });
+  assert.equal(unrelatedOtp.body.otp, undefined, "OTP must never be exposed in the API response");
   const unrelatedRegistration = await request(
     baseUrl,
     "/api/auth/register/verify",
     {
       body: JSON.stringify({
-        otp: unrelatedOtp.body.otp,
+        otp: deliveredCodes.get("+233550000003"),
         registrationId: unrelatedOtp.body.registrationId,
       }),
       method: "POST",
@@ -335,77 +378,25 @@ try {
       method: "POST",
     }
   );
-  assert.equal(normalUserAdminAttempt.response.status, 403);
-  assert.match(normalUserAdminAttempt.body.error, /admin/i);
+  assert.equal(normalUserAdminAttempt.response.status, 503);
+  assert.equal(normalUserAdminAttempt.body.code, "POSTGRES_REQUIRED_FOR_ADMIN_OPERATIONS");
 
-  const firstUserRecord = db.data.users.find((user: { id: string }) =>
-    user.id === firstRegistration.body.user.id
-  );
-  assert(firstUserRecord);
-  firstUserRecord.role = "ADMIN";
-  db.save();
-  const permittedAdminLogin = await request(baseUrl, "/api/admin/auth/login", {
-    body: JSON.stringify({ email: "jennifer@example.com", password: "Password123!" }),
-    method: "POST",
-  });
-  assert.equal(permittedAdminLogin.response.status, 200);
-  assert.equal(permittedAdminLogin.body.user.role, undefined);
-  const authorizedAdminAccess = await request(baseUrl, "/api/admin/access", {
-    headers: { Authorization: `Bearer ${permittedAdminLogin.body.token}` },
-  });
-  assert.equal(authorizedAdminAccess.response.status, 200);
-  assert.equal(authorizedAdminAccess.body.authorized, true);
-
-  const adminUsersList = await request(baseUrl, "/api/admin/users", {
-    headers: { Authorization: `Bearer ${firstToken}` },
-  });
-  assert.equal(adminUsersList.response.status, 200);
-  assert.equal(adminUsersList.body.count, 3);
-  assert.equal(adminUsersList.body.rows[0].passwordHash, undefined);
-
-  const adminCannotGrantRole = await request(baseUrl, `/api/admin/users/${secondRegistration.body.user.id}/role`, {
-    body: JSON.stringify({ role: "ADMIN", reason: "Attempted unauthorized promotion" }),
-    headers: { Authorization: `Bearer ${firstToken}` },
-    method: "PATCH",
-  });
-  assert.equal(adminCannotGrantRole.response.status, 403);
-
-  firstUserRecord.role = "SUPER_ADMIN";
-  db.save();
-  const summary = await request(baseUrl, "/api/admin/dashboard/summary", {
-    headers: { Authorization: `Bearer ${firstToken}` },
-  });
-  assert.equal(summary.response.status, 200);
-  assert.equal(summary.body.accounts.superAdmins, 1);
-  assert.ok(summary.body.security.deniedAdminLoginsLast24Hours >= 1);
-
-  const promoteMember = await request(baseUrl, `/api/admin/users/${secondRegistration.body.user.id}/role`, {
-    body: JSON.stringify({ role: "ADMIN", reason: "Approved staff access" }),
-    headers: { Authorization: `Bearer ${firstToken}` },
-    method: "PATCH",
-  });
-  assert.equal(promoteMember.response.status, 200);
-  assert.equal(promoteMember.body.user.role, "ADMIN");
-
-  const selfPromotion = await request(baseUrl, `/api/admin/users/${firstUserRecord.id}/role`, {
-    body: JSON.stringify({ role: "ADMIN", reason: "Self demotion attempt" }),
-    headers: { Authorization: `Bearer ${firstToken}` },
-    method: "PATCH",
-  });
-  assert.equal(selfPromotion.response.status, 400);
-
-  const adminAudit = await request(baseUrl, "/api/admin/audit-log", {
-    headers: { Authorization: `Bearer ${firstToken}` },
-  });
-  assert.equal(adminAudit.response.status, 200);
-  assert.ok(adminAudit.body.rows.some((entry: { action: string }) => entry.action === "ADMIN_USER_ROLE_CHANGED"));
-
-  firstUserRecord.role = "USER";
-  db.save();
-  const revokedAdminRole = await request(baseUrl, "/api/admin/dashboard/summary", {
-    headers: { Authorization: `Bearer ${permittedAdminLogin.body.token}` },
-  });
-  assert.equal(revokedAdminRole.response.status, 403);
+  const jsonAdminChecks = await Promise.all([
+    request(baseUrl, "/api/admin/users", { headers: { Authorization: `Bearer ${firstToken}` } }),
+    request(baseUrl, `/api/admin/users/${firstRegistration.body.user.id}/status`, {
+      body: JSON.stringify({ status: "SUSPENDED", reason: "JSON admin mode is unsupported" }),
+      headers: { Authorization: `Bearer ${firstToken}` }, method: "PATCH",
+    }),
+    request(baseUrl, `/api/admin/users/${firstRegistration.body.user.id}/role`, {
+      body: JSON.stringify({ role: "ADMIN", reason: "JSON admin mode is unsupported" }),
+      headers: { Authorization: `Bearer ${firstToken}` }, method: "PATCH",
+    }),
+  ]);
+  for (const result of jsonAdminChecks) {
+    assert.equal(result.response.status, 503);
+    assert.equal(result.body.code, "POSTGRES_REQUIRED_FOR_ADMIN_OPERATIONS");
+  }
+  assert.equal(db.data.users.find((user: { id: string }) => user.id === firstRegistration.body.user.id)?.role, "USER");
 
   const unauthorized = await request(baseUrl, "/api/me/dashboard");
   assert.equal(unauthorized.response.status, 401);

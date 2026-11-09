@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { beginAdminMfaSetup, checkAdminAccess, loginAdminWithPassword, logoutSession, saveAuthSession, verifyAdminMfa } from "@/components/backendApi";
+import { completeAdminMfaLogin, type AdminMfaLoginStep } from "@/components/adminMfaFlow";
 
 export type AdminRole = "admin" | "super_admin" | "finance_admin" | "product_manager" | "order_manager" | "support_admin" | "auditor";
 export type AdminSession = { email: string; name: string; role: AdminRole; authenticatedAt: string };
@@ -50,11 +51,11 @@ export const loginAdminAccount = async (email: string, password: string) => {
   }
 };
 
-export const finishAdminMfaLogin = async (email: string, code: string) => {
-  const result = await verifyAdminMfa(code);
-  const session = await verifyAndStoreAdminSession(email);
-  return { session, recoveryCodes: result.recoveryCodes ?? [] };
-};
+export const finishAdminMfaLogin = (email: string, code: string, step: AdminMfaLoginStep) =>
+  completeAdminMfaLogin({ email, code, step }, {
+    verifyCode: verifyAdminMfa,
+    establishSession: verifyAndStoreAdminSession,
+  });
 
 export const getAdminSession = async (): Promise<AdminSession | null> => {
   const rawSession = await AsyncStorage.getItem(ADMIN_SESSION_KEY);

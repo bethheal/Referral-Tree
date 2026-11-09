@@ -1,5 +1,6 @@
-import { addCartItem, getCartItems } from "@/components/cartStore";
-import { formatGhs, products } from "@/components/dashboardData";
+import { addCartItem, getCartItems, getUnmatchedLegacyCartCount } from "@/components/cartStore";
+import { getAllCustomerProducts, type CustomerProduct } from "@/components/backendApi";
+import { formatMinorCurrency } from "@/components/productMoney";
 import PageHeader from "@/components/pageHeader";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { useFocusEffect } from "@react-navigation/native";
@@ -7,7 +8,7 @@ import { router } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Animated,
-  Image,
+  ActivityIndicator,
   Modal,
   Pressable,
   SafeAreaView,
@@ -22,10 +23,11 @@ import {
   type ViewStyle,
 } from "react-native";
 
-type Product = (typeof products)[number];
-type SortOption = "topRated" | "lowToHigh" | "highToLow";
+type Product = CustomerProduct;
+type SortOption = "name" | "lowToHigh" | "highToLow";
 type AnimatedIconButtonProps = {
   color?: string;
+  disabled?: boolean;
   icon: string;
   onPress: () => void;
   rotateOnHover?: boolean;
@@ -37,15 +39,11 @@ type AnimatedTextButtonProps = {
   onPress: () => void;
 };
 
-const categories = [
-  "All",
-  ...Array.from(new Set(products.map((product) => product.category))),
-];
 const priceRanges = [
-  { label: "All prices", max: Infinity, min: 0 },
-  { label: "Under GHS 75", max: 75, min: 0 },
-  { label: "GHS 75 - 150", max: 150, min: 75 },
-  { label: "Above GHS 150", max: Infinity, min: 150 },
+  { label: "All prices", maxMinor: null, minMinor: "0" },
+  { label: "Under GHS 75", maxMinor: "7500", minMinor: "0" },
+  { label: "GHS 75 - 150", maxMinor: "15000", minMinor: "7500" },
+  { label: "Above GHS 150", maxMinor: null, minMinor: "15000" },
 ];
 
 const getColumnCount = (width: number) => {
@@ -56,6 +54,7 @@ const getColumnCount = (width: number) => {
 
 function AnimatedIconButton({
   color = "#192536",
+  disabled = false,
   icon,
   onPress,
   rotateOnHover = false,
@@ -97,6 +96,7 @@ function AnimatedIconButton({
       ]}
     >
       <Pressable
+        disabled={disabled}
         onHoverIn={() => {
           isHovered.current = true;
           setHovered(true);
@@ -112,7 +112,7 @@ function AnimatedIconButton({
         onPressOut={() =>
           animateTo(isHovered.current ? 1.14 : 1, isHovered.current ? 1 : 0)
         }
-        style={styles.iconOnlyButton}
+        style={[styles.iconOnlyButton, disabled && styles.disabledButton]}
       >
         <FontAwesome6 name={icon as any} size={size} color={hovered ? "#FFB900" : color} />
       </Pressable>
@@ -161,14 +161,17 @@ export default function Products() {
   const detailScale = useRef(new Animated.Value(0.94)).current;
   const toastOpacity = useRef(new Animated.Value(0)).current;
   const toastTranslateY = useRef(new Animated.Value(-14)).current;
-  const [activeCategory, setActiveCategory] = useState("All");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [catalogError, setCatalogError] = useState("");
+  const [unmatchedLegacyCount, setUnmatchedLegacyCount] = useState(0);
   const [cartCount, setCartCount] = useState(0);
   const [filterVisible, setFilterVisible] = useState(false);
   const [priceRangeIndex, setPriceRangeIndex] = useState(0);
   const [query, setQuery] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showAll, setShowAll] = useState(false);
-  const [sortOption, setSortOption] = useState<SortOption>("topRated");
+  const [sortOption, setSortOption] = useState<SortOption>("name");
   const [toastText, setToastText] = useState("");
 
   const columnCount = getColumnCount(width);
@@ -177,44 +180,58 @@ export default function Products() {
   const cardWidth =
     (width - horizontalPadding * 2 - gridGap * (columnCount - 1)) / columnCount;
 
-  const refreshCartCount = useCallback(() => {
-    getCartItems().then((items) => {
+  const loadCatalog = useCallback(async () => {
+    setCatalogLoading(true);
+    setCatalogError("");
+    try {
+      const result = await getAllCustomerProducts();
+      setProducts(result.rows);
+      const items = await getCartItems(result.rows);
       setCartCount(items.reduce((total, item) => total + item.quantity, 0));
-    });
+      setUnmatchedLegacyCount(await getUnmatchedLegacyCartCount());
+    } catch {
+      setCatalogError("We couldn't load the product catalog. Check your connection and try again.");
+    } finally {
+      setCatalogLoading(false);
+    }
   }, []);
 
-  useFocusEffect(refreshCartCount);
+  useFocusEffect(useCallback(() => { void loadCatalog(); }, [loadCatalog]));
 
   const filteredProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    const selectedPriceRange = priceRanges[priceRangeIndex];
+    const selectedPriceRange = priceRanges[priceRangeIndex]!;
+    const minMinor = BigInt(selectedPriceRange.minMinor);
+    const maxMinor = selectedPriceRange.maxMinor === null ? null : BigInt(selectedPriceRange.maxMinor);
 
     return products
       .filter((product) => {
-        const matchesCategory =
-          activeCategory === "All" || product.category === activeCategory;
         const matchesSearch =
           !normalizedQuery ||
           product.name.toLowerCase().includes(normalizedQuery) ||
-          product.category.toLowerCase().includes(normalizedQuery);
-        const matchesPrice =
-          product.price >= selectedPriceRange.min &&
-          product.price <= selectedPriceRange.max;
+          product.sku.toLowerCase().includes(normalizedQuery) ||
+          product.description.toLowerCase().includes(normalizedQuery);
+        const priceMinor = BigInt(product.priceMinor);
+        const matchesPrice = priceMinor >= minMinor && (maxMinor === null || priceMinor <= maxMinor);
 
-        return matchesCategory && matchesSearch && matchesPrice;
+        return matchesSearch && matchesPrice;
       })
       .sort((first, second) => {
         if (sortOption === "lowToHigh") {
-          return first.price - second.price;
+          const firstPrice = BigInt(first.priceMinor);
+          const secondPrice = BigInt(second.priceMinor);
+          return firstPrice < secondPrice ? -1 : firstPrice > secondPrice ? 1 : first.name.localeCompare(second.name);
         }
 
         if (sortOption === "highToLow") {
-          return second.price - first.price;
+          const firstPrice = BigInt(first.priceMinor);
+          const secondPrice = BigInt(second.priceMinor);
+          return firstPrice > secondPrice ? -1 : firstPrice < secondPrice ? 1 : first.name.localeCompare(second.name);
         }
 
-        return second.rating - first.rating;
+        return first.name.localeCompare(second.name);
       });
-  }, [activeCategory, priceRangeIndex, query, sortOption]);
+  }, [priceRangeIndex, products, query, sortOption]);
 
   const visibleProducts = showAll
     ? filteredProducts
@@ -257,10 +274,11 @@ export default function Products() {
     ]).start();
   };
 
-  const handleAddToCart = async (productName: string) => {
-    const items = await addCartItem(productName);
+  const handleAddToCart = async (product: Product) => {
+    if (!product.inStock) return;
+    const items = await addCartItem(product.id);
     setCartCount(items.reduce((total, item) => total + item.quantity, 0));
-    showAddedToast(productName);
+    showAddedToast(product.name);
   };
 
   const openProductDetails = (product: Product) => {
@@ -299,11 +317,10 @@ export default function Products() {
   };
 
   const resetFilters = () => {
-    setActiveCategory("All");
     setPriceRangeIndex(0);
     setQuery("");
     setShowAll(false);
-    setSortOption("topRated");
+    setSortOption("name");
   };
 
   return (
@@ -333,9 +350,7 @@ export default function Products() {
               onPress={() => setFilterVisible(true)}
               style={[
                 styles.filterButton,
-                (activeCategory !== "All" ||
-                  priceRangeIndex !== 0 ||
-                  sortOption !== "topRated") &&
+                (priceRangeIndex !== 0 || sortOption !== "name") &&
                   styles.activeFilterButton,
               ]}
             >
@@ -343,9 +358,7 @@ export default function Products() {
                 name="sliders"
                 size={14}
                 color={
-                  activeCategory !== "All" ||
-                  priceRangeIndex !== 0 ||
-                  sortOption !== "topRated"
+                  priceRangeIndex !== 0 || sortOption !== "name"
                     ? "#FFFFFF"
                     : "#192536"
                 }
@@ -353,61 +366,40 @@ export default function Products() {
             </TouchableOpacity>
           </View>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoryList}
-          >
-            {categories.map((category) => {
-              const isActive = activeCategory === category;
+          {catalogLoading && products.length === 0 ? (
+            <View style={styles.catalogState}><ActivityIndicator color="#192536" /><Text style={styles.emptyText}>Loading products…</Text></View>
+          ) : null}
+          {catalogError ? (
+            <View style={styles.catalogError}>
+              <Text style={styles.emptyTitle}>Product catalog unavailable</Text>
+              <Text style={styles.emptyText}>{catalogError}</Text>
+              <TouchableOpacity accessibilityRole="button" onPress={() => void loadCatalog()} style={styles.retryButton}><Text style={styles.retryButtonText}>Retry</Text></TouchableOpacity>
+            </View>
+          ) : null}
+          {unmatchedLegacyCount > 0 ? <Text style={styles.legacyNotice}>{unmatchedLegacyCount} previous cart item(s) could not be matched to the active catalog and were preserved on this device.</Text> : null}
 
-              return (
-                <TouchableOpacity
-                  key={category}
-                  activeOpacity={0.85}
-                  onPress={() => {
-                    setActiveCategory(category);
-                    setShowAll(false);
-                  }}
-                  style={[
-                    styles.categoryChip,
-                    isActive && styles.activeCategoryChip,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.categoryText,
-                      isActive && styles.activeCategoryText,
-                    ]}
-                  >
-                    {category}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-
-          <View style={styles.featuredCard}>
+          {products.length > 0 ? <View style={styles.featuredCard}>
             <View style={styles.featuredInfo}>
               <View style={styles.featuredBadge}>
-                <FontAwesome6 name="star" size={11} color="#D7B126" />
+                  <FontAwesome6 name="basket-shopping" size={11} color="#D7B126" />
 
-                <Text style={styles.featuredBadgeText}>Popular pick</Text>
+                <Text style={styles.featuredBadgeText}>Active catalog</Text>
               </View>
 
-              <Text style={styles.featuredTitle}>Fresh pantry essentials</Text>
+              <Text numberOfLines={1} style={styles.featuredTitle}>{products[0]!.name}</Text>
 
               <Text style={styles.featuredText}>
-                Stock up on favorites and earn reward points.
+                {products[0]!.description || products[0]!.sku}
               </Text>
 
               <View style={styles.featuredActions}>
                 <TouchableOpacity
+                  disabled={!products[0]!.inStock}
                   activeOpacity={0.85}
-                  onPress={() => handleAddToCart(products[0].name)}
-                  style={styles.featuredButton}
+                  onPress={() => void handleAddToCart(products[0]!)}
+                  style={[styles.featuredButton, !products[0]!.inStock && styles.disabledButton]}
                 >
-                  <Text style={styles.featuredButtonText}>Add to cart</Text>
+                  <Text style={styles.featuredButtonText}>{products[0]!.inStock ? "Add to cart" : "Out of stock"}</Text>
 
                   <FontAwesome6 name="plus" size={12} color="#FFFFFF" />
                 </TouchableOpacity>
@@ -426,12 +418,12 @@ export default function Products() {
 
             <TouchableOpacity
               activeOpacity={0.9}
-              onPress={() => openProductDetails(products[0])}
+              onPress={() => openProductDetails(products[0]!)}
               style={styles.featuredImageWrap}
             >
-              <Image source={{ uri: products[0].image }} style={styles.featuredImage} />
+              <View style={[styles.featuredImage, styles.productImageFallback]}><FontAwesome6 name="basket-shopping" size={34} color="#192536" /></View>
             </TouchableOpacity>
-          </View>
+          </View> : null}
 
           <View style={styles.sectionHeader}>
             <View>
@@ -444,7 +436,7 @@ export default function Products() {
                   ? "Sorted by lowest price"
                   : sortOption === "highToLow"
                   ? "Sorted by highest price"
-                  : "Sorted by top rated"}
+                  : "Sorted by product name"}
               </Text>
             </View>
 
@@ -457,7 +449,7 @@ export default function Products() {
           <View style={[styles.productGrid, { gap: gridGap }]}>
             {visibleProducts.map((product) => (
               <View
-                key={product.name}
+                key={product.id}
                 style={[styles.productCard, { width: cardWidth }]}
               >
                 <TouchableOpacity
@@ -465,11 +457,11 @@ export default function Products() {
                   onPress={() => openProductDetails(product)}
                   style={styles.productImageWrap}
                 >
-                  <Image source={{ uri: product.image }} style={styles.productImage} />
+                  <View style={[styles.productImage, styles.productImageFallback]}><FontAwesome6 name="basket-shopping" size={26} color="#192536" /></View>
 
                   <View style={styles.productIcon}>
                     <FontAwesome6
-                      name={product.icon as any}
+                      name="basket-shopping"
                       size={12}
                       color="#192536"
                     />
@@ -482,31 +474,22 @@ export default function Products() {
                   </Text>
 
                   <Text numberOfLines={1} style={styles.productUnit}>
-                    {product.unit}
+                    {product.sku}
                   </Text>
 
                   <View style={styles.ratingRow}>
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <FontAwesome6
-                        key={star}
-                        name="star"
-                        size={8}
-                        color={
-                          star <= Math.round(product.rating) ? "#D7B126" : "#E5DCD7"
-                        }
-                      />
-                    ))}
-
-                    <Text style={styles.ratingText}>{product.rating}</Text>
+                    <FontAwesome6 name={product.inStock ? "circle-check" : "circle-minus"} size={10} color={product.inStock ? "#2F7C50" : "#A39894"} />
+                    <Text style={styles.ratingText}>{product.inStock ? "In stock" : "Out of stock"}</Text>
                   </View>
 
                   <View style={styles.productBottom}>
-                    <Text style={styles.productPrice}>{formatGhs(product.price)}</Text>
+                    <Text style={styles.productPrice}>{formatMinorCurrency(product.priceMinor, product.currency)}</Text>
 
                     <AnimatedIconButton
                       color="#1E3631"
                       icon="plus"
-                      onPress={() => handleAddToCart(product.name)}
+                      disabled={!product.inStock}
+                      onPress={() => void handleAddToCart(product)}
                       rotateOnHover
                       style={styles.addButton}
                     />
@@ -523,13 +506,13 @@ export default function Products() {
             ))}
           </View>
 
-          {filteredProducts.length === 0 ? (
+          {!catalogLoading && !catalogError && filteredProducts.length === 0 ? (
             <View style={styles.emptyCard}>
               <FontAwesome6 name="magnifying-glass" size={18} color="#192536" />
 
-              <Text style={styles.emptyTitle}>No products found</Text>
+              <Text style={styles.emptyTitle}>{products.length === 0 ? "No active products yet" : "No products found"}</Text>
 
-              <Text style={styles.emptyText}>Try another search or category.</Text>
+              <Text style={styles.emptyText}>{products.length === 0 ? "Active products will appear here when they are added to the catalog." : "Try another search or price filter."}</Text>
             </View>
           ) : null}
         </ScrollView>
@@ -577,16 +560,13 @@ export default function Products() {
                   <FontAwesome6 name="xmark" size={15} color="#1E3631" />
                 </TouchableOpacity>
 
-                <View
-                  style={styles.modalImageWrap}
-                >
-                  <Image
-                    source={{ uri: selectedProduct.image }}
-                    style={styles.modalImage}
-                  />
+                <View style={styles.modalImageWrap}>
+                  <View style={[styles.modalImage, styles.productImageFallback]}>
+                    <FontAwesome6 name="basket-shopping" size={42} color="#192536" />
+                  </View>
                 </View>
 
-                <Text style={styles.modalCategory}>{selectedProduct.category}</Text>
+                <Text style={styles.modalCategory}>{selectedProduct.sku}</Text>
 
                 <Text style={styles.modalTitle}>{selectedProduct.name}</Text>
 
@@ -594,16 +574,17 @@ export default function Products() {
 
                 <View style={styles.modalMetaRow}>
                   <Text style={styles.modalPrice}>
-                    {formatGhs(selectedProduct.price)}
+                    {formatMinorCurrency(selectedProduct.priceMinor, selectedProduct.currency)}
                   </Text>
 
-                  <Text style={styles.modalUnit}>{selectedProduct.unit}</Text>
+                  <Text style={styles.modalUnit}>{selectedProduct.inStock ? "In stock" : "Out of stock"}</Text>
                 </View>
 
                 <TouchableOpacity
                   activeOpacity={0.85}
-                  onPress={() => handleAddToCart(selectedProduct.name)}
-                  style={styles.modalButton}
+                  disabled={!selectedProduct.inStock}
+                  onPress={() => void handleAddToCart(selectedProduct)}
+                  style={[styles.modalButton, !selectedProduct.inStock && styles.disabledButton]}
                 >
                   <Text style={styles.modalButtonText}>Add to cart</Text>
 
@@ -627,9 +608,7 @@ export default function Products() {
               <View>
                 <Text style={styles.filterTitle}>Filter Products</Text>
 
-                <Text style={styles.filterSubtitle}>
-                  Choose category, price, and sorting
-                </Text>
+                <Text style={styles.filterSubtitle}>Choose a price range and sort order</Text>
               </View>
 
               <TouchableOpacity
@@ -639,38 +618,6 @@ export default function Products() {
               >
                 <FontAwesome6 name="xmark" size={15} color="#1E3631" />
               </TouchableOpacity>
-            </View>
-
-            <Text style={styles.filterGroupTitle}>Category</Text>
-
-            <View style={styles.filterChipWrap}>
-              {categories.map((category) => {
-                const isActive = activeCategory === category;
-
-                return (
-                  <TouchableOpacity
-                    key={category}
-                    activeOpacity={0.85}
-                    onPress={() => {
-                      setActiveCategory(category);
-                      setShowAll(false);
-                    }}
-                    style={[
-                      styles.filterOptionChip,
-                      isActive && styles.activeCategoryChip,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.categoryText,
-                        isActive && styles.activeCategoryText,
-                      ]}
-                    >
-                      {category}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
             </View>
 
             <Text style={styles.filterGroupTitle}>Price</Text>
@@ -709,7 +656,7 @@ export default function Products() {
 
             <View style={styles.filterChipWrap}>
               {[
-                { label: "Top rated", value: "topRated" },
+                { label: "Product name", value: "name" },
                 { label: "Lowest price", value: "lowToHigh" },
                 { label: "Highest price", value: "highToLow" },
               ].map((sort) => {
@@ -1120,6 +1067,57 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     marginTop: 12,
     padding: 20,
+  },
+
+  catalogState: {
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    gap: 8,
+    marginTop: 12,
+    padding: 24,
+  },
+
+  catalogError: {
+    alignItems: "center",
+    backgroundColor: "#FFF5F3",
+    borderRadius: 18,
+    marginTop: 12,
+    padding: 18,
+  },
+
+  retryButton: {
+    backgroundColor: "#192536",
+    borderRadius: 12,
+    marginTop: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+  },
+
+  retryButtonText: {
+    color: "#FFFFFF",
+    fontFamily: "PoppinsBold",
+    fontSize: 11,
+  },
+
+  legacyNotice: {
+    backgroundColor: "#FFF8E5",
+    borderRadius: 12,
+    color: "#705A16",
+    fontFamily: "PoppinsRegular",
+    fontSize: 10,
+    marginTop: 10,
+    padding: 12,
+  },
+
+  productImageFallback: {
+    alignItems: "center",
+    backgroundColor: "#FFF1EF",
+    justifyContent: "center",
+  },
+
+  disabledButton: {
+    opacity: 0.45,
   },
 
   emptyTitle: {

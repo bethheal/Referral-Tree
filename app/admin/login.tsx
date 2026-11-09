@@ -49,20 +49,22 @@ export default function AdminLogin() {
   };
 
   const handleVerifyMfa = async () => {
+    if (mfaStep !== "setup" && mfaStep !== "verify") return;
     if (!mfaCode.trim()) {
       setMessage("Enter the six-digit authenticator code or a recovery code.");
       return;
     }
     setIsLoading(true);
     try {
-      const { session, recoveryCodes } = await finishAdminMfaLogin(email.trim(), mfaCode.trim());
-      if (mfaStep === "setup") {
-        setRecoveryCodes(recoveryCodes);
+      const result = await finishAdminMfaLogin(email.trim(), mfaCode.trim(), mfaStep);
+      if (result.destination === "recovery") {
+        setRecoveryCodes(result.recoveryCodes);
         setMfaStep("recovery");
-        setMessage("MFA is active. Save these recovery codes somewhere secure.");
+        setMfaCode("");
+        setMessage("MFA enrollment succeeded. Save these one-time recovery codes, then continue to the dashboard.");
         return;
       }
-      setMessage(`Welcome, ${session.name}.`);
+      setMessage(`Welcome, ${result.session.name}.`);
       router.replace("/admin" as any);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "MFA verification failed.");
@@ -164,7 +166,6 @@ export default function AdminLogin() {
               </Text>
             </TouchableOpacity>
 
-            {message ? <Text style={styles.message}>{message}</Text> : null}
           </View> : null}
 
           {mfaStep === "setup" || mfaStep === "verify" ? <View style={styles.form}>
@@ -201,6 +202,8 @@ export default function AdminLogin() {
               <Text style={styles.loginButtonText}>Continue to dashboard</Text>
             </TouchableOpacity>
           </View> : null}
+
+          {message ? <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={styles.message}>{message}</Text> : null}
 
           <View style={styles.securityPanel}>
             <Text style={styles.securityTitle}>Backend protection required</Text>

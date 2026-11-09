@@ -7,6 +7,7 @@ import {
   hashPassword,
   nowIso,
   signToken,
+  verifyOtpHash,
   verifyPassword,
 } from "../utils/crypto.ts";
 import { normalizePhoneNumber } from "../validators/phone.ts";
@@ -17,10 +18,12 @@ import {
 } from "./referralService.ts";
 import { recordRegistrationRiskSignals } from "./riskService.ts";
 import { HttpError } from "../utils/http.ts";
+import { assertSmsDeliveryAvailable, deliverRegistrationOtp, getSmsProvider } from "./smsProvider.ts";
+import type { SmsProvider } from "./smsProvider.ts";
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
-export const requestRegistrationOtp = (
+export const requestRegistrationOtp = async (
   data: Database,
   input: {
     email: string;
@@ -28,7 +31,8 @@ export const requestRegistrationOtp = (
     password: string;
     phoneNumber: string;
     referralCode?: string;
-  }
+  },
+  provider: SmsProvider = getSmsProvider(),
 ) => {
   if (
     typeof input?.fullName !== "string" ||
@@ -45,6 +49,7 @@ export const requestRegistrationOtp = (
 
   const email = normalizeEmail(input.email);
   const phoneNumber = normalizePhoneNumber(input.phoneNumber);
+  assertSmsDeliveryAvailable(provider);
 
   if (!input.fullName.trim()) throw new HttpError("Full name is required.");
   if (!email.includes("@")) throw new HttpError("Enter a valid email address.");
@@ -94,9 +99,10 @@ export const requestRegistrationOtp = (
     data.registrations.push(attempt);
   }
 
+  await deliverRegistrationOtp(provider, phoneNumber, otp, env.otpTtlSeconds);
+
   return {
     registrationId: attempt.id,
-    ...(env.otpDevMode ? { otp } : {}),
   };
 };
 
@@ -118,14 +124,15 @@ export const completeRegistration = (
   );
 
   if (!attempt) throw new HttpError("Registration was not found.", 404, "NOT_FOUND");
-  if (new Date(attempt.otpExpiresAt).getTime() < Date.now()) {
+  if (new Date(attempt.otpExpiresAt).getTime() <= Date.now()) {
     throw new HttpError("OTP has expired.", 400, "OTP_EXPIRED");
   }
-  if (attempt.otpAttempts >= env.otpMaxAttempts) {
+  const maxAttempts = Math.min(env.otpMaxAttempts, 5);
+  if (attempt.otpAttempts >= maxAttempts) {
     throw new HttpError("Too many incorrect OTP attempts.", 429, "OTP_ATTEMPTS_EXCEEDED");
   }
 
-  if (attempt.otpHash !== hashOtp(input.otp)) {
+  if (!verifyOtpHash(input.otp, attempt.otpHash)) {
     attempt.otpAttempts += 1;
     throw new HttpError("Incorrect OTP.", 400, "OTP_INVALID");
   }

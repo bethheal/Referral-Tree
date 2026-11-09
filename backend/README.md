@@ -6,24 +6,24 @@ Node.js 22+ HTTP API with a development JSON adapter and a Prisma 7/PostgreSQL r
 
 ```powershell
 Copy-Item .env.example .env
-npm run dev
+npm run dev:json
 ```
 
 Use `OTP_DEV_MODE=true` only on a private development machine. Do not use it in a deployed environment.
 
 ## PostgreSQL development
 
-Create `backend/.env.development.local` using the approved `angelfoods-dev` pooled and direct Neon URLs, `DATABASE_TARGET=angelfoods-dev`, `NEON_BRANCH=angelfoods-dev`, the endpoint identifier, and a local `MFA_ENCRYPTION_KEY`. Do not commit the file or paste its contents into logs or chat.
+Create `backend/.env.development.local` with the approved `angelfoods-dev` runtime (`DATABASE_URL`) and migration (`DIRECT_URL`) Neon URLs, `DATABASE_TARGET=angelfoods-dev`, `NEON_BRANCH=angelfoods-dev`, the endpoint identifier, and a local `MFA_ENCRYPTION_KEY`. Use a pooled runtime URL and a direct migration URL. Do not commit the file or paste its contents into logs or chat.
 
 ```powershell
 npm run prisma:validate
 npm run prisma:check:dev
-npm run dev:postgres
+npm run dev
 ```
 
 Migrations require a separate reviewed command with the explicit `CONFIRM_DB_MIGRATION=angelfoods-dev` target. The Prisma config blocks production migration commands and validates the Neon endpoint. Application queries should use the pooled URL; migrations use the direct URL.
 
-The guarded remote integration test creates random member/admin fixtures and removes them in `finally`:
+The guarded remote integration test enables development OTP only in its test process, creates random member/admin fixtures, and removes them in `finally`:
 
 ```powershell
 npm run test:postgres:dev
@@ -43,4 +43,4 @@ Membership checkout/webhooks and withdrawals fail closed until merchant sandbox 
 
 ## Verification status
 
-The development branch currently has three applied migrations. `ASSESSMENT.md` records the dated integration and build results. The root Expo release build still requires a real HTTPS `EXPO_PUBLIC_API_BASE_URL`; do not put a placeholder there. This project is not production-ready and has not received a production deployment, backup restore drill, or external-payment test.
+The development branch has five applied migrations and is up to date. `ASSESSMENT.md` records the dated integration and build results. The root Expo release build still requires a real HTTPS `EXPO_PUBLIC_API_BASE_URL`; do not put a placeholder there. This project is not production-ready and has not received a production deployment, backup restore drill, or external-payment test.
