@@ -1,14 +1,21 @@
+import {
+  clearAdminSession,
+  verifyAndStoreAdminSession,
+} from "@/components/adminAccess";
+import {
+  ApiError,
+  loginWithPassword,
+  saveAuthSession,
+} from "@/components/backendApi";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-import { clearAdminSession, verifyAndStoreAdminSession } from "@/components/adminAccess";
-import { ApiError, loginWithPassword, saveAuthSession } from "@/components/backendApi";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
-  StyleSheet,
   StatusBar,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -63,7 +70,9 @@ export default function Login() {
           showToast("Login successful");
           setTimeout(() => router.replace("/dashboard"), 350);
         } else {
-          showToast("Signed in, but account access could not be checked. Try again.");
+          showToast(
+            "Signed in, but account access could not be checked. Try again.",
+          );
         }
       }
     } catch (error) {
@@ -115,19 +124,13 @@ export default function Login() {
           onPress={handleBack}
           activeOpacity={0.7}
         >
-          <FontAwesome6
-            name="arrow-left"
-            size={18}
-            color="#261D1A"
-          />
+          <FontAwesome6 name="arrow-left" size={18} color="#261D1A" />
         </TouchableOpacity>
 
         {/* HEADER */}
 
         <View style={styles.header}>
-          <Text style={styles.title}>
-            Log in
-          </Text>
+          <Text style={styles.title}>Log in</Text>
 
           <Text style={styles.subtitle}>
             Use email or continue with a social account.
@@ -137,13 +140,10 @@ export default function Login() {
         {/* FORM */}
 
         <View style={styles.form}>
-
           {/* EMAIL */}
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              Email
-            </Text>
+            <Text style={styles.label}>Email</Text>
 
             <TextInput
               autoCapitalize="none"
@@ -160,9 +160,7 @@ export default function Login() {
           {/* PASSWORD */}
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              Password
-            </Text>
+            <Text style={styles.label}>Password</Text>
 
             <View style={styles.passwordInputWrap}>
               <TextInput
@@ -180,19 +178,11 @@ export default function Login() {
 
               <TouchableOpacity
                 activeOpacity={0.75}
-                onPress={() =>
-                  setShowPassword(
-                    (current) => !current
-                  )
-                }
+                onPress={() => setShowPassword((current) => !current)}
                 style={styles.eyeButton}
               >
                 <FontAwesome6
-                  name={
-                    showPassword
-                      ? "eye-slash"
-                      : "eye"
-                  }
+                  name={showPassword ? "eye-slash" : "eye"}
                   size={17}
                   color="#8B7F7A"
                 />
@@ -207,9 +197,7 @@ export default function Login() {
             onPress={handleForgotPassword}
             style={styles.forgotButton}
           >
-            <Text style={styles.forgotText}>
-              Forgot password?
-            </Text>
+            <Text style={styles.forgotText}>Forgot password?</Text>
           </TouchableOpacity>
 
           {/* LOGIN */}
@@ -218,7 +206,10 @@ export default function Login() {
             activeOpacity={0.86}
             disabled={isSubmitting}
             onPress={handleLogin}
-            style={[styles.primaryButton, isSubmitting && styles.disabledButton]}
+            style={[
+              styles.primaryButton,
+              isSubmitting && styles.disabledButton,
+            ]}
           >
             <Text style={styles.primaryButtonText}>
               {isSubmitting ? "Logging in..." : "Log in"}
@@ -230,9 +221,7 @@ export default function Login() {
           <View style={styles.dividerRow}>
             <View style={styles.divider} />
 
-            <Text style={styles.dividerText}>
-              or
-            </Text>
+            <Text style={styles.dividerText}>or</Text>
 
             <View style={styles.divider} />
           </View>
@@ -240,73 +229,45 @@ export default function Login() {
           {/* SOCIAL LOGIN */}
 
           <View style={styles.socialRow}>
-
             {/* GOOGLE */}
 
             <TouchableOpacity
               activeOpacity={0.82}
-              onPress={() =>
-                handleSocialLogin("Google")
-              }
+              onPress={() => handleSocialLogin("Google")}
               style={styles.socialButton}
             >
-              <FontAwesome6
-                name="google"
-                size={18}
-                color="#DB4437"
-              />
+              <FontAwesome6 name="google" size={18} color="#DB4437" />
             </TouchableOpacity>
 
             {/* FACEBOOK */}
 
             <TouchableOpacity
               activeOpacity={0.82}
-              onPress={() =>
-                handleSocialLogin("Facebook")
-              }
+              onPress={() => handleSocialLogin("Facebook")}
               style={styles.socialButton}
             >
-              <FontAwesome6
-                name="facebook-f"
-                size={18}
-                color="#1877F2"
-              />
+              <FontAwesome6 name="facebook-f" size={18} color="#1877F2" />
             </TouchableOpacity>
 
             {/* INSTAGRAM */}
 
             <TouchableOpacity
               activeOpacity={0.82}
-              onPress={() =>
-                handleSocialLogin("Instagram")
-              }
+              onPress={() => handleSocialLogin("Instagram")}
               style={styles.socialButton}
             >
-              <FontAwesome6
-                name="instagram"
-                size={18}
-                color="#C13584"
-              />
+              <FontAwesome6 name="instagram" size={18} color="#C13584" />
             </TouchableOpacity>
-
           </View>
         </View>
 
         {/* FOOTER */}
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            New to Angel Foods?
-          </Text>
+          <Text style={styles.footerText}>New to Angelic mkts?</Text>
 
-          <TouchableOpacity
-            onPress={() =>
-              router.replace("/auth/signup")
-            }
-          >
-            <Text style={styles.footerLink}>
-              {" "}Create account
-            </Text>
+          <TouchableOpacity onPress={() => router.replace("/auth/signup")}>
+            <Text style={styles.footerLink}> Create account</Text>
           </TouchableOpacity>
         </View>
 
@@ -314,12 +275,9 @@ export default function Login() {
 
         {toast ? (
           <View style={styles.toast}>
-            <Text style={styles.toastText}>
-              {toast}
-            </Text>
+            <Text style={styles.toastText}>{toast}</Text>
           </View>
         ) : null}
-
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

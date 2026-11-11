@@ -1,9 +1,21 @@
-import type { IncomingMessage, ServerResponse } from "node:http";
 import crypto from "node:crypto";
+import type { IncomingMessage, ServerResponse } from "node:http";
 import { URL } from "node:url";
-import { getBearerToken, requireAdmin, requireSuperAdmin, requireUser } from "../middleware/auth.ts";
-import { enforceRateLimit } from "../middleware/rateLimit.ts";
 import { env } from "../config/env.ts";
+import {
+  getBearerToken,
+  requireAdmin,
+  requireSuperAdmin,
+  requireUser,
+} from "../middleware/auth.ts";
+import { enforceRateLimit } from "../middleware/rateLimit.ts";
+import {
+  getAdminAuditLog,
+  getAdminSummary,
+  listAdminUsers,
+  updateManagedUserRole,
+  updateManagedUserStatus,
+} from "../services/adminService.ts";
 import {
   completeRegistration,
   login,
@@ -17,7 +29,6 @@ import {
   getPaymentHistory,
   requestCashOut,
 } from "../services/financialService.ts";
-import { getNetworkUserIds } from "../services/referralService.ts";
 import {
   getMembershipPayment,
   getMembershipState,
@@ -25,19 +36,21 @@ import {
   startMembershipCheckout,
   verifyMembershipPayment,
 } from "../services/membershipService.ts";
-import { nowIso } from "../utils/crypto.ts";
-import { getRequestContext, HttpError, parsePagination, readJson, sendJson } from "../utils/http.ts";
-import { createId, hashSessionToken } from "../utils/crypto.ts";
-import { profileFor, updateProfile } from "../services/profileService.ts";
-import {
-  getAdminAuditLog,
-  getAdminSummary,
-  listAdminUsers,
-  updateManagedUserRole,
-  updateManagedUserStatus,
-} from "../services/adminService.ts";
-import { postgresRoute, type PostgresRouteDependencies } from "./postgresRouter.ts";
 import { postgresRuntimeEnabled } from "../services/prismaClient.ts";
+import { profileFor, updateProfile } from "../services/profileService.ts";
+import { getNetworkUserIds } from "../services/referralService.ts";
+import { createId, hashSessionToken, nowIso } from "../utils/crypto.ts";
+import {
+  getRequestContext,
+  HttpError,
+  parsePagination,
+  readJson,
+  sendJson,
+} from "../utils/http.ts";
+import {
+  postgresRoute,
+  type PostgresRouteDependencies,
+} from "./postgresRouter.ts";
 
 const ok = (response: ServerResponse, payload: unknown) =>
   sendJson(response, 200, payload);
@@ -61,12 +74,22 @@ export const route = async (
     const origin = request.headers.origin;
     if (origin) {
       if (!env.allowedOrigins.includes(origin)) {
-        throw new HttpError("Origin is not allowed.", 403, "ORIGIN_NOT_ALLOWED");
+        throw new HttpError(
+          "Origin is not allowed.",
+          403,
+          "ORIGIN_NOT_ALLOWED",
+        );
       }
       response.setHeader("Access-Control-Allow-Origin", origin);
       response.setHeader("Vary", "Origin");
-      response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, Idempotency-Key");
-      response.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
+      response.setHeader(
+        "Access-Control-Allow-Headers",
+        "Authorization, Content-Type, Idempotency-Key",
+      );
+      response.setHeader(
+        "Access-Control-Allow-Methods",
+        "GET, POST, PATCH, DELETE, OPTIONS",
+      );
     }
 
     const clientAddress = request.socket.remoteAddress ?? "unknown";
@@ -88,27 +111,59 @@ export const route = async (
     }
 
     if (postgresRuntimeEnabled()) {
-      await postgresRoute(request, response, url, requestId, postgresDependencies);
+      await postgresRoute(
+        request,
+        response,
+        url,
+        requestId,
+        postgresDependencies,
+      );
       return;
     }
 
     // Administrative authentication, reads, and mutations rely on the
     // PostgreSQL MFA, permission, approval, and audit model. Never fall back to
     // the weaker legacy JSON administrator routes.
-    if (url.pathname === "/api/admin" || url.pathname.startsWith("/api/admin/")) {
-      throw new HttpError("Administrator operations require PostgreSQL storage.", 503, "POSTGRES_REQUIRED_FOR_ADMIN_OPERATIONS");
+    if (
+      url.pathname === "/api/admin" ||
+      url.pathname.startsWith("/api/admin/")
+    ) {
+      throw new HttpError(
+        "Administrator operations require PostgreSQL storage.",
+        503,
+        "POSTGRES_REQUIRED_FOR_ADMIN_OPERATIONS",
+      );
     }
 
-    if (request.method === "POST" && url.pathname === "/api/webhooks/flutterwave") {
+    if (
+      request.method === "POST" &&
+      url.pathname === "/api/webhooks/flutterwave"
+    ) {
       const signature = request.headers["verif-hash"];
       const secret = env.flutterwaveSecretHash;
-      const signatureBuffer = Buffer.from(typeof signature === "string" ? signature : "");
+      const signatureBuffer = Buffer.from(
+        typeof signature === "string" ? signature : "",
+      );
       const secretBuffer = Buffer.from(secret);
-      if (!secret || signatureBuffer.length !== secretBuffer.length || !crypto.timingSafeEqual(signatureBuffer, secretBuffer)) {
-        throw new HttpError("Invalid webhook signature.", 401, "INVALID_WEBHOOK_SIGNATURE");
+      if (
+        !secret ||
+        signatureBuffer.length !== secretBuffer.length ||
+        !crypto.timingSafeEqual(signatureBuffer, secretBuffer)
+      ) {
+        throw new HttpError(
+          "Invalid webhook signature.",
+          401,
+          "INVALID_WEBHOOK_SIGNATURE",
+        );
       }
       const body = await readJson<{
-        data?: { id?: string | number; tx_ref?: string; status?: string; amount?: string | number; currency?: string };
+        data?: {
+          id?: string | number;
+          tx_ref?: string;
+          status?: string;
+          amount?: string | number;
+          currency?: string;
+        };
         event?: string;
       }>(request);
       await handleFlutterwaveWebhook(db.data, body.event, body.data);
@@ -117,31 +172,42 @@ export const route = async (
       return;
     }
 
-    if (request.method === "GET" && url.pathname === "/api/payments/flutterwave/return") {
+    if (
+      request.method === "GET" &&
+      url.pathname === "/api/payments/flutterwave/return"
+    ) {
       const reference = url.searchParams.get("tx_ref") ?? "";
       const transactionId = url.searchParams.get("transaction_id") ?? "";
       let paymentStatus = "PENDING";
       if (reference && /^\d+$/.test(transactionId)) {
         try {
-          const payment = await verifyMembershipPayment(db.data, reference, transactionId);
+          const payment = await verifyMembershipPayment(
+            db.data,
+            reference,
+            transactionId,
+          );
           paymentStatus = payment?.status ?? "PENDING";
           db.save();
         } catch {
           paymentStatus = "PENDING";
         }
       }
-      const message = paymentStatus === "PAID"
-        ? "Payment confirmed. Your membership access is active. Return to the Angel Foods app."
-        : paymentStatus === "FAILED"
-          ? "Payment was not completed. Membership access was not changed. Return to the Angel Foods app."
-          : "Payment is being verified. Membership access will update after confirmation. Return to the Angel Foods app shortly.";
+      const message =
+        paymentStatus === "PAID"
+          ? "Payment confirmed. Your membership access is active. Return to the Angelic mkts app."
+          : paymentStatus === "FAILED"
+            ? "Payment was not completed. Membership access was not changed. Return to the Angelic mkts app."
+            : "Payment is being verified. Membership access will update after confirmation. Return to the Angelic mkts app shortly.";
       response.writeHead(200, {
         "Cache-Control": "no-store",
-        "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'",
+        "Content-Security-Policy":
+          "default-src 'none'; style-src 'unsafe-inline'",
         "Content-Type": "text/html; charset=utf-8",
         "X-Content-Type-Options": "nosniff",
       });
-      response.end(`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Angel Foods payment</title></head><body style="font-family:Arial,sans-serif;padding:2rem;max-width:36rem;margin:auto"><h1>Payment status: ${paymentStatus}</h1><p>${message}</p><p><a href="angelfoods://dashboard/payments">Return to Angel Foods</a></p></body></html>`);
+      response.end(
+        `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Angelic mkts payment</title></head><body style="font-family:Arial,sans-serif;padding:2rem;max-width:36rem;margin:auto"><h1>Payment status: ${paymentStatus}</h1><p>${message}</p><p><a href="angelfoods://dashboard/payments">Return to Angelic mkts</a></p></body></html>`,
+      );
       return;
     }
 
@@ -151,7 +217,11 @@ export const route = async (
     }
 
     if (request.method === "GET" && url.pathname === "/ready") {
-      ok(response, { status: "ready", storage: "development-json", productionReady: false });
+      ok(response, {
+        status: "ready",
+        storage: "development-json",
+        productionReady: false,
+      });
       return;
     }
 
@@ -216,7 +286,8 @@ export const route = async (
       if (token) {
         db.data.revokedSessions ??= [];
         const tokenHash = hashSessionToken(token);
-        if (!db.data.revokedSessions.includes(tokenHash)) db.data.revokedSessions.push(tokenHash);
+        if (!db.data.revokedSessions.includes(tokenHash))
+          db.data.revokedSessions.push(tokenHash);
         db.save();
       }
       ok(response, { loggedOut: true });
@@ -262,11 +333,18 @@ export const route = async (
     if (request.method === "GET" && url.pathname === "/api/admin/access") {
       const user = requireUser(db.data, request);
       requireAdmin(user);
-      ok(response, { authorized: true, role: user.role, fullName: user.fullName });
+      ok(response, {
+        authorized: true,
+        role: user.role,
+        fullName: user.fullName,
+      });
       return;
     }
 
-    if (request.method === "GET" && url.pathname === "/api/admin/dashboard/summary") {
+    if (
+      request.method === "GET" &&
+      url.pathname === "/api/admin/dashboard/summary"
+    ) {
       requireAdmin(requireUser(db.data, request));
       ok(response, getAdminSummary(db.data));
       return;
@@ -276,7 +354,8 @@ export const route = async (
       requireAdmin(requireUser(db.data, request));
       const { limit, offset } = parsePagination(url.searchParams);
       const search = url.searchParams.get("search") ?? undefined;
-      if (search && search.length > 100) throw new HttpError("Search query is too long.", 400, "INVALID_SEARCH");
+      if (search && search.length > 100)
+        throw new HttpError("Search query is too long.", 400, "INVALID_SEARCH");
       ok(response, listAdminUsers(db.data, { limit, offset, search }));
       return;
     }
@@ -284,14 +363,24 @@ export const route = async (
     if (request.method === "GET" && url.pathname === "/api/admin/audit-log") {
       requireAdmin(requireUser(db.data, request));
       const requestedLimit = Number(url.searchParams.get("limit") ?? 50);
-      if (!Number.isInteger(requestedLimit) || requestedLimit < 1 || requestedLimit > 100) {
-        throw new HttpError("Limit must be an integer from 1 to 100.", 400, "INVALID_PAGINATION");
+      if (
+        !Number.isInteger(requestedLimit) ||
+        requestedLimit < 1 ||
+        requestedLimit > 100
+      ) {
+        throw new HttpError(
+          "Limit must be an integer from 1 to 100.",
+          400,
+          "INVALID_PAGINATION",
+        );
       }
       ok(response, getAdminAuditLog(db.data, requestedLimit));
       return;
     }
 
-    const adminUserAction = url.pathname.match(/^\/api\/admin\/users\/([^/]+)\/(role|status)$/);
+    const adminUserAction = url.pathname.match(
+      /^\/api\/admin\/users\/([^/]+)\/(role|status)$/,
+    );
     if (request.method === "PATCH" && adminUserAction) {
       const actor = requireUser(db.data, request);
       requireAdmin(actor);
@@ -299,17 +388,34 @@ export const route = async (
       const targetId = decodeURIComponent(adminUserAction[1]);
       const body = await readJson<Record<string, unknown>>(request);
       const action = adminUserAction[2];
-      const allowedKeys = action === "role" ? ["role", "reason"] : ["status", "reason"];
+      const allowedKeys =
+        action === "role" ? ["role", "reason"] : ["status", "reason"];
       if (Object.keys(body).some((key) => !allowedKeys.includes(key))) {
-        throw new HttpError("Request contains unsupported fields.", 400, "INVALID_FIELDS");
+        throw new HttpError(
+          "Request contains unsupported fields.",
+          400,
+          "INVALID_FIELDS",
+        );
       }
       if (action === "role") {
         requireSuperAdmin(actor);
-        const user = updateManagedUserRole(db.data, actor, targetId, body.role, body.reason);
+        const user = updateManagedUserRole(
+          db.data,
+          actor,
+          targetId,
+          body.role,
+          body.reason,
+        );
         db.save();
         ok(response, { user });
       } else {
-        const user = updateManagedUserStatus(db.data, actor, targetId, body.status, body.reason);
+        const user = updateManagedUserStatus(
+          db.data,
+          actor,
+          targetId,
+          body.status,
+          body.reason,
+        );
         db.save();
         ok(response, { user });
       }
@@ -361,7 +467,8 @@ export const route = async (
 
       const referral = db.data.users.find((item) => item.id === referralId);
 
-      if (!referral) throw new HttpError("Referral not found.", 404, "NOT_FOUND");
+      if (!referral)
+        throw new HttpError("Referral not found.", 404, "NOT_FOUND");
 
       ok(response, {
         id: referral.id,
@@ -424,11 +531,21 @@ export const route = async (
       return;
     }
 
-    if (request.method === "POST" && url.pathname === "/api/me/membership/checkout") {
+    if (
+      request.method === "POST" &&
+      url.pathname === "/api/me/membership/checkout"
+    ) {
       const user = requireUser(db.data, request);
-      const body = await readJson<{ plan?: unknown; expectedAmount?: unknown }>(request);
+      const body = await readJson<{ plan?: unknown; expectedAmount?: unknown }>(
+        request,
+      );
       try {
-        const result = await startMembershipCheckout(db.data, user, body.plan, body.expectedAmount);
+        const result = await startMembershipCheckout(
+          db.data,
+          user,
+          body.plan,
+          body.expectedAmount,
+        );
         db.save();
         created(response, result);
       } catch (error) {
@@ -438,9 +555,14 @@ export const route = async (
       return;
     }
 
-    if (request.method === "GET" && url.pathname.startsWith("/api/me/membership-payments/")) {
+    if (
+      request.method === "GET" &&
+      url.pathname.startsWith("/api/me/membership-payments/")
+    ) {
       const user = requireUser(db.data, request);
-      const reference = decodeURIComponent(url.pathname.split("/").at(-1) ?? "");
+      const reference = decodeURIComponent(
+        url.pathname.split("/").at(-1) ?? "",
+      );
       ok(response, getMembershipPayment(db.data, user.id, reference));
       return;
     }
@@ -523,20 +645,28 @@ export const route = async (
       return;
     }
 
-    if (request.method === "PATCH" && url.pathname.startsWith("/api/me/notification/") && url.pathname.endsWith("/read")) {
+    if (
+      request.method === "PATCH" &&
+      url.pathname.startsWith("/api/me/notification/") &&
+      url.pathname.endsWith("/read")
+    ) {
       const user = requireUser(db.data, request);
       const notificationId = url.pathname.split("/").at(-2);
       const message = db.data.notification.find(
         (item) => item.id === notificationId && item.userId === user.id,
       );
-      if (!message) throw new HttpError("Notification not found.", 404, "NOT_FOUND");
+      if (!message)
+        throw new HttpError("Notification not found.", 404, "NOT_FOUND");
       message.readAt ??= nowIso();
       db.save();
       ok(response, { id: message.id, readAt: message.readAt });
       return;
     }
 
-    if (request.method === "POST" && url.pathname === "/api/me/notification/read-all") {
+    if (
+      request.method === "POST" &&
+      url.pathname === "/api/me/notification/read-all"
+    ) {
       const user = requireUser(db.data, request);
       const readAt = nowIso();
       for (const message of db.data.notification) {
@@ -564,7 +694,7 @@ export const route = async (
       throw new HttpError(
         "Cash-out review is unavailable until approval rules and transactional PostgreSQL storage are configured.",
         503,
-        "FINANCIAL_RULES_UNCONFIGURED"
+        "FINANCIAL_RULES_UNCONFIGURED",
       );
     }
 
@@ -580,7 +710,8 @@ export const route = async (
     if (
       !postgresRuntimeEnabled() &&
       knownError &&
-      ((url.pathname === "/api/auth/register/verify" && error.code === "OTP_INVALID") ||
+      ((url.pathname === "/api/auth/register/verify" &&
+        error.code === "OTP_INVALID") ||
         (url.pathname === "/api/auth/login" && error.code === "LOGIN_FAILED") ||
         url.pathname === "/api/admin/auth/login")
     ) {

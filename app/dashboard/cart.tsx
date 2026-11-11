@@ -1,15 +1,28 @@
 import {
+  ApiError,
+  createCustomerOrder,
+  getAllCustomerOrders,
+  getAllCustomerProducts,
+  type CreateCustomerOrderResponse,
+  type CustomerProduct,
+} from "@/components/backendApi";
+import type { CartItem } from "@/components/cartStore";
+import {
+  clearPendingOrderSubmission,
   getCartItems,
+  getPendingOrderSubmission,
   getUnmatchedLegacyCartCount,
+  reconcileSubmittedCart,
   removeCartItem,
+  savePendingOrderSubmission,
   updateCartItemQuantity,
 } from "@/components/cartStore";
-import type { CartItem } from "@/components/cartStore";
-import { ApiError, createCustomerOrder, getAllCustomerOrders, getAllCustomerProducts, type CreateCustomerOrderResponse, type CustomerProduct } from "@/components/backendApi";
-import { clearPendingOrderSubmission, getPendingOrderSubmission, reconcileSubmittedCart, savePendingOrderSubmission } from "@/components/cartStore";
-import { formatMinorCurrency } from "@/components/productMoney";
-import { buildCustomerOrderPayload, isDefinitiveOrderRejection } from "@/components/orderSubmission";
+import {
+  buildCustomerOrderPayload,
+  isDefinitiveOrderRejection,
+} from "@/components/orderSubmission";
 import PageHeader from "@/components/pageHeader";
+import { formatMinorCurrency } from "@/components/productMoney";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
@@ -32,10 +45,12 @@ export default function Cart() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [unmatchedLegacyCount, setUnmatchedLegacyCount] = useState(0);
-  const [pendingOrder, setPendingOrder] = useState<Awaited<ReturnType<typeof getPendingOrderSubmission>>>(null);
+  const [pendingOrder, setPendingOrder] =
+    useState<Awaited<ReturnType<typeof getPendingOrderSubmission>>>(null);
   const [checkoutBusy, setCheckoutBusy] = useState(false);
   const [checkoutMessage, setCheckoutMessage] = useState("");
-  const [confirmedOrder, setConfirmedOrder] = useState<CreateCustomerOrderResponse | null>(null);
+  const [confirmedOrder, setConfirmedOrder] =
+    useState<CreateCustomerOrderResponse | null>(null);
   const checkoutLock = useRef(false);
 
   const horizontalPadding = width >= 620 ? 22 : 18;
@@ -43,19 +58,23 @@ export default function Cart() {
 
   const hydratedCartItems = useMemo(
     () =>
-      cartItems
-        .map((item) => ({
-          ...item,
-          product: products.find((product) => product.id === item.productId) ?? null,
-        })),
-    [cartItems, products]
+      cartItems.map((item) => ({
+        ...item,
+        product:
+          products.find((product) => product.id === item.productId) ?? null,
+      })),
+    [cartItems, products],
   );
 
   const totalsByCurrency = useMemo(() => {
     const totals = new Map<string, bigint>();
     for (const item of hydratedCartItems) {
       if (!item.product) continue;
-      totals.set(item.product.currency, (totals.get(item.product.currency) ?? 0n) + BigInt(item.product.priceMinor) * BigInt(item.quantity));
+      totals.set(
+        item.product.currency,
+        (totals.get(item.product.currency) ?? 0n) +
+          BigInt(item.product.priceMinor) * BigInt(item.quantity),
+      );
     }
     return [...totals.entries()];
   }, [hydratedCartItems]);
@@ -70,13 +89,19 @@ export default function Cart() {
       setUnmatchedLegacyCount(await getUnmatchedLegacyCartCount());
       setPendingOrder(await getPendingOrderSubmission());
     } catch {
-      setError("We couldn't load current product prices. Retry before reviewing your cart.");
+      setError(
+        "We couldn't load current product prices. Retry before reviewing your cart.",
+      );
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useFocusEffect(useCallback(() => { void loadCart(); }, [loadCart]));
+  useFocusEffect(
+    useCallback(() => {
+      void loadCart();
+    }, [loadCart]),
+  );
 
   const changeQuantity = async (productId: string, quantity: number) => {
     const items = await updateCartItemQuantity(productId, quantity);
@@ -97,13 +122,28 @@ export default function Cart() {
     try {
       let submission = pendingOrder;
       if (!submission) {
-        const items = cartItems.filter((item) => products.some((product) => product.id === item.productId && product.inStock)).map(({ productId, quantity }) => ({ productId, quantity }));
-        if (items.length === 0) { setCheckoutMessage("Your cart has no available items to order."); return; }
-        submission = { idempotencyKey: `af-${Date.now()}-${Math.random().toString(36).slice(2, 14)}`, payload: buildCustomerOrderPayload(items) };
+        const items = cartItems
+          .filter((item) =>
+            products.some(
+              (product) => product.id === item.productId && product.inStock,
+            ),
+          )
+          .map(({ productId, quantity }) => ({ productId, quantity }));
+        if (items.length === 0) {
+          setCheckoutMessage("Your cart has no available items to order.");
+          return;
+        }
+        submission = {
+          idempotencyKey: `af-${Date.now()}-${Math.random().toString(36).slice(2, 14)}`,
+          payload: buildCustomerOrderPayload(items),
+        };
         await savePendingOrderSubmission(submission);
         setPendingOrder(submission);
       }
-      const order = await createCustomerOrder(submission.payload, submission.idempotencyKey);
+      const order = await createCustomerOrder(
+        submission.payload,
+        submission.idempotencyKey,
+      );
       setConfirmedOrder(order);
       try {
         const cart = await reconcileSubmittedCart(submission.payload.items);
@@ -111,18 +151,35 @@ export default function Cart() {
         await clearPendingOrderSubmission();
         setPendingOrder(null);
       } catch {
-        setCheckoutMessage("Your order is confirmed, but the cart could not be updated on this device. Retry the saved request to safely finish syncing it.");
+        setCheckoutMessage(
+          "Your order is confirmed, but the cart could not be updated on this device. Retry the saved request to safely finish syncing it.",
+        );
       }
-      try { await getAllCustomerOrders(); } catch { /* History refresh can be retried on the Orders screen. */ }
+      try {
+        await getAllCustomerOrders();
+      } catch {
+        /* History refresh can be retried on the Orders screen. */
+      }
     } catch (cause) {
-      if (cause instanceof ApiError && isDefinitiveOrderRejection(cause.status)) {
+      if (
+        cause instanceof ApiError &&
+        isDefinitiveOrderRejection(cause.status)
+      ) {
         await clearPendingOrderSubmission();
         setPendingOrder(null);
-        if (cause.status === 401) setCheckoutMessage("Your session has expired. Sign in again, then submit your order.");
-        else if (cause.code === "INSUFFICIENT_STOCK") setCheckoutMessage("Some items are no longer available in the requested quantities. Your cart is unchanged.");
+        if (cause.status === 401)
+          setCheckoutMessage(
+            "Your session has expired. Sign in again, then submit your order.",
+          );
+        else if (cause.code === "INSUFFICIENT_STOCK")
+          setCheckoutMessage(
+            "Some items are no longer available in the requested quantities. Your cart is unchanged.",
+          );
         else setCheckoutMessage(`${cause.message} Your cart is unchanged.`);
       } else {
-        setCheckoutMessage("We couldn't confirm whether the order was created. Your cart is unchanged. Retry to safely check using the same saved request.");
+        setCheckoutMessage(
+          "We couldn't confirm whether the order was created. Your cart is unchanged. Retry to safely check using the same saved request.",
+        );
       }
     } finally {
       checkoutLock.current = false;
@@ -133,16 +190,37 @@ export default function Cart() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={[styles.screen, { paddingHorizontal: horizontalPadding }]}>
-        <PageHeader title="Cart" subtitle="Your Angel Foods cart" />
+        <PageHeader title="Cart" subtitle="Your Angelic mkts cart" />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {error ? <View style={styles.catalogError}><Text style={styles.emptyText}>{error}</Text><TouchableOpacity accessibilityRole="button" onPress={() => void loadCart()} style={styles.retryButton}><Text style={styles.retryButtonText}>Retry</Text></TouchableOpacity></View> : null}
-          {unmatchedLegacyCount > 0 ? <Text style={styles.legacyNotice}>{unmatchedLegacyCount} old cart item(s) could not be matched to current products and were preserved on this device.</Text> : null}
+          {error ? (
+            <View style={styles.catalogError}>
+              <Text style={styles.emptyText}>{error}</Text>
+              <TouchableOpacity
+                accessibilityRole="button"
+                onPress={() => void loadCart()}
+                style={styles.retryButton}
+              >
+                <Text style={styles.retryButtonText}>Retry</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
+          {unmatchedLegacyCount > 0 ? (
+            <Text style={styles.legacyNotice}>
+              {unmatchedLegacyCount} old cart item(s) could not be matched to
+              current products and were preserved on this device.
+            </Text>
+          ) : null}
           {loading && products.length === 0 ? (
-            <View style={styles.loadingState}><ActivityIndicator color="#192536" /><Text style={styles.emptyText}>Loading current product prices…</Text></View>
+            <View style={styles.loadingState}>
+              <ActivityIndicator color="#192536" />
+              <Text style={styles.emptyText}>
+                Loading current product prices…
+              </Text>
+            </View>
           ) : !error && hydratedCartItems.length > 0 ? (
             <View style={[styles.cartLayout, isWide && styles.wideCartLayout]}>
               <View style={styles.cartItemsColumn}>
@@ -162,17 +240,39 @@ export default function Cart() {
                   const product = item.product;
 
                   if (!product) {
-                    return <View key={item.productId} style={styles.cartItemCard}><View style={styles.itemInfo}><Text style={styles.itemName}>Product unavailable</Text><Text style={styles.itemUnit}>This item is no longer in the active catalog.</Text></View><TouchableOpacity accessibilityRole="button" onPress={() => void removeItem(item.productId)} style={styles.removeButton}><FontAwesome6 name="trash" size={12} color="#192536" /></TouchableOpacity></View>;
+                    return (
+                      <View key={item.productId} style={styles.cartItemCard}>
+                        <View style={styles.itemInfo}>
+                          <Text style={styles.itemName}>
+                            Product unavailable
+                          </Text>
+                          <Text style={styles.itemUnit}>
+                            This item is no longer in the active catalog.
+                          </Text>
+                        </View>
+                        <TouchableOpacity
+                          accessibilityRole="button"
+                          onPress={() => void removeItem(item.productId)}
+                          style={styles.removeButton}
+                        >
+                          <FontAwesome6
+                            name="trash"
+                            size={12}
+                            color="#192536"
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    );
                   }
 
                   return (
                     <View key={item.productId} style={styles.cartItemCard}>
-                      <View
-                        style={[
-                          styles.itemImageWrap,
-                        ]}
-                      >
-                        <FontAwesome6 name="basket-shopping" size={22} color="#192536" />
+                      <View style={[styles.itemImageWrap]}>
+                        <FontAwesome6
+                          name="basket-shopping"
+                          size={22}
+                          color="#192536"
+                        />
                       </View>
 
                       <View style={styles.itemInfo}>
@@ -181,10 +281,16 @@ export default function Cart() {
                         </Text>
 
                         <Text numberOfLines={1} style={styles.itemUnit}>
-                          {product.sku} · {product.inStock ? "In stock" : "Out of stock"}
+                          {product.sku} ·{" "}
+                          {product.inStock ? "In stock" : "Out of stock"}
                         </Text>
 
-                        <Text style={styles.itemPrice}>{formatMinorCurrency(product.priceMinor, product.currency)}</Text>
+                        <Text style={styles.itemPrice}>
+                          {formatMinorCurrency(
+                            product.priceMinor,
+                            product.currency,
+                          )}
+                        </Text>
 
                         <View style={styles.quantityRow}>
                           <TouchableOpacity
@@ -194,25 +300,42 @@ export default function Cart() {
                             }
                             style={styles.quantityButton}
                           >
-                            <FontAwesome6 name="minus" size={10} color="#192536" />
+                            <FontAwesome6
+                              name="minus"
+                              size={10}
+                              color="#192536"
+                            />
                           </TouchableOpacity>
 
-                          <Text style={styles.quantityText}>{item.quantity}</Text>
+                          <Text style={styles.quantityText}>
+                            {item.quantity}
+                          </Text>
 
                           <TouchableOpacity
                             activeOpacity={0.85}
                             disabled={!product.inStock}
-                            onPress={() => void changeQuantity(product.id, item.quantity + 1)}
+                            onPress={() =>
+                              void changeQuantity(product.id, item.quantity + 1)
+                            }
                             style={styles.quantityButton}
                           >
-                            <FontAwesome6 name="plus" size={10} color="#192536" />
+                            <FontAwesome6
+                              name="plus"
+                              size={10}
+                              color="#192536"
+                            />
                           </TouchableOpacity>
                         </View>
                       </View>
 
                       <View style={styles.itemRight}>
                         <Text style={styles.lineTotal}>
-                          {formatMinorCurrency((BigInt(product.priceMinor) * BigInt(item.quantity)).toString(), product.currency)}
+                          {formatMinorCurrency(
+                            (
+                              BigInt(product.priceMinor) * BigInt(item.quantity)
+                            ).toString(),
+                            product.currency,
+                          )}
                         </Text>
 
                         <TouchableOpacity
@@ -220,7 +343,11 @@ export default function Cart() {
                           onPress={() => void removeItem(product.id)}
                           style={styles.removeButton}
                         >
-                          <FontAwesome6 name="trash" size={12} color="#192536" />
+                          <FontAwesome6
+                            name="trash"
+                            size={12}
+                            color="#192536"
+                          />
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -235,17 +362,79 @@ export default function Cart() {
 
                 <Text style={styles.summaryTitle}>Order Summary</Text>
 
-                {totalsByCurrency.map(([currency, amount]) => <View key={currency} style={styles.summaryRow}><Text style={styles.summaryLabel}>Subtotal · {currency}</Text><Text style={styles.summaryValue}>{formatMinorCurrency(amount.toString(), currency)}</Text></View>)}
-                {totalsByCurrency.map(([currency, amount]) => <View key={`total-${currency}`} style={styles.totalRow}><Text style={styles.totalLabel}>Total · {currency}</Text><Text style={styles.totalValue}>{formatMinorCurrency(amount.toString(), currency)}</Text></View>)}
+                {totalsByCurrency.map(([currency, amount]) => (
+                  <View key={currency} style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>
+                      Subtotal · {currency}
+                    </Text>
+                    <Text style={styles.summaryValue}>
+                      {formatMinorCurrency(amount.toString(), currency)}
+                    </Text>
+                  </View>
+                ))}
+                {totalsByCurrency.map(([currency, amount]) => (
+                  <View key={`total-${currency}`} style={styles.totalRow}>
+                    <Text style={styles.totalLabel}>Total · {currency}</Text>
+                    <Text style={styles.totalValue}>
+                      {formatMinorCurrency(amount.toString(), currency)}
+                    </Text>
+                  </View>
+                ))}
 
-                {confirmedOrder ? <View style={styles.confirmedCard}><Text style={styles.confirmedTitle}>Order confirmed</Text><Text style={styles.checkoutNotice}>Reference {confirmedOrder.orderNumber}</Text><Text style={styles.confirmedTotal}>{formatMinorCurrency(confirmedOrder.totalMinor, confirmedOrder.currency)}</Text><Text style={styles.checkoutNotice}>Status: PENDING_PAYMENT. Payment has not been completed.</Text></View> : null}
-                {checkoutMessage ? <Text accessibilityRole="alert" style={styles.checkoutNotice}>{checkoutMessage}</Text> : null}
-                {pendingOrder ? <Text style={styles.checkoutNotice}>An order request is awaiting confirmation. Retry will use the same saved request.</Text> : null}
-                <TouchableOpacity activeOpacity={0.85} disabled={checkoutBusy || loading || (hydratedCartItems.length === 0 && !pendingOrder)} onPress={() => void submitOrder()} style={[styles.checkoutButton, checkoutBusy && { opacity: 0.65 }]}>
+                {confirmedOrder ? (
+                  <View style={styles.confirmedCard}>
+                    <Text style={styles.confirmedTitle}>Order confirmed</Text>
+                    <Text style={styles.checkoutNotice}>
+                      Reference {confirmedOrder.orderNumber}
+                    </Text>
+                    <Text style={styles.confirmedTotal}>
+                      {formatMinorCurrency(
+                        confirmedOrder.totalMinor,
+                        confirmedOrder.currency,
+                      )}
+                    </Text>
+                    <Text style={styles.checkoutNotice}>
+                      Status: PENDING_PAYMENT. Payment has not been completed.
+                    </Text>
+                  </View>
+                ) : null}
+                {checkoutMessage ? (
+                  <Text accessibilityRole="alert" style={styles.checkoutNotice}>
+                    {checkoutMessage}
+                  </Text>
+                ) : null}
+                {pendingOrder ? (
+                  <Text style={styles.checkoutNotice}>
+                    An order request is awaiting confirmation. Retry will use
+                    the same saved request.
+                  </Text>
+                ) : null}
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  disabled={
+                    checkoutBusy ||
+                    loading ||
+                    (hydratedCartItems.length === 0 && !pendingOrder)
+                  }
+                  onPress={() => void submitOrder()}
+                  style={[
+                    styles.checkoutButton,
+                    checkoutBusy && { opacity: 0.65 },
+                  ]}
+                >
                   {checkoutBusy ? <ActivityIndicator color="#FFFFFF" /> : null}
-                  <Text style={styles.checkoutButtonText}>{checkoutBusy ? "Submitting order…" : pendingOrder ? "Retry order submission" : "Submit order"}</Text>
+                  <Text style={styles.checkoutButtonText}>
+                    {checkoutBusy
+                      ? "Submitting order…"
+                      : pendingOrder
+                        ? "Retry order submission"
+                        : "Submit order"}
+                  </Text>
                 </TouchableOpacity>
-                <Text style={styles.checkoutNotice}>Submitting creates an order only. Payment is not collected here.</Text>
+                <Text style={styles.checkoutNotice}>
+                  Submitting creates an order only. Payment is not collected
+                  here.
+                </Text>
               </View>
             </View>
           ) : !loading && !error ? (
@@ -256,7 +445,11 @@ export default function Cart() {
 
               <Text style={styles.emptyTitle}>Your cart is empty</Text>
 
-              <Text style={styles.emptyText}>{unmatchedLegacyCount > 0 ? "Your previous items were preserved, but none match an active product yet." : "Add products from the shop to see them here."}</Text>
+              <Text style={styles.emptyText}>
+                {unmatchedLegacyCount > 0
+                  ? "Your previous items were preserved, but none match an active product yet."
+                  : "Add products from the shop to see them here."}
+              </Text>
 
               <TouchableOpacity
                 activeOpacity={0.85}
@@ -270,7 +463,6 @@ export default function Cart() {
             </View>
           ) : null}
         </ScrollView>
-
       </View>
     </SafeAreaView>
   );
@@ -521,9 +713,20 @@ const styles = StyleSheet.create({
     marginTop: 10,
     textAlign: "center",
   },
-  confirmedCard: { backgroundColor: "#EEF8F0", borderRadius: 14, marginTop: 14, padding: 14 },
+  confirmedCard: {
+    backgroundColor: "#EEF8F0",
+    borderRadius: 14,
+    marginTop: 14,
+    padding: 14,
+  },
   confirmedTitle: { color: "#245A36", fontFamily: "PoppinsBold", fontSize: 14 },
-  confirmedTotal: { color: "#192536", fontFamily: "PoppinsBold", fontSize: 20, marginTop: 6, textAlign: "center" },
+  confirmedTotal: {
+    color: "#192536",
+    fontFamily: "PoppinsBold",
+    fontSize: 20,
+    marginTop: 6,
+    textAlign: "center",
+  },
 
   emptyCartCard: {
     alignItems: "center",

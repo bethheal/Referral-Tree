@@ -41,8 +41,12 @@ const requirePaymentConfig = (plan: MembershipPlan) => {
 
 const addOneMonth = (from: Date) => {
   const day = from.getUTCDate();
-  const next = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth() + 1, 1));
-  const lastDay = new Date(Date.UTC(next.getUTCFullYear(), next.getUTCMonth() + 1, 0)).getUTCDate();
+  const next = new Date(
+    Date.UTC(from.getUTCFullYear(), from.getUTCMonth() + 1, 1),
+  );
+  const lastDay = new Date(
+    Date.UTC(next.getUTCFullYear(), next.getUTCMonth() + 1, 0),
+  ).getUTCDate();
   next.setUTCDate(Math.min(day, lastDay));
   return next.toISOString();
 };
@@ -55,7 +59,8 @@ export const getMembershipState = (data: Database, userId: string) => {
   const latestPayment = data.membershipPayments
     .filter((item) => item.userId === userId)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
-  const isExpired = !!membership && Date.parse(membership.expiresAt) <= Date.now();
+  const isExpired =
+    !!membership && Date.parse(membership.expiresAt) <= Date.now();
 
   return {
     membership: membership
@@ -82,12 +87,23 @@ export const startMembershipCheckout = async (
   requestedPlan: unknown,
   expectedAmount: unknown,
 ) => {
-  if (typeof requestedPlan !== "string" || !plans.includes(requestedPlan as MembershipPlan)) {
-    throw new HttpError("Choose a valid paid membership plan.", 400, "INVALID_MEMBERSHIP_PLAN");
+  if (
+    typeof requestedPlan !== "string" ||
+    !plans.includes(requestedPlan as MembershipPlan)
+  ) {
+    throw new HttpError(
+      "Choose a valid paid membership plan.",
+      400,
+      "INVALID_MEMBERSHIP_PLAN",
+    );
   }
   const plan = requestedPlan as MembershipPlan;
   const amount = requirePaymentConfig(plan);
-  if (typeof expectedAmount !== "number" || !Number.isFinite(expectedAmount) || expectedAmount !== amount) {
+  if (
+    typeof expectedAmount !== "number" ||
+    !Number.isFinite(expectedAmount) ||
+    expectedAmount !== amount
+  ) {
     throw new HttpError(
       "The displayed plan price does not match the configured price. Refresh the app or contact support.",
       409,
@@ -95,10 +111,17 @@ export const startMembershipCheckout = async (
     );
   }
   if (!user.email) {
-    throw new HttpError("An email address is required to start checkout.", 400, "EMAIL_REQUIRED");
+    throw new HttpError(
+      "An email address is required to start checkout.",
+      400,
+      "EMAIL_REQUIRED",
+    );
   }
   const activeMembership = data.memberships.find(
-    (item) => item.userId === user.id && item.status === "ACTIVE" && Date.parse(item.expiresAt) > Date.now(),
+    (item) =>
+      item.userId === user.id &&
+      item.status === "ACTIVE" &&
+      Date.parse(item.expiresAt) > Date.now(),
   );
   if (activeMembership) {
     throw new HttpError(
@@ -151,7 +174,7 @@ export const startMembershipCheckout = async (
           ...(user.phoneNumber ? { phonenumber: user.phoneNumber } : {}),
         },
         customizations: {
-          title: "Angel Foods membership",
+          title: "Angelic mkts membership",
           description: `${plan[0].toUpperCase()}${plan.slice(1)} monthly membership`,
         },
         payment_options: "card, ghanamobilemoney",
@@ -159,7 +182,7 @@ export const startMembershipCheckout = async (
         tx_ref: payment.reference,
       }),
     });
-    const body = await response.json() as {
+    const body = (await response.json()) as {
       data?: { link?: unknown };
       status?: unknown;
     };
@@ -168,7 +191,10 @@ export const startMembershipCheckout = async (
       throw new Error("Flutterwave checkout could not be started.");
     }
     const parsedLink = new URL(link);
-    if (parsedLink.protocol !== "https:" || parsedLink.hostname !== "checkout.flutterwave.com") {
+    if (
+      parsedLink.protocol !== "https:" ||
+      parsedLink.hostname !== "checkout.flutterwave.com"
+    ) {
       throw new Error("Flutterwave returned an invalid checkout URL.");
     }
 
@@ -198,9 +224,17 @@ const verifyTransaction = async (transactionId: string | number) => {
     headers: { Authorization: `Bearer ${env.flutterwaveSecretKey}` },
     signal: AbortSignal.timeout(15_000),
   });
-  if (!response.ok) throw new HttpError("Payment verification is temporarily unavailable.", 502, "PAYMENT_VERIFY_FAILED");
-  const body = await response.json() as { data?: FlutterwaveTransaction; status?: unknown };
-  return body.status === "success" ? body.data ?? null : null;
+  if (!response.ok)
+    throw new HttpError(
+      "Payment verification is temporarily unavailable.",
+      502,
+      "PAYMENT_VERIFY_FAILED",
+    );
+  const body = (await response.json()) as {
+    data?: FlutterwaveTransaction;
+    status?: unknown;
+  };
+  return body.status === "success" ? (body.data ?? null) : null;
 };
 
 const applyVerifiedTransaction = (
@@ -224,7 +258,9 @@ const applyVerifiedTransaction = (
       payment.paidAt = paidAt;
       payment.updatedAt = paidAt;
       payment.flutterwaveTransactionId = String(transaction.id ?? "");
-      const existing = data.memberships.find((item) => item.userId === payment.userId);
+      const existing = data.memberships.find(
+        (item) => item.userId === payment.userId,
+      );
       const membership: Membership = {
         id: existing?.id ?? createId("membership"),
         userId: payment.userId,
@@ -238,7 +274,10 @@ const applyVerifiedTransaction = (
       if (existing) Object.assign(existing, membership);
       else data.memberships.push(membership);
     }
-  } else if (transaction?.status === "failed" || transaction?.status === "cancelled") {
+  } else if (
+    transaction?.status === "failed" ||
+    transaction?.status === "cancelled"
+  ) {
     if (payment.status !== "PAID") {
       payment.status = "FAILED";
       payment.updatedAt = updatedAt;
@@ -254,10 +293,19 @@ export const verifyMembershipPayment = async (
   transactionId: string | number,
 ) => {
   const payment = findPayment(data, reference);
-  if (!payment) throw new HttpError("Payment reference was not found.", 404, "PAYMENT_NOT_FOUND");
+  if (!payment)
+    throw new HttpError(
+      "Payment reference was not found.",
+      404,
+      "PAYMENT_NOT_FOUND",
+    );
   const transaction = await verifyTransaction(transactionId);
   if (!transaction || transaction.tx_ref !== reference) {
-    throw new HttpError("Flutterwave could not verify this payment reference.", 400, "PAYMENT_UNVERIFIED");
+    throw new HttpError(
+      "Flutterwave could not verify this payment reference.",
+      400,
+      "PAYMENT_UNVERIFIED",
+    );
   }
   return applyVerifiedTransaction(data, transaction);
 };
@@ -267,7 +315,8 @@ export const handleFlutterwaveWebhook = async (
   event: unknown,
   transaction: FlutterwaveTransaction | undefined,
 ) => {
-  if (event !== "charge.completed" || !transaction?.id || !transaction.tx_ref) return null;
+  if (event !== "charge.completed" || !transaction?.id || !transaction.tx_ref)
+    return null;
   const payment = findPayment(data, transaction.tx_ref);
   if (!payment) return null;
   const verified = await verifyTransaction(transaction.id);
@@ -275,10 +324,18 @@ export const handleFlutterwaveWebhook = async (
   return applyVerifiedTransaction(data, verified);
 };
 
-export const getMembershipPayment = (data: Database, userId: string, reference: string) => {
+export const getMembershipPayment = (
+  data: Database,
+  userId: string,
+  reference: string,
+) => {
   const payment = findPayment(data, reference);
   if (!payment || payment.userId !== userId) {
-    throw new HttpError("Payment reference was not found.", 404, "PAYMENT_NOT_FOUND");
+    throw new HttpError(
+      "Payment reference was not found.",
+      404,
+      "PAYMENT_NOT_FOUND",
+    );
   }
   return {
     amount: payment.amount,

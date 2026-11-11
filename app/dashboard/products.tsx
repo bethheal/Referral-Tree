@@ -1,14 +1,21 @@
-import { addCartItem, getCartItems, getUnmatchedLegacyCartCount } from "@/components/cartStore";
-import { getAllCustomerProducts, type CustomerProduct } from "@/components/backendApi";
-import { formatMinorCurrency } from "@/components/productMoney";
+import {
+  getAllCustomerProducts,
+  type CustomerProduct,
+} from "@/components/backendApi";
+import {
+  addCartItem,
+  getCartItems,
+  getUnmatchedLegacyCartCount,
+} from "@/components/cartStore";
 import PageHeader from "@/components/pageHeader";
+import { formatMinorCurrency } from "@/components/productMoney";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import {
-  Animated,
   ActivityIndicator,
+  Animated,
   Modal,
   Pressable,
   SafeAreaView,
@@ -17,9 +24,9 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  type StyleProp,
   useWindowDimensions,
   View,
+  type StyleProp,
   type ViewStyle,
 } from "react-native";
 
@@ -90,10 +97,7 @@ function AnimatedIconButton({
 
   return (
     <Animated.View
-      style={[
-        style,
-        { transform: [{ scale }, { rotate: rotateInterpolate }] },
-      ]}
+      style={[style, { transform: [{ scale }, { rotate: rotateInterpolate }] }]}
     >
       <Pressable
         disabled={disabled}
@@ -114,7 +118,11 @@ function AnimatedIconButton({
         }
         style={[styles.iconOnlyButton, disabled && styles.disabledButton]}
       >
-        <FontAwesome6 name={icon as any} size={size} color={hovered ? "#FFB900" : color} />
+        <FontAwesome6
+          name={icon as any}
+          size={size}
+          color={hovered ? "#FFB900" : color}
+        />
       </Pressable>
     </Animated.View>
   );
@@ -149,7 +157,9 @@ function AnimatedTextButton({ label, onPress }: AnimatedTextButtonProps) {
         onPressOut={() => animateTo(1)}
         style={styles.sectionActionButton}
       >
-        <Text style={[styles.sectionAction, hovered && styles.hoverText]}>{label}</Text>
+        <Text style={[styles.sectionAction, hovered && styles.hoverText]}>
+          {label}
+        </Text>
       </Pressable>
     </Animated.View>
   );
@@ -190,19 +200,28 @@ export default function Products() {
       setCartCount(items.reduce((total, item) => total + item.quantity, 0));
       setUnmatchedLegacyCount(await getUnmatchedLegacyCartCount());
     } catch {
-      setCatalogError("We couldn't load the product catalog. Check your connection and try again.");
+      setCatalogError(
+        "We couldn't load the product catalog. Check your connection and try again.",
+      );
     } finally {
       setCatalogLoading(false);
     }
   }, []);
 
-  useFocusEffect(useCallback(() => { void loadCatalog(); }, [loadCatalog]));
+  useFocusEffect(
+    useCallback(() => {
+      void loadCatalog();
+    }, [loadCatalog]),
+  );
 
   const filteredProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     const selectedPriceRange = priceRanges[priceRangeIndex]!;
     const minMinor = BigInt(selectedPriceRange.minMinor);
-    const maxMinor = selectedPriceRange.maxMinor === null ? null : BigInt(selectedPriceRange.maxMinor);
+    const maxMinor =
+      selectedPriceRange.maxMinor === null
+        ? null
+        : BigInt(selectedPriceRange.maxMinor);
 
     return products
       .filter((product) => {
@@ -212,7 +231,9 @@ export default function Products() {
           product.sku.toLowerCase().includes(normalizedQuery) ||
           product.description.toLowerCase().includes(normalizedQuery);
         const priceMinor = BigInt(product.priceMinor);
-        const matchesPrice = priceMinor >= minMinor && (maxMinor === null || priceMinor <= maxMinor);
+        const matchesPrice =
+          priceMinor >= minMinor &&
+          (maxMinor === null || priceMinor <= maxMinor);
 
         return matchesSearch && matchesPrice;
       })
@@ -220,13 +241,21 @@ export default function Products() {
         if (sortOption === "lowToHigh") {
           const firstPrice = BigInt(first.priceMinor);
           const secondPrice = BigInt(second.priceMinor);
-          return firstPrice < secondPrice ? -1 : firstPrice > secondPrice ? 1 : first.name.localeCompare(second.name);
+          return firstPrice < secondPrice
+            ? -1
+            : firstPrice > secondPrice
+              ? 1
+              : first.name.localeCompare(second.name);
         }
 
         if (sortOption === "highToLow") {
           const firstPrice = BigInt(first.priceMinor);
           const secondPrice = BigInt(second.priceMinor);
-          return firstPrice > secondPrice ? -1 : firstPrice < secondPrice ? 1 : first.name.localeCompare(second.name);
+          return firstPrice > secondPrice
+            ? -1
+            : firstPrice < secondPrice
+              ? 1
+              : first.name.localeCompare(second.name);
         }
 
         return first.name.localeCompare(second.name);
@@ -326,7 +355,7 @@ export default function Products() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={[styles.screen, { paddingHorizontal: horizontalPadding }]}>
-        <PageHeader title="Products" subtitle="Browse Angel Foods products" />
+        <PageHeader title="Products" subtitle="Browse Angelic mkts products" />
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -367,63 +396,102 @@ export default function Products() {
           </View>
 
           {catalogLoading && products.length === 0 ? (
-            <View style={styles.catalogState}><ActivityIndicator color="#192536" /><Text style={styles.emptyText}>Loading products…</Text></View>
+            <View style={styles.catalogState}>
+              <ActivityIndicator color="#192536" />
+              <Text style={styles.emptyText}>Loading products…</Text>
+            </View>
           ) : null}
           {catalogError ? (
             <View style={styles.catalogError}>
               <Text style={styles.emptyTitle}>Product catalog unavailable</Text>
               <Text style={styles.emptyText}>{catalogError}</Text>
-              <TouchableOpacity accessibilityRole="button" onPress={() => void loadCatalog()} style={styles.retryButton}><Text style={styles.retryButtonText}>Retry</Text></TouchableOpacity>
+              <TouchableOpacity
+                accessibilityRole="button"
+                onPress={() => void loadCatalog()}
+                style={styles.retryButton}
+              >
+                <Text style={styles.retryButtonText}>Retry</Text>
+              </TouchableOpacity>
             </View>
           ) : null}
-          {unmatchedLegacyCount > 0 ? <Text style={styles.legacyNotice}>{unmatchedLegacyCount} previous cart item(s) could not be matched to the active catalog and were preserved on this device.</Text> : null}
+          {unmatchedLegacyCount > 0 ? (
+            <Text style={styles.legacyNotice}>
+              {unmatchedLegacyCount} previous cart item(s) could not be matched
+              to the active catalog and were preserved on this device.
+            </Text>
+          ) : null}
 
-          {products.length > 0 ? <View style={styles.featuredCard}>
-            <View style={styles.featuredInfo}>
-              <View style={styles.featuredBadge}>
-                  <FontAwesome6 name="basket-shopping" size={11} color="#D7B126" />
+          {products.length > 0 ? (
+            <View style={styles.featuredCard}>
+              <View style={styles.featuredInfo}>
+                <View style={styles.featuredBadge}>
+                  <FontAwesome6
+                    name="basket-shopping"
+                    size={11}
+                    color="#D7B126"
+                  />
 
-                <Text style={styles.featuredBadgeText}>Active catalog</Text>
+                  <Text style={styles.featuredBadgeText}>Active catalog</Text>
+                </View>
+
+                <Text numberOfLines={1} style={styles.featuredTitle}>
+                  {products[0]!.name}
+                </Text>
+
+                <Text style={styles.featuredText}>
+                  {products[0]!.description || products[0]!.sku}
+                </Text>
+
+                <View style={styles.featuredActions}>
+                  <TouchableOpacity
+                    disabled={!products[0]!.inStock}
+                    activeOpacity={0.85}
+                    onPress={() => void handleAddToCart(products[0]!)}
+                    style={[
+                      styles.featuredButton,
+                      !products[0]!.inStock && styles.disabledButton,
+                    ]}
+                  >
+                    <Text style={styles.featuredButtonText}>
+                      {products[0]!.inStock ? "Add to cart" : "Out of stock"}
+                    </Text>
+
+                    <FontAwesome6 name="plus" size={12} color="#FFFFFF" />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    activeOpacity={0.85}
+                    onPress={() => router.replace("/dashboard/cart" as any)}
+                    style={styles.cartPill}
+                  >
+                    <FontAwesome6
+                      name="cart-shopping"
+                      size={12}
+                      color="#192536"
+                    />
+
+                    <Text style={styles.cartPillText}>{cartCount}</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
 
-              <Text numberOfLines={1} style={styles.featuredTitle}>{products[0]!.name}</Text>
-
-              <Text style={styles.featuredText}>
-                {products[0]!.description || products[0]!.sku}
-              </Text>
-
-              <View style={styles.featuredActions}>
-                <TouchableOpacity
-                  disabled={!products[0]!.inStock}
-                  activeOpacity={0.85}
-                  onPress={() => void handleAddToCart(products[0]!)}
-                  style={[styles.featuredButton, !products[0]!.inStock && styles.disabledButton]}
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => openProductDetails(products[0]!)}
+                style={styles.featuredImageWrap}
+              >
+                <View
+                  style={[styles.featuredImage, styles.productImageFallback]}
                 >
-                  <Text style={styles.featuredButtonText}>{products[0]!.inStock ? "Add to cart" : "Out of stock"}</Text>
-
-                  <FontAwesome6 name="plus" size={12} color="#FFFFFF" />
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  activeOpacity={0.85}
-                  onPress={() => router.replace("/dashboard/cart" as any)}
-                  style={styles.cartPill}
-                >
-                  <FontAwesome6 name="cart-shopping" size={12} color="#192536" />
-
-                  <Text style={styles.cartPillText}>{cartCount}</Text>
-                </TouchableOpacity>
-              </View>
+                  <FontAwesome6
+                    name="basket-shopping"
+                    size={34}
+                    color="#192536"
+                  />
+                </View>
+              </TouchableOpacity>
             </View>
-
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() => openProductDetails(products[0]!)}
-              style={styles.featuredImageWrap}
-            >
-              <View style={[styles.featuredImage, styles.productImageFallback]}><FontAwesome6 name="basket-shopping" size={34} color="#192536" /></View>
-            </TouchableOpacity>
-          </View> : null}
+          ) : null}
 
           <View style={styles.sectionHeader}>
             <View>
@@ -435,8 +503,8 @@ export default function Products() {
                 {sortOption === "lowToHigh"
                   ? "Sorted by lowest price"
                   : sortOption === "highToLow"
-                  ? "Sorted by highest price"
-                  : "Sorted by product name"}
+                    ? "Sorted by highest price"
+                    : "Sorted by product name"}
               </Text>
             </View>
 
@@ -457,7 +525,15 @@ export default function Products() {
                   onPress={() => openProductDetails(product)}
                   style={styles.productImageWrap}
                 >
-                  <View style={[styles.productImage, styles.productImageFallback]}><FontAwesome6 name="basket-shopping" size={26} color="#192536" /></View>
+                  <View
+                    style={[styles.productImage, styles.productImageFallback]}
+                  >
+                    <FontAwesome6
+                      name="basket-shopping"
+                      size={26}
+                      color="#192536"
+                    />
+                  </View>
 
                   <View style={styles.productIcon}>
                     <FontAwesome6
@@ -478,12 +554,23 @@ export default function Products() {
                   </Text>
 
                   <View style={styles.ratingRow}>
-                    <FontAwesome6 name={product.inStock ? "circle-check" : "circle-minus"} size={10} color={product.inStock ? "#2F7C50" : "#A39894"} />
-                    <Text style={styles.ratingText}>{product.inStock ? "In stock" : "Out of stock"}</Text>
+                    <FontAwesome6
+                      name={product.inStock ? "circle-check" : "circle-minus"}
+                      size={10}
+                      color={product.inStock ? "#2F7C50" : "#A39894"}
+                    />
+                    <Text style={styles.ratingText}>
+                      {product.inStock ? "In stock" : "Out of stock"}
+                    </Text>
                   </View>
 
                   <View style={styles.productBottom}>
-                    <Text style={styles.productPrice}>{formatMinorCurrency(product.priceMinor, product.currency)}</Text>
+                    <Text style={styles.productPrice}>
+                      {formatMinorCurrency(
+                        product.priceMinor,
+                        product.currency,
+                      )}
+                    </Text>
 
                     <AnimatedIconButton
                       color="#1E3631"
@@ -510,13 +597,20 @@ export default function Products() {
             <View style={styles.emptyCard}>
               <FontAwesome6 name="magnifying-glass" size={18} color="#192536" />
 
-              <Text style={styles.emptyTitle}>{products.length === 0 ? "No active products yet" : "No products found"}</Text>
+              <Text style={styles.emptyTitle}>
+                {products.length === 0
+                  ? "No active products yet"
+                  : "No products found"}
+              </Text>
 
-              <Text style={styles.emptyText}>{products.length === 0 ? "Active products will appear here when they are added to the catalog." : "Try another search or price filter."}</Text>
+              <Text style={styles.emptyText}>
+                {products.length === 0
+                  ? "Active products will appear here when they are added to the catalog."
+                  : "Try another search or price filter."}
+              </Text>
             </View>
           ) : null}
         </ScrollView>
-
       </View>
 
       <Animated.View
@@ -561,8 +655,14 @@ export default function Products() {
                 </TouchableOpacity>
 
                 <View style={styles.modalImageWrap}>
-                  <View style={[styles.modalImage, styles.productImageFallback]}>
-                    <FontAwesome6 name="basket-shopping" size={42} color="#192536" />
+                  <View
+                    style={[styles.modalImage, styles.productImageFallback]}
+                  >
+                    <FontAwesome6
+                      name="basket-shopping"
+                      size={42}
+                      color="#192536"
+                    />
                   </View>
                 </View>
 
@@ -570,21 +670,31 @@ export default function Products() {
 
                 <Text style={styles.modalTitle}>{selectedProduct.name}</Text>
 
-                <Text style={styles.modalText}>{selectedProduct.description}</Text>
+                <Text style={styles.modalText}>
+                  {selectedProduct.description}
+                </Text>
 
                 <View style={styles.modalMetaRow}>
                   <Text style={styles.modalPrice}>
-                    {formatMinorCurrency(selectedProduct.priceMinor, selectedProduct.currency)}
+                    {formatMinorCurrency(
+                      selectedProduct.priceMinor,
+                      selectedProduct.currency,
+                    )}
                   </Text>
 
-                  <Text style={styles.modalUnit}>{selectedProduct.inStock ? "In stock" : "Out of stock"}</Text>
+                  <Text style={styles.modalUnit}>
+                    {selectedProduct.inStock ? "In stock" : "Out of stock"}
+                  </Text>
                 </View>
 
                 <TouchableOpacity
                   activeOpacity={0.85}
                   disabled={!selectedProduct.inStock}
                   onPress={() => void handleAddToCart(selectedProduct)}
-                  style={[styles.modalButton, !selectedProduct.inStock && styles.disabledButton]}
+                  style={[
+                    styles.modalButton,
+                    !selectedProduct.inStock && styles.disabledButton,
+                  ]}
                 >
                   <Text style={styles.modalButtonText}>Add to cart</Text>
 
@@ -608,7 +718,9 @@ export default function Products() {
               <View>
                 <Text style={styles.filterTitle}>Filter Products</Text>
 
-                <Text style={styles.filterSubtitle}>Choose a price range and sort order</Text>
+                <Text style={styles.filterSubtitle}>
+                  Choose a price range and sort order
+                </Text>
               </View>
 
               <TouchableOpacity

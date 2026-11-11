@@ -1,4 +1,3 @@
-import { orders } from "@/components/dashboardData";
 import {
   accountHistory,
   financialSummary,
@@ -9,6 +8,7 @@ import {
   logoutSession,
   type DashboardApiSummary,
 } from "@/components/backendApi";
+import { orders } from "@/components/dashboardData";
 import {
   getMemberDashboardSummary,
   getMemberDirectReferrals,
@@ -72,13 +72,16 @@ export default function Dashboard() {
     : financialSummary.projectedCashOut;
   const referralLink = dashboardApiSummary?.referralLink ?? mockReferralLink;
   const latestActivity =
-    accountHistory[0]?.title ?? paymentHistory[0]?.title ?? "No recent activity";
+    accountHistory[0]?.title ??
+    paymentHistory[0]?.title ??
+    "No recent activity";
   const referralPreview =
     dashboardApiSummary?.referralPreview ??
     getMemberDirectReferrals(referralSystem, "user-1")
       .slice(0, 5)
       .map((member) => ({
-        directReferrals: getMemberDirectReferrals(referralSystem, member.id).length,
+        directReferrals: getMemberDirectReferrals(referralSystem, member.id)
+          .length,
         fullName: member.name,
         id: member.id,
         joinedAt: member.createdAt,
@@ -171,7 +174,7 @@ export default function Dashboard() {
     await Share.share({
       message: referralLink,
       url: referralLink,
-      title: "Join Angel Foods",
+      title: "Join Angelic mkts",
     });
   };
 
@@ -194,7 +197,7 @@ export default function Dashboard() {
               {greeting}, {user}
             </Text>
 
-            <Text style={styles.subGreeting}>Welcome back to Angel Foods</Text>
+            <Text style={styles.subGreeting}>Welcome back to Angelic mkts</Text>
           </View>
 
           <TouchableOpacity
@@ -220,9 +223,10 @@ export default function Dashboard() {
             <View style={styles.heroTop}>
               <View>
                 <Text style={styles.heroTitle}>Dashboard</Text>
-                <Text style={styles.heroSubtitle}>Your Angel Foods overview</Text>
+                <Text style={styles.heroSubtitle}>
+                  Your Angelic mkts overview
+                </Text>
               </View>
-
             </View>
 
             <View style={styles.heroMoneyRow}>
@@ -246,7 +250,9 @@ export default function Dashboard() {
             <View style={styles.heroMiniGrid}>
               <View style={styles.heroMiniCard}>
                 <Text style={styles.heroMiniLabel}>Points</Text>
-                <Text style={styles.heroMiniValue}>{totalPoints.toLocaleString()}</Text>
+                <Text style={styles.heroMiniValue}>
+                  {totalPoints.toLocaleString()}
+                </Text>
               </View>
 
               <View style={styles.heroMiniCard}>
@@ -258,7 +264,9 @@ export default function Dashboard() {
 
               <View style={styles.heroMiniCard}>
                 <Text style={styles.heroMiniLabel}>Leads</Text>
-                <Text style={styles.heroMiniValue}>{totalLeads.toLocaleString()}</Text>
+                <Text style={styles.heroMiniValue}>
+                  {totalLeads.toLocaleString()}
+                </Text>
               </View>
             </View>
           </View>
@@ -311,9 +319,12 @@ export default function Dashboard() {
             </View>
 
             <View style={styles.profilePromptCopy}>
-              <Text style={styles.profilePromptTitle}>Complete your account profile</Text>
+              <Text style={styles.profilePromptTitle}>
+                Complete your account profile
+              </Text>
               <Text style={styles.profilePromptText}>
-                Keep phone, payment, and security details ready for cash-out review.
+                Keep phone, payment, and security details ready for cash-out
+                review.
               </Text>
             </View>
 
@@ -325,8 +336,6 @@ export default function Dashboard() {
               <FontAwesome6 name="arrow-right" size={12} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
-
-         
 
           <View style={styles.sectionHeader}>
             <View>
@@ -365,7 +374,6 @@ export default function Dashboard() {
               </TouchableOpacity>
             ))}
           </View>
-
 
           {/* ====================================================
               INVITE & EARN
@@ -454,14 +462,16 @@ export default function Dashboard() {
                   {totalReferrals} total referrals
                 </Text>
                 <Text style={styles.networkSummaryText}>
-                  Preview is read-only. Open the full network to expand referrals
-                  and view authorized details.
+                  Preview is read-only. Open the full network to expand
+                  referrals and view authorized details.
                 </Text>
               </View>
             </View>
 
             <View style={styles.networkPreview}>
-              <View style={[styles.networkPreviewRow, styles.networkPreviewRootRow]}>
+              <View
+                style={[styles.networkPreviewRow, styles.networkPreviewRootRow]}
+              >
                 <View style={styles.networkPreviewRail}>
                   <View style={styles.networkPreviewDot} />
                 </View>
@@ -471,9 +481,12 @@ export default function Dashboard() {
                 </View>
 
                 <View style={styles.networkPreviewCopy}>
-                  <Text style={styles.networkPreviewName}>{mockReferralTree.name}</Text>
+                  <Text style={styles.networkPreviewName}>
+                    {mockReferralTree.name}
+                  </Text>
                   <Text style={styles.networkPreviewMeta}>
-                    Root account - {mockReferralTree.children.length} direct referrals
+                    Root account - {mockReferralTree.children.length} direct
+                    referrals
                   </Text>
                 </View>
 
@@ -497,7 +510,11 @@ export default function Dashboard() {
                     </View>
 
                     <View style={styles.networkPreviewChevron}>
-                      <FontAwesome6 name="chevron-right" size={9} color="#8B7F7A" />
+                      <FontAwesome6
+                        name="chevron-right"
+                        size={9}
+                        color="#8B7F7A"
+                      />
                     </View>
 
                     <View style={styles.networkPreviewAvatar}>
@@ -515,7 +532,8 @@ export default function Dashboard() {
                         {member.name}
                       </Text>
                       <Text numberOfLines={1} style={styles.networkPreviewMeta}>
-                        Level {member.treeLevel} - {member.children.length} direct
+                        Level {member.treeLevel} - {member.children.length}{" "}
+                        direct
                       </Text>
                     </View>
 
@@ -527,7 +545,7 @@ export default function Dashboard() {
                             {
                               width: `${Math.min(
                                 (member.children.length / 4) * 100,
-                                100
+                                100,
                               )}%`,
                             },
                           ]}
@@ -610,7 +628,7 @@ export default function Dashboard() {
               <Text style={styles.sectionTitle}>Recent Orders</Text>
 
               <Text style={styles.sectionSubtitle}>
-                Your latest Angel Foods purchases
+                Your latest Angelic mkts purchases
               </Text>
             </View>
 
@@ -640,7 +658,6 @@ export default function Dashboard() {
             </TouchableOpacity>
           ))}
         </ScrollView>
-
       </View>
     </SafeAreaView>
   );

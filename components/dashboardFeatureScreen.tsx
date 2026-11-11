@@ -3,6 +3,7 @@ import {
   financialSummary,
   paymentHistory,
 } from "@/components/accountFeatureData";
+import { logoutSession } from "@/components/backendApi";
 import { orders } from "@/components/dashboardData";
 import {
   getMemberDashboardSummary,
@@ -11,7 +12,6 @@ import {
   mockReferralTree,
   referralSystem,
 } from "@/components/referralData";
-import { logoutSession } from "@/components/backendApi";
 import ReferralTree from "@/components/referralTree";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import * as Clipboard from "expo-clipboard";
@@ -139,7 +139,7 @@ export default function Dashboard(props: DashboardFeatureScreenProps) {
     await Share.share({
       message: mockReferralLink,
       url: mockReferralLink,
-      title: "Join Angel Foods",
+      title: "Join Angelic mkts",
     });
   };
 
@@ -160,7 +160,7 @@ export default function Dashboard(props: DashboardFeatureScreenProps) {
               {greeting}, {user}
             </Text>
 
-            <Text style={styles.subGreeting}>Welcome back to Angel Foods</Text>
+            <Text style={styles.subGreeting}>Welcome back to Angelic mkts</Text>
           </View>
 
           {/* LOGOUT BUTTON */}
@@ -451,7 +451,7 @@ export default function Dashboard(props: DashboardFeatureScreenProps) {
               <Text style={styles.sectionTitle}>Recent Orders</Text>
 
               <Text style={styles.sectionSubtitle}>
-                Your latest Angel Foods purchases
+                Your latest Angelic mkts purchases
               </Text>
             </View>
 

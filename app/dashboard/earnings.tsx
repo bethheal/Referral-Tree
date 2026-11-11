@@ -1,12 +1,14 @@
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import {
   getMemberDashboardSummary,
   getMemberDirectReferrals,
   referralSystem,
 } from "@/components/referralData";
+import { MOBILE_CONTENT_GUTTER } from "@/components/layout";
+import { usePaidMembership } from "@/components/membershipAccess";
 
 /* -------------------------------------------------------------------------- */
 /* Theme & config                                                             */
@@ -238,6 +240,7 @@ function Tile({
 
 export default function Earnings() {
   const [period, setPeriod] = useState<Period>("week");
+  const { isPaidMember } = usePaidMembership();
 
   const summary = useMemo(() => getMemberDashboardSummary(referralSystem, CURRENT_USER_ID), []);
   const directReferrals = useMemo(
@@ -311,7 +314,17 @@ export default function Earnings() {
     return [...map.entries()].map(([name, amount]) => ({ name, amount }));
   }, [commissions]);
 
-  const goToWithdraw = () => router.push(ACCOUNT_ROUTE as any);
+  const goToWithdraw = () => {
+    if (!isPaidMember) {
+      Alert.alert(
+        "Paid membership required",
+        "Make a payment to enable withdrawals and other earnings features.",
+      );
+      return;
+    }
+
+    router.push(ACCOUNT_ROUTE as any);
+  };
 
   return (
     <View style={styles.container}>
@@ -343,7 +356,11 @@ export default function Earnings() {
             <Pressable
               accessibilityRole="button"
               onPress={goToWithdraw}
-              style={({ pressed }) => [styles.walletButton, pressed && styles.pressed]}
+              style={({ pressed }) => [
+                styles.walletButton,
+                !isPaidMember && styles.walletButtonLocked,
+                pressed && styles.pressed,
+              ]}
             >
               <Text style={styles.walletButtonText}>Withdraw now</Text>
             </Pressable>
@@ -496,7 +513,7 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 48 },
   pressed: { opacity: 0.75 },
 
-  header: { backgroundColor: C.green, paddingBottom: 72, paddingHorizontal: 20, paddingTop: 18 },
+  header: { backgroundColor: C.green, paddingBottom: 72, paddingHorizontal: MOBILE_CONTENT_GUTTER, paddingTop: 18 },
   headerRow: { alignItems: "center", columnGap: 12, flexDirection: "row", paddingTop: 8 },
   backButton: {
     alignItems: "center",
@@ -508,7 +525,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: { color: "#FFFFFF", fontFamily: "PoppinsBold", fontSize: 16 },
 
-  cardsRow: { columnGap: 12, flexDirection: "row", marginTop: -52, paddingHorizontal: 20 },
+  cardsRow: { columnGap: 12, flexDirection: "row", marginTop: -52, paddingHorizontal: MOBILE_CONTENT_GUTTER },
   walletCard: { borderRadius: 18, flex: 1, minHeight: 132, padding: 14, ...shadow },
   walletLabel: { color: "#FFFFFF", fontFamily: "PoppinsRegular", fontSize: 11 },
   walletValue: { color: "#FFFFFF", fontFamily: "PoppinsBold", fontSize: 22, marginTop: 4 },
@@ -520,6 +537,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   walletButtonText: { color: C.ink, fontFamily: "PoppinsBold", fontSize: 11 },
+  walletButtonLocked: { opacity: 0.48 },
   walletNote: {
     alignItems: "center",
     backgroundColor: "rgba(255,255,255,0.3)",
@@ -537,7 +555,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     columnGap: 12,
     flexDirection: "row",
-    marginHorizontal: 20,
+    marginHorizontal: MOBILE_CONTENT_GUTTER,
     marginTop: 16,
     padding: 14,
   },
@@ -554,7 +572,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: C.card,
     borderRadius: 20,
-    marginHorizontal: 20,
+    marginHorizontal: MOBILE_CONTENT_GUTTER,
     marginTop: 16,
     padding: 16,
     ...shadow,
@@ -603,7 +621,7 @@ const styles = StyleSheet.create({
     color: C.ink,
     fontFamily: "PoppinsBold",
     fontSize: 13,
-    marginHorizontal: 20,
+    marginHorizontal: MOBILE_CONTENT_GUTTER,
     marginTop: 24,
   },
   categoryRow: {
@@ -612,7 +630,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     columnGap: 14,
     flexDirection: "row",
-    marginHorizontal: 20,
+    marginHorizontal: MOBILE_CONTENT_GUTTER,
     marginTop: 10,
     padding: 14,
     ...shadow,

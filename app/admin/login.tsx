@@ -24,7 +24,9 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [mfaStep, setMfaStep] = useState<"password" | "setup" | "verify" | "recovery">("password");
+  const [mfaStep, setMfaStep] = useState<
+    "password" | "setup" | "verify" | "recovery"
+  >("password");
   const [mfaSecret, setMfaSecret] = useState("");
   const [mfaCode, setMfaCode] = useState("");
   const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
@@ -56,18 +58,26 @@ export default function AdminLogin() {
     }
     setIsLoading(true);
     try {
-      const result = await finishAdminMfaLogin(email.trim(), mfaCode.trim(), mfaStep);
+      const result = await finishAdminMfaLogin(
+        email.trim(),
+        mfaCode.trim(),
+        mfaStep,
+      );
       if (result.destination === "recovery") {
         setRecoveryCodes(result.recoveryCodes);
         setMfaStep("recovery");
         setMfaCode("");
-        setMessage("MFA enrollment succeeded. Save these one-time recovery codes, then continue to the dashboard.");
+        setMessage(
+          "MFA enrollment succeeded. Save these one-time recovery codes, then continue to the dashboard.",
+        );
         return;
       }
       setMessage(`Welcome, ${result.session.name}.`);
       router.replace("/admin" as any);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "MFA verification failed.");
+      setMessage(
+        error instanceof Error ? error.message : "MFA verification failed.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -102,111 +112,161 @@ export default function AdminLogin() {
 
           <Text style={styles.title}>Admin Login</Text>
           <Text style={styles.subtitle}>
-            Authorized Angel Foods staff only. Admin rights are verified before
+            Authorized Angelic mkts staff only. Admin rights are verified before
             dashboard access.
           </Text>
 
-          {mfaStep === "password" ? <View style={styles.form}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email</Text>
-              <TextInput
-                autoCapitalize="none"
-                autoComplete="email"
-                keyboardType="email-address"
-                onChangeText={setEmail}
-                placeholder="admin@angelfoods.com"
-                placeholderTextColor="#A69A95"
-                style={styles.input}
-                value={email}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
-              <View style={styles.passwordWrap}>
+          {mfaStep === "password" ? (
+            <View style={styles.form}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Email</Text>
                 <TextInput
                   autoCapitalize="none"
-                  autoComplete="password"
-                  onChangeText={setPassword}
-                  placeholder="Enter password"
+                  autoComplete="email"
+                  keyboardType="email-address"
+                  onChangeText={setEmail}
+                  placeholder="admin@angelfoods.com"
                   placeholderTextColor="#A69A95"
-                  secureTextEntry={!showPassword}
-                  style={styles.passwordInput}
-                  value={password}
+                  style={styles.input}
+                  value={email}
                 />
-                <TouchableOpacity
-                  activeOpacity={0.75}
-                  onPress={() => setShowPassword((current) => !current)}
-                  style={styles.eyeButton}
-                >
-                  <FontAwesome6
-                    name={showPassword ? "eye-slash" : "eye"}
-                    size={16}
-                    color="#8B7F7A"
-                  />
-                </TouchableOpacity>
               </View>
-            </View>
 
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={handleForgotPassword}
-              style={styles.forgotButton}
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Password</Text>
+                <View style={styles.passwordWrap}>
+                  <TextInput
+                    autoCapitalize="none"
+                    autoComplete="password"
+                    onChangeText={setPassword}
+                    placeholder="Enter password"
+                    placeholderTextColor="#A69A95"
+                    secureTextEntry={!showPassword}
+                    style={styles.passwordInput}
+                    value={password}
+                  />
+                  <TouchableOpacity
+                    activeOpacity={0.75}
+                    onPress={() => setShowPassword((current) => !current)}
+                    style={styles.eyeButton}
+                  >
+                    <FontAwesome6
+                      name={showPassword ? "eye-slash" : "eye"}
+                      size={16}
+                      color="#8B7F7A"
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={handleForgotPassword}
+                style={styles.forgotButton}
+              >
+                <Text style={styles.forgotText}>Forgot Password?</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.86}
+                onPress={handleLogin}
+                style={styles.loginButton}
+              >
+                <Text style={styles.loginButtonText}>
+                  {isLoading ? "Checking..." : "Login"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
+
+          {mfaStep === "setup" || mfaStep === "verify" ? (
+            <View style={styles.form}>
+              {mfaStep === "setup" ? (
+                <View style={styles.mfaPanel}>
+                  <Text style={styles.label}>Authenticator setup key</Text>
+                  <Text selectable style={styles.secret}>
+                    {mfaSecret}
+                  </Text>
+                  <Text style={styles.mfaHint}>
+                    Enter this key manually in an authenticator app, then enter
+                    the current six-digit code below.
+                  </Text>
+                </View>
+              ) : null}
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>
+                  {mfaStep === "setup"
+                    ? "Authenticator code"
+                    : "Authenticator or recovery code"}
+                </Text>
+                <TextInput
+                  autoCapitalize="characters"
+                  autoComplete="one-time-code"
+                  keyboardType={
+                    mfaCode.includes("-") ? "default" : "number-pad"
+                  }
+                  onChangeText={setMfaCode}
+                  placeholder={
+                    mfaStep === "setup" ? "123456" : "Enter your code"
+                  }
+                  placeholderTextColor="#A69A95"
+                  style={styles.input}
+                  value={mfaCode}
+                />
+              </View>
+              <TouchableOpacity
+                activeOpacity={0.86}
+                disabled={isLoading}
+                onPress={() => void handleVerifyMfa()}
+                style={styles.loginButton}
+              >
+                <Text style={styles.loginButtonText}>
+                  {isLoading ? "Verifying..." : "Verify MFA"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
+
+          {mfaStep === "recovery" ? (
+            <View style={styles.form}>
+              <View style={styles.mfaPanel}>
+                <Text style={styles.label}>One-time recovery codes</Text>
+                {recoveryCodes.map((code) => (
+                  <Text selectable key={code} style={styles.secret}>
+                    {code}
+                  </Text>
+                ))}
+                <Text style={styles.mfaHint}>
+                  Each code can only be used once. Store them securely; they
+                  will not be shown again.
+                </Text>
+              </View>
+              <TouchableOpacity
+                activeOpacity={0.86}
+                onPress={() => router.replace("/admin" as any)}
+                style={styles.loginButton}
+              >
+                <Text style={styles.loginButtonText}>
+                  Continue to dashboard
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
+
+          {message ? (
+            <Text
+              accessibilityRole="alert"
+              accessibilityLiveRegion="polite"
+              style={styles.message}
             >
-              <Text style={styles.forgotText}>Forgot Password?</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.86}
-              onPress={handleLogin}
-              style={styles.loginButton}
-            >
-              <Text style={styles.loginButtonText}>
-                {isLoading ? "Checking..." : "Login"}
-              </Text>
-            </TouchableOpacity>
-
-          </View> : null}
-
-          {mfaStep === "setup" || mfaStep === "verify" ? <View style={styles.form}>
-            {mfaStep === "setup" ? <View style={styles.mfaPanel}>
-              <Text style={styles.label}>Authenticator setup key</Text>
-              <Text selectable style={styles.secret}>{mfaSecret}</Text>
-              <Text style={styles.mfaHint}>Enter this key manually in an authenticator app, then enter the current six-digit code below.</Text>
-            </View> : null}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{mfaStep === "setup" ? "Authenticator code" : "Authenticator or recovery code"}</Text>
-              <TextInput
-                autoCapitalize="characters"
-                autoComplete="one-time-code"
-                keyboardType={mfaCode.includes("-") ? "default" : "number-pad"}
-                onChangeText={setMfaCode}
-                placeholder={mfaStep === "setup" ? "123456" : "Enter your code"}
-                placeholderTextColor="#A69A95"
-                style={styles.input}
-                value={mfaCode}
-              />
-            </View>
-            <TouchableOpacity activeOpacity={0.86} disabled={isLoading} onPress={() => void handleVerifyMfa()} style={styles.loginButton}>
-              <Text style={styles.loginButtonText}>{isLoading ? "Verifying..." : "Verify MFA"}</Text>
-            </TouchableOpacity>
-          </View> : null}
-
-          {mfaStep === "recovery" ? <View style={styles.form}>
-            <View style={styles.mfaPanel}>
-              <Text style={styles.label}>One-time recovery codes</Text>
-              {recoveryCodes.map((code) => <Text selectable key={code} style={styles.secret}>{code}</Text>)}
-              <Text style={styles.mfaHint}>Each code can only be used once. Store them securely; they will not be shown again.</Text>
-            </View>
-            <TouchableOpacity activeOpacity={0.86} onPress={() => router.replace("/admin" as any)} style={styles.loginButton}>
-              <Text style={styles.loginButtonText}>Continue to dashboard</Text>
-            </TouchableOpacity>
-          </View> : null}
-
-          {message ? <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={styles.message}>{message}</Text> : null}
+              {message}
+            </Text>
+          ) : null}
 
           <View style={styles.securityPanel}>
-            <Text style={styles.securityTitle}>Backend protection required</Text>
+            <Text style={styles.securityTitle}>
+              Backend protection required
+            </Text>
             {backendAuthorizationRequirements.map((item) => (
               <View key={item} style={styles.securityRow}>
                 <FontAwesome6 name="lock" size={10} color="#192536" />

@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "suitest": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@suiflex/suitest-mcp"
+      ],
+      "env": {
+        "SUITEST_API_URL": "http://127.0.0.1:4001",
+        "SUITEST_API_KEY": "sk_suitest_2mqLSzDFeQVQ3KWgwl_HL82YiG9z8nFmyl5C8iNTAWY"
+      }
+    }
+  }
+}

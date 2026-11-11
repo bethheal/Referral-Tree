@@ -3,8 +3,8 @@ import {
   Image,
   ImageBackground,
   SafeAreaView,
-  StyleSheet,
   StatusBar,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -39,7 +39,7 @@ export default function Auth() {
             source={require("../../assets/images/logo.png")}
             style={styles.logo}
           />
-          <Text style={styles.brand}>ANGEL FOODS</Text>
+          <Text style={styles.brand}>Angelic mktS</Text>
         </View>
 
         <View style={styles.panel}>

@@ -105,7 +105,7 @@ export default function MembershipPlans({
           </View>
           <View style={styles.currentRight}>
             <Text style={styles.currentLabel}>
-            Monthly membership price
+            Membership price
             </Text>
             <Text style={styles.currentAmount}>
               {formatGhs(current.monthlyFee)}
@@ -137,7 +137,7 @@ export default function MembershipPlans({
           return (
             <Pressable
               key={item.key}
-              accessibilityLabel={`${item.label} plan, ${formatGhs(item.monthlyFee)} per month`}
+              accessibilityLabel={`${item.label} plan, ${formatGhs(item.monthlyFee)}`}
               accessibilityRole="radio"
               accessibilityState={{ selected: isSelected }}
               onPress={() => {
@@ -175,20 +175,18 @@ export default function MembershipPlans({
               <Text style={styles.planName}>{item.label}</Text>
               <Text style={styles.planPrice}>
                 {item.monthlyFee === 0 ? "GHS 0" : formatGhs(item.monthlyFee)}
-                <Text style={styles.planPer}> /month</Text>
+                <Text style={styles.planPer}> one-time</Text>
               </Text>
-              <Text style={styles.planRate}>
-                {item.monthlyFee === 0 ? "No membership fee" : "One-time monthly payment"}
-              </Text>
+              <Text style={styles.planRate}>{item.paymentDescription}</Text>
             </Pressable>
           );
         })}
       </View>
 
       <View style={styles.summary}>
-        <Text style={styles.summaryTitle}>{plan.label} monthly membership</Text>
+        <Text style={styles.summaryTitle}>{plan.label} membership</Text>
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Monthly fee</Text>
+          <Text style={styles.summaryLabel}>One-time payment</Text>
           <Text style={styles.summaryValue}>{formatGhs(plan.monthlyFee)}</Text>
         </View>
         <Text style={styles.note}>
@@ -235,7 +233,7 @@ export default function MembershipPlans({
           <ActivityIndicator color="#FFFFFF" />
         ) : (
           <Text style={styles.buttonText}>
-            {isCurrent ? `You're on ${plan.label}` : freePlanUnavailable ? `Available after ${current.label} ends` : plan.monthlyFee > 0 ? `Pay for ${plan.label}` : `Continue with ${plan.label}`}
+            {isCurrent ? `You're on ${plan.label}` : freePlanUnavailable ? `Available after ${current.label} ends` : plan.key === "gold" ? "Upgrade with Gold package" : plan.monthlyFee > 0 ? `Pay for ${plan.label}` : `Continue with ${plan.label}`}
           </Text>
         )}
       </Pressable>

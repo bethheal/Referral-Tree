@@ -1,4 +1,10 @@
 import {
+  getMembershipState,
+  startMembershipCheckout,
+  type MembershipApiState,
+  type MembershipPlanKey,
+} from "@/components/backendApi";
+import {
   getMemberDashboardSummary,
   getMemberDirectReferrals,
   mockReferralLink,
@@ -7,12 +13,6 @@ import {
 } from "@/components/referralData";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import * as Clipboard from "expo-clipboard";
-import {
-  getMembershipState,
-  startMembershipCheckout,
-  type MembershipApiState,
-  type MembershipPlanKey,
-} from "@/components/backendApi";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -20,8 +20,8 @@ import {
   Alert,
   Image,
   KeyboardAvoidingView,
-  Linking,
   LayoutChangeEvent,
+  Linking,
   Modal,
   Platform,
   Pressable,
@@ -36,6 +36,7 @@ import {
 } from "react-native";
 import MembershipPlans from "./MembershipPlans";
 import type { PlanKey } from "./accountServices";
+import { MOBILE_CONTENT_GUTTER } from "@/components/layout";
 
 /* -------------------------------------------------------------------------- */
 /* Theme                                                                      */
@@ -1326,7 +1327,8 @@ function PaymentFlow({
 function PaymentMethodsList() {
   return (
     <Text style={styles.note}>
-      Payments use Flutterwave secure checkout. Choose card or Mobile Money there; Angel Foods does not store payment details.
+      Payments use Flutterwave secure checkout. Choose card or Mobile Money
+      there; Angelic mkts does not store payment details.
     </Text>
   );
 }
@@ -1382,14 +1384,18 @@ export default function Account() {
         if (!mounted) return;
         setMembershipState(state);
         setMembershipPlan(
-          state.membership?.status === "ACTIVE" ? state.membership.plan : "free",
+          state.membership?.status === "ACTIVE"
+            ? state.membership.plan
+            : "free",
         );
       })
       .catch(() => undefined)
       .finally(() => {
         if (mounted) setMembershipLoading(false);
       });
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -1401,7 +1407,9 @@ export default function Account() {
         if (!mounted) return;
         setMembershipState(state);
         setMembershipPlan(
-          state.membership?.status === "ACTIVE" ? state.membership.plan : "free",
+          state.membership?.status === "ACTIVE"
+            ? state.membership.plan
+            : "free",
         );
       } catch {
         // Keep the visible payment status pending if the server cannot be reached.
@@ -1412,13 +1420,24 @@ export default function Account() {
       mounted = false;
       clearInterval(timer);
     };
-  }, [membershipState.latestPayment?.reference, membershipState.latestPayment?.status]);
+  }, [
+    membershipState.latestPayment?.reference,
+    membershipState.latestPayment?.status,
+  ]);
 
-  const beginMembershipCheckout = async (nextPlan: PlanKey, expectedAmount: number) => {
+  const beginMembershipCheckout = async (
+    nextPlan: PlanKey,
+    expectedAmount: number,
+  ) => {
     if (nextPlan === "free") {
-      throw new Error("Changing to the Free plan is not available from this payment flow.");
+      throw new Error(
+        "Changing to the Free plan is not available from this payment flow.",
+      );
     }
-    const checkout = await startMembershipCheckout(nextPlan as MembershipPlanKey, expectedAmount);
+    const checkout = await startMembershipCheckout(
+      nextPlan as MembershipPlanKey,
+      expectedAmount,
+    );
     setMembershipState((current) => ({
       ...current,
       latestPayment: {
@@ -1432,7 +1451,9 @@ export default function Account() {
     try {
       await Linking.openURL(checkout.checkoutUrl);
     } catch {
-      throw new Error("Flutterwave checkout could not be opened. Your current membership access has not changed.");
+      throw new Error(
+        "Flutterwave checkout could not be opened. Your current membership access has not changed.",
+      );
     }
   };
 
@@ -1636,8 +1657,8 @@ export default function Account() {
 
   const shareReferral = () =>
     Share.share({
-      message: `Join Angel Foods with my referral link: ${mockReferralLink}`,
-      title: "Join Angel Foods",
+      message: `Join Angelic mkts with my referral link: ${mockReferralLink}`,
+      title: "Join Angelic mkts",
       url: mockReferralLink,
     });
 
@@ -1685,6 +1706,16 @@ export default function Account() {
   /* ------------------------------- Render -------------------------------- */
 
   const withdrawDisabled = available <= 0 || !activePayout;
+  const paidMembershipActive =
+    membershipState.membership?.status === "ACTIVE" &&
+    membershipState.membership.plan !== "free";
+
+  const showMembershipRequired = () => {
+    Alert.alert(
+      "Paid membership required",
+      "Make a payment to enable withdrawals and other earnings features.",
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -1950,7 +1981,8 @@ export default function Account() {
           ) : null}
           {typeof pending !== "number" || typeof withdrawn !== "number" ? (
             <Text style={styles.note}>
-              The em dash means that figure isn&apos;t provided by the current data source.
+              The em dash means that figure isn&apos;t provided by the current
+              data source.
             </Text>
           ) : null}
         </Section>
@@ -2114,12 +2146,12 @@ export default function Account() {
 
           <Pressable
             accessibilityRole="button"
-            accessibilityState={{ disabled: withdrawDisabled }}
-            disabled={withdrawDisabled}
-            onPress={submitWithdrawal}
+            accessibilityState={{ disabled: withdrawDisabled || !paidMembershipActive }}
+            disabled={withdrawDisabled && paidMembershipActive}
+            onPress={paidMembershipActive ? submitWithdrawal : showMembershipRequired}
             style={({ pressed }) => [
               styles.withdrawButton,
-              withdrawDisabled && styles.withdrawButtonDisabled,
+              (withdrawDisabled || !paidMembershipActive) && styles.withdrawButtonDisabled,
               pressed && styles.pressed,
             ]}
           >
@@ -2322,7 +2354,7 @@ const styles = StyleSheet.create({
 
   header: { alignItems: "center", paddingBottom: 12, paddingTop: 26 },
   headerTitle: { color: C.ink, fontFamily: "PoppinsBold", fontSize: 18 },
-  content: { paddingBottom: 40, paddingHorizontal: 20 },
+  content: { paddingBottom: 40, paddingHorizontal: MOBILE_CONTENT_GUTTER },
 
   /* Hero */
   heroCard: {

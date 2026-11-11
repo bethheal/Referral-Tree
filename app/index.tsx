@@ -1,7 +1,5 @@
-
-
-import Loading from "@/components/loading";
 import { hasAuthSession } from "@/components/backendApi";
+import Loading from "@/components/loading";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
@@ -25,7 +23,7 @@ export default function Index() {
           }
 
           router.replace(
-            onboardingComplete === "true" ? "/auth/login" : "/onboarding"
+            onboardingComplete === "true" ? "/auth/login" : "/onboarding",
           );
         } catch (error) {
           console.log("Startup route check failed:", error);
@@ -43,7 +41,7 @@ export default function Index() {
     <View style={styles.container}>
       <Image source={require("../assets/images/logo.png")} style={styles.img} />
 
-      <Text style={styles.text}>ANGEL FOODS</Text>
+      <Text style={styles.text}>Angelic mktS</Text>
       <Loading />
     </View>
   );

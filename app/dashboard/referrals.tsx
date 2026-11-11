@@ -1,4 +1,15 @@
+import { getConnectionDetails } from "@/components/accountFeatureData";
+import type { ReferralNodeData } from "@/components/referralData";
+import {
+  getMemberDashboardSummary,
+  getMemberDirectReferrals,
+  getReferralTotal,
+  mockReferralLink,
+  mockReferralTree,
+  referralSystem,
+} from "@/components/referralData";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import { usePaidMembership } from "@/components/membershipAccess";
 import * as Clipboard from "expo-clipboard";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -17,16 +28,6 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { getConnectionDetails } from "@/components/accountFeatureData";
-import {
-  getReferralTotal,
-  getMemberDashboardSummary,
-  getMemberDirectReferrals,
-  mockReferralLink,
-  mockReferralTree,
-  referralSystem,
-} from "@/components/referralData";
-import type { ReferralNodeData } from "@/components/referralData";
 
 if (
   Platform.OS === "android" &&
@@ -70,7 +71,10 @@ const EMPTY_FILTERS: NetworkFilters = {
 };
 
 const formatGhs = (value: number) => `GH₵${value.toLocaleString("en-GH")}`;
-const normalize = (value: unknown) => String(value ?? "").trim().toLowerCase();
+const normalize = (value: unknown) =>
+  String(value ?? "")
+    .trim()
+    .toLowerCase();
 const levelLabel = (level: number) => (level === 0 ? "Root" : `Level ${level}`);
 const isActiveStatus = (status: unknown) => normalize(status) === "active";
 
@@ -89,7 +93,7 @@ function flattenVisible(node: VisibleNode): VisibleNode[] {
  */
 function pruneTree(
   node: ReferralNodeData,
-  predicate: (node: ReferralNodeData) => boolean
+  predicate: (node: ReferralNodeData) => boolean,
 ): VisibleNode | null {
   const children = node.children
     .map((child) => pruneTree(child, predicate))
@@ -119,7 +123,10 @@ const TYPE_KEYS = ["type", "kind", "commissionType"];
 const LEVEL_KEYS = ["level", "treeLevel"];
 const STATUS_KEYS = ["status", "paymentStatus"];
 
-function readField(record: object, keys: string[]): string | number | undefined {
+function readField(
+  record: object,
+  keys: string[],
+): string | number | undefined {
   const source = record as Record<string, unknown>;
 
   for (const key of keys) {
@@ -179,7 +186,10 @@ function ChipGroup<T extends string | number>({
           style={[styles.chip, selected === null && styles.chipSelected]}
         >
           <Text
-            style={[styles.chipText, selected === null && styles.chipTextSelected]}
+            style={[
+              styles.chipText,
+              selected === null && styles.chipTextSelected,
+            ]}
           >
             All
           </Text>
@@ -248,7 +258,9 @@ function ReferralOutlineNode({
   return (
     <View style={styles.outlineNode}>
       <Pressable
-        accessibilityHint={isOpen ? "Hides referral details" : "Shows referral details"}
+        accessibilityHint={
+          isOpen ? "Hides referral details" : "Shows referral details"
+        }
         accessibilityLabel={`${node.name}. ${meta}`}
         accessibilityRole="button"
         accessibilityState={{ expanded: isOpen }}
@@ -283,7 +295,10 @@ function ReferralOutlineNode({
 
         <View style={[styles.statusPill, active && styles.statusPillActive]}>
           <Text
-            style={[styles.statusPillText, active && styles.statusPillTextActive]}
+            style={[
+              styles.statusPillText,
+              active && styles.statusPillTextActive,
+            ]}
           >
             {String(node.status).toUpperCase()}
           </Text>
@@ -317,7 +332,7 @@ function ReferralOutlineNode({
               {
                 label: "Earnings",
                 value: `${connection.commissions.length} records • ${formatGhs(
-                  earnings
+                  earnings,
                 )}`,
               },
               {
@@ -368,6 +383,7 @@ function ReferralOutlineNode({
 /* -------------------------------------------------------------------------- */
 
 export default function MyReferrals() {
+  const { isPaidMember } = usePaidMembership();
   const { width } = useWindowDimensions();
   const isWide = width >= WIDE_BREAKPOINT;
 
@@ -382,7 +398,7 @@ export default function MyReferrals() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(
-    () => new Set([CURRENT_USER_ID])
+    () => new Set([CURRENT_USER_ID]),
   );
 
   // Earnings state
@@ -393,21 +409,21 @@ export default function MyReferrals() {
 
   const summary = useMemo(
     () => getMemberDashboardSummary(referralSystem, CURRENT_USER_ID),
-    []
+    [],
   );
   const directReferralMembers = useMemo(
     () => getMemberDirectReferrals(referralSystem, CURRENT_USER_ID),
-    []
+    [],
   );
   const ownedIds = useMemo(
     () => new Set(directReferralMembers.map((member) => member.id)),
-    [directReferralMembers]
+    [directReferralMembers],
   );
   const totalReferrals = useMemo(() => getReferralTotal(mockReferralTree), []);
   const allNodes = useMemo(() => flattenTree(mockReferralTree), []);
   const activeCount = useMemo(
     () => allNodes.filter((node) => isActiveStatus(node.status)).length,
-    [allNodes]
+    [allNodes],
   );
 
   const lifetimeEarnings = summary.earnings.total;
@@ -425,7 +441,7 @@ export default function MyReferrals() {
         .sort((a, b) => a - b)
         .map((level) => ({ label: levelLabel(level), value: level })),
       qualifications: unique(
-        allNodes.map((node) => normalize(node.qualificationStatus))
+        allNodes.map((node) => normalize(node.qualificationStatus)),
       )
         .filter(Boolean)
         .map((value) => ({
@@ -462,18 +478,20 @@ export default function MyReferrals() {
   const visibleTree = useMemo(() => {
     const predicate = (node: ReferralNodeData) => {
       if (tab === "owned" && !ownedIds.has(node.id)) return false;
-      if (filters.status && normalize(node.status) !== filters.status) return false;
+      if (filters.status && normalize(node.status) !== filters.status)
+        return false;
       if (
         filters.qualification &&
         normalize(node.qualificationStatus) !== filters.qualification
       ) {
         return false;
       }
-      if (filters.level !== null && node.treeLevel !== filters.level) return false;
+      if (filters.level !== null && node.treeLevel !== filters.level)
+        return false;
 
       if (query) {
         return [node.name, node.referralCode].some((field) =>
-          normalize(field).includes(query)
+          normalize(field).includes(query),
         );
       }
 
@@ -485,8 +503,10 @@ export default function MyReferrals() {
 
   const visibleIds = useMemo(
     () =>
-      new Set(visibleTree ? flattenVisible(visibleTree).map((v) => v.node.id) : []),
-    [visibleTree]
+      new Set(
+        visibleTree ? flattenVisible(visibleTree).map((v) => v.node.id) : [],
+      ),
+    [visibleTree],
   );
 
   // Open the branches that lead to matches whenever search/filters change.
@@ -512,14 +532,14 @@ export default function MyReferrals() {
   const myCommissions = useMemo(
     () =>
       referralSystem.commissions.filter(
-        (commission) => commission.recipientId === CURRENT_USER_ID
+        (commission) => commission.recipientId === CURRENT_USER_ID,
       ),
-    []
+    [],
   );
 
   const hasDatedEarnings = useMemo(
     () => myCommissions.some((commission) => getTimestamp(commission) !== null),
-    [myCommissions]
+    [myCommissions],
   );
 
   const earningsSince = (days: number) => {
@@ -528,7 +548,9 @@ export default function MyReferrals() {
     return myCommissions.reduce((total, commission) => {
       const time = getTimestamp(commission);
 
-      return time !== null && time >= cutoff ? total + commission.amount : total;
+      return time !== null && time >= cutoff
+        ? total + commission.amount
+        : total;
     }, 0);
   };
 
@@ -543,9 +565,9 @@ export default function MyReferrals() {
   const sortedCommissions = useMemo(
     () =>
       [...myCommissions].sort(
-        (a, b) => (getTimestamp(b) ?? 0) - (getTimestamp(a) ?? 0)
+        (a, b) => (getTimestamp(b) ?? 0) - (getTimestamp(a) ?? 0),
       ),
-    [myCommissions]
+    [myCommissions],
   );
   const shownCommissions = showAllEarnings
     ? sortedCommissions
@@ -564,8 +586,8 @@ export default function MyReferrals() {
 
   const shareInvite = async () => {
     await Share.share({
-      message: `Join Angel Foods with my referral link: ${mockReferralLink}`,
-      title: "Join Angel Foods",
+      message: `Join Angelic mkts with my referral link: ${mockReferralLink}`,
+      title: "Join Angelic mkts",
       url: mockReferralLink,
     });
   };
@@ -576,11 +598,19 @@ export default function MyReferrals() {
    * state is faked.
    */
   const requestWithdrawal = () => {
+    if (!isPaidMember) {
+      Alert.alert(
+        "Paid membership required",
+        "Make a payment to enable withdrawals and other earnings features.",
+      );
+      return;
+    }
+
     Alert.alert(
       "Withdrawals aren't connected yet",
       `Your available balance is ${formatGhs(
-        availableBalance
-      )}. Withdrawal will be available once the payout service is connected.`
+        availableBalance,
+      )}. Withdrawal will be available once the payout service is connected.`,
     );
   };
 
@@ -693,17 +723,23 @@ export default function MyReferrals() {
 
               <View style={styles.summaryHeaderCopy}>
                 <Text style={styles.sectionEyebrow}>REFERRAL SUMMARY</Text>
-                <Text style={styles.summaryTitle}>Your referral performance</Text>
+                <Text style={styles.summaryTitle}>
+                  Your referral performance
+                </Text>
               </View>
             </View>
 
-            <View style={[styles.metricsWrap, isWide && styles.metricsWrapWide]}>
+            <View
+              style={[styles.metricsWrap, isWide && styles.metricsWrapWide]}
+            >
               {metrics.map((metric, index) => (
                 <View
                   key={metric.key}
                   style={[styles.metricGroup, isWide && styles.metricGroupWide]}
                 >
-                  <View style={[styles.metricTile, isWide && styles.metricTileWide]}>
+                  <View
+                    style={[styles.metricTile, isWide && styles.metricTileWide]}
+                  >
                     <View
                       style={[
                         styles.metricIcon,
@@ -713,19 +749,27 @@ export default function MyReferrals() {
                       <FontAwesome6
                         name={metric.icon}
                         size={14}
-                        color={metric.key === "earnings" ? "#FFFFFF" : "#192536"}
+                        color={
+                          metric.key === "earnings" ? "#FFFFFF" : "#192536"
+                        }
                       />
                     </View>
                     <Text style={styles.metricTileLabel}>{metric.label}</Text>
                     <Text numberOfLines={1} style={styles.metricTileValue}>
                       {metric.value}
                     </Text>
-                    <Text style={styles.metricTileCaption}>{metric.caption}</Text>
+                    <Text style={styles.metricTileCaption}>
+                      {metric.caption}
+                    </Text>
                   </View>
 
                   {isWide && index < metrics.length - 1 ? (
                     <View style={styles.flowArrow}>
-                      <FontAwesome6 name="chevron-right" size={11} color="#D8C7C1" />
+                      <FontAwesome6
+                        name="chevron-right"
+                        size={11}
+                        color="#D8C7C1"
+                      />
                     </View>
                   ) : null}
                 </View>
@@ -751,7 +795,9 @@ export default function MyReferrals() {
               </Text>
               <Text style={styles.summaryMeta}>
                 Status{" "}
-                <Text style={styles.summaryMetaStrong}>{summary.treeStatus}</Text>
+                <Text style={styles.summaryMetaStrong}>
+                  {summary.treeStatus}
+                </Text>
               </Text>
             </View>
 
@@ -811,11 +857,7 @@ export default function MyReferrals() {
                 ]}
               >
                 <View style={styles.shareButtonIcon}>
-                  <FontAwesome6
-                    name="share-nodes"
-                    size={13}
-                    color="#192536"
-                  />
+                  <FontAwesome6 name="share-nodes" size={13} color="#192536" />
                 </View>
                 <Text style={styles.shareButtonText}>Share Referral Link</Text>
                 <FontAwesome6 name="arrow-right" size={12} color="#FFFFFF" />
@@ -850,7 +892,9 @@ export default function MyReferrals() {
             <View style={styles.balanceRow}>
               <View style={styles.balanceBlock}>
                 <Text style={styles.balanceLabel}>Lifetime earnings</Text>
-                <Text style={styles.balanceValue}>{formatGhs(lifetimeEarnings)}</Text>
+                <Text style={styles.balanceValue}>
+                  {formatGhs(lifetimeEarnings)}
+                </Text>
               </View>
 
               <View style={[styles.balanceBlock, styles.balanceBlockRight]}>
@@ -866,10 +910,15 @@ export default function MyReferrals() {
                 {earningsPeriods.map((period, index) => (
                   <View
                     key={period.label}
-                    style={[styles.periodItem, index > 0 && styles.periodItemBorder]}
+                    style={[
+                      styles.periodItem,
+                      index > 0 && styles.periodItemBorder,
+                    ]}
                   >
                     <Text style={styles.periodLabel}>{period.label}</Text>
-                    <Text style={styles.periodValue}>{formatGhs(period.value)}</Text>
+                    <Text style={styles.periodValue}>
+                      {formatGhs(period.value)}
+                    </Text>
                   </View>
                 ))}
               </View>
@@ -878,36 +927,44 @@ export default function MyReferrals() {
             <Pressable
               accessibilityLabel="Withdraw earnings"
               accessibilityRole="button"
-              accessibilityState={{ disabled: availableBalance <= 0 }}
-              disabled={availableBalance <= 0}
+              accessibilityState={{ disabled: availableBalance <= 0 || !isPaidMember }}
+              disabled={availableBalance <= 0 && isPaidMember}
               onPress={requestWithdrawal}
               style={({ pressed }) => [
                 styles.withdrawButton,
-                availableBalance <= 0 && styles.withdrawButtonDisabled,
+                (availableBalance <= 0 || !isPaidMember) && styles.withdrawButtonDisabled,
                 pressed && styles.pressed,
               ]}
             >
-              <FontAwesome6 name="money-bill-transfer" size={14} color="#FFFFFF" />
+              <FontAwesome6
+                name="money-bill-transfer"
+                size={14}
+                color="#FFFFFF"
+              />
               <Text style={styles.withdrawButtonText}>Withdraw Earnings</Text>
             </Pressable>
 
             {showEarningsDetails ? (
               <View style={styles.earningsDetails}>
                 {sortedCommissions.length === 0 ? (
-                  <Text style={styles.emptyInline}>No referral earnings yet</Text>
+                  <Text style={styles.emptyInline}>
+                    No referral earnings yet
+                  </Text>
                 ) : (
                   <>
                     {shownCommissions.map((commission, index) => {
                       const time = getTimestamp(commission);
                       const sourceId = readField(commission, SOURCE_KEYS);
                       const source = referralSystem.users.find(
-                        (user) => user.id === sourceId
+                        (user) => user.id === sourceId,
                       );
                       const type = readField(commission, TYPE_KEYS);
                       const level = readField(commission, LEVEL_KEYS);
                       const status = readField(commission, STATUS_KEYS);
                       const subtitle = [
-                        time !== null ? new Date(time).toLocaleDateString() : null,
+                        time !== null
+                          ? new Date(time).toLocaleDateString()
+                          : null,
                         level !== undefined
                           ? typeof level === "number"
                             ? levelLabel(level)
@@ -924,11 +981,17 @@ export default function MyReferrals() {
                           style={styles.earningsRow}
                         >
                           <View style={styles.earningsRowCopy}>
-                            <Text numberOfLines={1} style={styles.earningsRowTitle}>
+                            <Text
+                              numberOfLines={1}
+                              style={styles.earningsRowTitle}
+                            >
                               {source?.name ?? "Referral commission"}
                             </Text>
                             {subtitle ? (
-                              <Text numberOfLines={1} style={styles.earningsRowMeta}>
+                              <Text
+                                numberOfLines={1}
+                                style={styles.earningsRowMeta}
+                              >
                                 {subtitle}
                               </Text>
                             ) : null}
@@ -950,7 +1013,9 @@ export default function MyReferrals() {
 
                     {sortedCommissions.length > INITIAL_EARNINGS_ROWS ? (
                       <Pressable
-                        onPress={() => setShowAllEarnings((current) => !current)}
+                        onPress={() =>
+                          setShowAllEarnings((current) => !current)
+                        }
                         style={styles.showMoreButton}
                       >
                         <Text style={styles.showMoreText}>
@@ -975,12 +1040,11 @@ export default function MyReferrals() {
               </View>
 
               <Text style={styles.progressText}>
-                {totalReferrals} of {bonusTarget} referrals toward the bonus draw
+                {totalReferrals} of {bonusTarget} referrals toward the bonus
+                draw
               </Text>
             </View>
           </View>
-
-         
 
           <Text style={styles.sectionTitle}>Top Invites</Text>
           <View style={styles.invitePodium}>
@@ -993,8 +1057,15 @@ export default function MyReferrals() {
                     invite.rank === 1 && styles.firstAvatar,
                   ]}
                 >
-                  <Text style={styles.avatarInitial}>{invite.name.charAt(0)}</Text>
-                  <View style={[styles.rankBadge, { backgroundColor: invite.color }]}>
+                  <Text style={styles.avatarInitial}>
+                    {invite.name.charAt(0)}
+                  </Text>
+                  <View
+                    style={[
+                      styles.rankBadge,
+                      { backgroundColor: invite.color },
+                    ]}
+                  >
                     <Text style={styles.rankText}>{invite.rank}</Text>
                   </View>
                 </View>
@@ -1026,14 +1097,16 @@ export default function MyReferrals() {
               <View key={friend.id} style={styles.friendRow}>
                 <Text style={styles.friendRank}>{index + 1}</Text>
                 <View style={styles.friendAvatar}>
-                  <Text style={styles.friendInitial}>{friend.name.charAt(0)}</Text>
+                  <Text style={styles.friendInitial}>
+                    {friend.name.charAt(0)}
+                  </Text>
                 </View>
                 <View style={styles.friendCopy}>
                   <Text style={styles.friendName}>{friend.name}</Text>
                   <Text style={styles.friendMeta}>
                     Parent -{" "}
                     {referralSystem.users.find(
-                      (user) => user.id === friend.placementParentId
+                      (user) => user.id === friend.placementParentId,
                     )?.name ?? "None"}
                   </Text>
                 </View>
@@ -1082,7 +1155,10 @@ export default function MyReferrals() {
                     accessibilityRole="tab"
                     accessibilityState={{ selected: isActive }}
                     onPress={() => setTab(item.key)}
-                    style={[styles.filterPill, isActive && styles.filterPillActive]}
+                    style={[
+                      styles.filterPill,
+                      isActive && styles.filterPillActive,
+                    ]}
                   >
                     <Text
                       style={[
@@ -1107,7 +1183,11 @@ export default function MyReferrals() {
 
             <View style={styles.searchRow}>
               <View style={styles.searchBox}>
-                <FontAwesome6 name="magnifying-glass" size={11} color="#8B7F7A" />
+                <FontAwesome6
+                  name="magnifying-glass"
+                  size={11}
+                  color="#8B7F7A"
+                />
                 <TextInput
                   accessibilityLabel="Search referral network"
                   autoCapitalize="none"
@@ -1128,7 +1208,11 @@ export default function MyReferrals() {
                       setQuery("");
                     }}
                   >
-                    <FontAwesome6 name="circle-xmark" size={13} color="#B5AAA5" />
+                    <FontAwesome6
+                      name="circle-xmark"
+                      size={13}
+                      color="#B5AAA5"
+                    />
                   </Pressable>
                 ) : null}
               </View>
@@ -1140,13 +1224,16 @@ export default function MyReferrals() {
                 onPress={() => setShowFilters((current) => !current)}
                 style={[
                   styles.filterButton,
-                  (showFilters || activeFilterCount > 0) && styles.filterButtonActive,
+                  (showFilters || activeFilterCount > 0) &&
+                    styles.filterButtonActive,
                 ]}
               >
                 <FontAwesome6
                   name="filter"
                   size={11}
-                  color={showFilters || activeFilterCount > 0 ? "#192536" : "#8B7F7A"}
+                  color={
+                    showFilters || activeFilterCount > 0 ? "#192536" : "#8B7F7A"
+                  }
                 />
                 <Text
                   style={[
@@ -1173,7 +1260,10 @@ export default function MyReferrals() {
                 <ChipGroup
                   label="Qualification"
                   onSelect={(value) =>
-                    setFilters((current) => ({ ...current, qualification: value }))
+                    setFilters((current) => ({
+                      ...current,
+                      qualification: value,
+                    }))
                   }
                   options={filterOptions.qualifications}
                   selected={filters.qualification}
@@ -1195,7 +1285,8 @@ export default function MyReferrals() {
                   <Text
                     style={[
                       styles.clearFiltersText,
-                      activeFilterCount === 0 && styles.clearFiltersTextDisabled,
+                      activeFilterCount === 0 &&
+                        styles.clearFiltersTextDisabled,
                     ]}
                   >
                     Clear Filters
@@ -1221,8 +1312,13 @@ export default function MyReferrals() {
                     Try searching by name or referral code.
                   </Text>
                   {isFiltering ? (
-                    <Pressable onPress={resetNetworkControls} style={styles.clearFilters}>
-                      <Text style={styles.clearFiltersText}>Reset search & filters</Text>
+                    <Pressable
+                      onPress={resetNetworkControls}
+                      style={styles.clearFilters}
+                    >
+                      <Text style={styles.clearFiltersText}>
+                        Reset search & filters
+                      </Text>
                     </Pressable>
                   ) : null}
                 </View>
@@ -1230,9 +1326,9 @@ export default function MyReferrals() {
             </View>
 
             <Text style={styles.detailNote}>
-              Users can explore only the referral network returned by the backend.
-              This page does not expose editing controls for referral relationships,
-              points, earnings, or payment records.
+              Users can explore only the referral network returned by the
+              backend. This page does not expose editing controls for referral
+              relationships, points, earnings, or payment records.
             </Text>
           </View>
         </ScrollView>

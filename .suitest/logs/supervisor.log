@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Gallopsea\Desktop\Projects\AngelFoods\.suitest\.venv\Lib\site-packages\suitest_runner\local_supervisor.py", line 15, in <module>
+    import fcntl
+ModuleNotFoundError: No module named 'fcntl'

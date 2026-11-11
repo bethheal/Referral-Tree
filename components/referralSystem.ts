@@ -101,7 +101,7 @@ export type ReferralNodeData = ReferralMember & {
 export const productConfigs: ProductConfig[] = [
   {
     id: "product-level-1",
-    name: "Angel Foods Level 1",
+    name: "Angelic mkts Level 1",
     level: 1,
     price: 10,
     commissionAmount: 4,
@@ -110,7 +110,7 @@ export const productConfigs: ProductConfig[] = [
   },
   {
     id: "product-level-2",
-    name: "Angel Foods Level 2",
+    name: "Angelic mkts Level 2",
     level: 2,
     price: 10,
     commissionAmount: 4,
@@ -119,7 +119,7 @@ export const productConfigs: ProductConfig[] = [
   },
   {
     id: "product-level-3",
-    name: "Angel Foods Level 3",
+    name: "Angelic mkts Level 3",
     level: 3,
     price: 25,
     commissionAmount: 10,
@@ -128,7 +128,7 @@ export const productConfigs: ProductConfig[] = [
   },
   {
     id: "product-level-4",
-    name: "Angel Foods Level 4",
+    name: "Angelic mkts Level 4",
     level: 4,
     price: 60,
     commissionAmount: 24,
@@ -137,7 +137,7 @@ export const productConfigs: ProductConfig[] = [
   },
   {
     id: "product-level-5",
-    name: "Angel Foods Level 5",
+    name: "Angelic mkts Level 5",
     level: 5,
     price: 150,
     commissionAmount: 120,
@@ -146,7 +146,7 @@ export const productConfigs: ProductConfig[] = [
   },
   {
     id: "product-level-6",
-    name: "Angel Foods Level 6",
+    name: "Angelic mkts Level 6",
     level: 6,
     price: 300,
     commissionAmount: 120,
@@ -158,7 +158,10 @@ export const productConfigs: ProductConfig[] = [
 const now = "2026-09-14T12:00:00.000Z";
 
 const createCode = (name: string, index: number) =>
-  `${name.replace(/[^a-z]/gi, "").slice(0, 3).toUpperCase()}${String(index).padStart(3, "0")}`;
+  `${name
+    .replace(/[^a-z]/gi, "")
+    .slice(0, 3)
+    .toUpperCase()}${String(index).padStart(3, "0")}`;
 
 const getChildren = (state: ReferralSystemState, parentId: string) =>
   state.users
@@ -175,7 +178,9 @@ const hasPlacementCycle = (state: ReferralSystemState, userId: string) => {
     }
 
     visited.add(current.placementParentId);
-    current = state.users.find((user) => user.id === current?.placementParentId);
+    current = state.users.find(
+      (user) => user.id === current?.placementParentId,
+    );
   }
 
   return false;
@@ -183,7 +188,7 @@ const hasPlacementCycle = (state: ReferralSystemState, userId: string) => {
 
 export const findPlacementPosition = (
   state: ReferralSystemState,
-  sponsorId: string
+  sponsorId: string,
 ) => {
   const sponsor = state.users.find((user) => user.id === sponsorId);
 
@@ -210,11 +215,11 @@ export const findPlacementPosition = (
 
     if (children.length < MAX_DIRECT_PLACEMENT_CHILDREN) {
       const usedPositions = new Set(
-        children.map((child) => child.placementPosition).filter(Boolean)
+        children.map((child) => child.placementPosition).filter(Boolean),
       );
       const nextPosition = Array.from(
         { length: MAX_DIRECT_PLACEMENT_CHILDREN },
-        (_, index) => index + 1
+        (_, index) => index + 1,
       ).find((position) => !usedPositions.has(position));
 
       if (!nextPosition) {
@@ -242,10 +247,10 @@ export const registerMember = (
     email: string;
     sponsorReferralCode: string;
     productLevel?: number;
-  }
+  },
 ) => {
   const sponsor = state.users.find(
-    (user) => user.referralCode === input.sponsorReferralCode
+    (user) => user.referralCode === input.sponsorReferralCode,
   );
 
   if (!sponsor) {
@@ -257,7 +262,7 @@ export const registerMember = (
   }
 
   const existingUser = state.users.find(
-    (user) => user.email.toLowerCase() === input.email.toLowerCase()
+    (user) => user.email.toLowerCase() === input.email.toLowerCase(),
   );
 
   if (existingUser) {
@@ -290,7 +295,7 @@ export const registerMember = (
     (user) =>
       user.treeId === placement.treeId &&
       user.placementParentId === placement.parentId &&
-      user.placementPosition === placement.position
+      user.placementPosition === placement.position,
   );
 
   if (duplicatePosition) {
@@ -353,7 +358,7 @@ export const validateReferralIntegrity = (state: ReferralSystemState) => {
 
     if (members.length !== tree.memberCount) {
       issues.push(
-        `${tree.id} member count is ${tree.memberCount}, but ${members.length} users are assigned.`
+        `${tree.id} member count is ${tree.memberCount}, but ${members.length} users are assigned.`,
       );
     }
 
@@ -386,7 +391,7 @@ export const validateReferralIntegrity = (state: ReferralSystemState) => {
 
       if (usedPositions.has(child.placementPosition)) {
         issues.push(
-          `${user.name} has a duplicate placement position ${child.placementPosition}.`
+          `${user.name} has a duplicate placement position ${child.placementPosition}.`,
         );
       }
 
@@ -418,7 +423,7 @@ export const validateReferralIntegrity = (state: ReferralSystemState) => {
 export const updateMemberStatus = (
   state: ReferralSystemState,
   memberId: string,
-  status: MemberStatus
+  status: MemberStatus,
 ) => {
   const member = state.users.find((user) => user.id === memberId);
 
@@ -435,10 +440,10 @@ export const updateMemberStatus = (
 export const updateCommissionStatus = (
   state: ReferralSystemState,
   transactionId: string,
-  status: CommissionStatus
+  status: CommissionStatus,
 ) => {
   const transaction = state.commissions.find(
-    (commission) => commission.id === transactionId
+    (commission) => commission.id === transactionId,
   );
 
   if (!transaction) {
@@ -453,7 +458,7 @@ export const updateCommissionStatus = (
 export const updateProductCommission = (
   state: ReferralSystemState,
   productId: string,
-  commissionAmount: number
+  commissionAmount: number,
 ) => {
   const product = state.products.find((item) => item.id === productId);
 
@@ -558,7 +563,7 @@ export const referralSystem = createInitialReferralSystem();
 
 export const buildReferralTree = (
   state: ReferralSystemState,
-  rootUserId: string
+  rootUserId: string,
 ): ReferralNodeData => {
   const user = state.users.find((item) => item.id === rootUserId);
 
@@ -567,7 +572,7 @@ export const buildReferralTree = (
   }
 
   const children = getChildren(state, rootUserId).map((child) =>
-    buildReferralTree(state, child.id)
+    buildReferralTree(state, child.id),
   );
 
   return {
@@ -586,7 +591,7 @@ export const getReferralInitials = (name: string) =>
 
 export const getMemberDirectReferrals = (
   state: ReferralSystemState,
-  memberId: string
+  memberId: string,
 ) => state.users.filter((user) => user.sponsorId === memberId);
 
 export const getPlacementChildren = getChildren;
@@ -595,18 +600,21 @@ export const getTreeMembers = (state: ReferralSystemState, treeId: string) =>
   state.users.filter((user) => user.treeId === treeId);
 
 export const getLevelCounts = (state: ReferralSystemState, treeId: string) =>
-  getTreeMembers(state, treeId).reduce<Record<number, number>>((counts, user) => {
-    if (user.treeLevel > 0) {
-      counts[user.treeLevel] = (counts[user.treeLevel] ?? 0) + 1;
-    }
+  getTreeMembers(state, treeId).reduce<Record<number, number>>(
+    (counts, user) => {
+      if (user.treeLevel > 0) {
+        counts[user.treeLevel] = (counts[user.treeLevel] ?? 0) + 1;
+      }
 
-    return counts;
-  }, {});
+      return counts;
+    },
+    {},
+  );
 
 export const getLevelRows = (
   state: ReferralSystemState,
   treeId: string,
-  maxLevel = 6
+  maxLevel = 6,
 ) => {
   const counts = getLevelCounts(state, treeId);
 
@@ -624,10 +632,10 @@ export const getLevelRows = (
 
 export const getMemberEarnings = (
   state: ReferralSystemState,
-  memberId: string
+  memberId: string,
 ) => {
   const memberCommissions = state.commissions.filter(
-    (commission) => commission.recipientId === memberId
+    (commission) => commission.recipientId === memberId,
   );
 
   return {
@@ -649,17 +657,14 @@ export const getMemberEarnings = (
   };
 };
 
-export const getMemberPoints = (
-  state: ReferralSystemState,
-  memberId: string
-) =>
+export const getMemberPoints = (state: ReferralSystemState, memberId: string) =>
   state.points
     .filter((transaction) => transaction.userId === memberId)
     .reduce((sum, transaction) => sum + transaction.points, 0);
 
 export const getMemberDashboardSummary = (
   state: ReferralSystemState,
-  memberId: string
+  memberId: string,
 ) => {
   const member = state.users.find((user) => user.id === memberId);
 
@@ -682,7 +687,8 @@ export const getMemberDashboardSummary = (
     treeSize: tree?.memberCount ?? treeMembers.length,
     treeCapacity: tree?.maxMembers ?? MAX_TREE_SIZE,
     availableTreeSpaces:
-      (tree?.maxMembers ?? MAX_TREE_SIZE) - (tree?.memberCount ?? treeMembers.length),
+      (tree?.maxMembers ?? MAX_TREE_SIZE) -
+      (tree?.memberCount ?? treeMembers.length),
     treeStatus: tree?.status ?? "INACTIVE",
     currentLevel: member.treeLevel,
     totalPoints: getMemberPoints(state, memberId),
@@ -698,7 +704,7 @@ export const getAdminSummary = (state: ReferralSystemState) => ({
   totalReferrals: state.users.filter((user) => user.sponsorId).length,
   totalCommissions: state.commissions.reduce(
     (sum, commission) => sum + commission.amount,
-    0
+    0,
   ),
   pendingCommissions: state.commissions
     .filter((commission) => commission.status === "PENDING")
@@ -709,7 +715,7 @@ export const getAdminSummary = (state: ReferralSystemState) => ({
   productSales: state.users.filter((user) => user.productLevel > 0).length,
   totalPoints: state.points.reduce(
     (sum, transaction) => sum + transaction.points,
-    0
+    0,
   ),
 });
 

@@ -1,0 +1,10 @@
+{
+  "mode": "frontend",
+  "projectName": "AngelFoods",
+  "projectPath": ".",
+  "baseUrl": "http://localhost:3000",
+  "server": {
+    "autostart": false,
+    "startCommand": ""
+  }
+}

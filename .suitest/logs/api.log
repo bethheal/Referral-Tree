@@ -1,0 +1,1378 @@
+2026-11-10 13:08:12 [debug    ] reporter_registry.registered   name=xray
+2026-11-10 13:08:12 [debug    ] reporter_registry.registered   name=qtest
+INFO:     Started server process [10604]
+INFO:     Waiting for application startup.
+{"mode": "gateway", "s3_endpoint": "http://localhost:9000", "s3_public_endpoint": null, "force_gateway": false, "event": "artifact_delivery.startup", "level": "info", "time": "2026-11-10T13:08:13.585397Z"}
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:4000 (Press CTRL+C to quit)
+2026-11-10 13:10:30 [debug    ] reporter_registry.registered   name=xray
+2026-11-10 13:10:30 [debug    ] reporter_registry.registered   name=qtest
+INFO:     Started server process [19104]
+INFO:     Waiting for application startup.
+{"mode": "gateway", "s3_endpoint": "http://localhost:9000", "s3_public_endpoint": null, "force_gateway": false, "event": "artifact_delivery.startup", "level": "info", "time": "2026-11-10T13:10:30.771057Z"}
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:4001 (Press CTRL+C to quit)
+INFO:     127.0.0.1:53572 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57694 - "POST /auth/cookie/login HTTP/1.1" 204 No Content
+INFO:     127.0.0.1:53572 - "GET /api/v1/workspaces HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57694 - "POST /api/v1/workspaces/j7d08eyz7cvkw68nvit272bj/api-keys HTTP/1.1" 201 Created
+INFO:     127.0.0.1:53590 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53590 - "GET /assets/index-BAHqWqVl.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49793 - "GET /assets/index-BsGPPj1I.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63081 - "GET /assets/tanstack-BQdTQcIE.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58926 - "GET /assets/radix-D-NfLl_q.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54324 - "GET /assets/recharts-DycNZ1IV.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53590 - "GET /api/v1/auth/me HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:54324 - "GET /favicon.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54324 - "GET /login?next=%2Fdashboard HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53590 - "GET /capabilities HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54324 - "GET /logo.svg HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53590 - "GET /capabilities HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58926 - "GET /assets/index-BsGPPj1I.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:53590 - "GET /assets/geist-sans-latin-400-normal-gapTbOY8.woff2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54324 - "GET /assets/geist-mono-latin-500-normal-C3sF8Y1B.woff2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63081 - "GET /assets/geist-mono-latin-400-normal-DKaoCDn5.woff2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49793 - "GET /assets/geist-sans-latin-500-normal-uokXdC-Q.woff2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62820 - "POST /auth/cookie/login HTTP/1.1" 204 No Content
+INFO:     127.0.0.1:62820 - "GET /dashboard HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62820 - "GET /assets/index-BsGPPj1I.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:62820 - "GET /api/v1/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50117 - "GET /assets/index-BsGPPj1I.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:50117 - "GET /api/v1/projects HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50117 - "GET /capabilities HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56149 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:50117 - "GET /capabilities HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50117 - "GET /assets/geist-sans-latin-600-normal-DFOURf8L.woff2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49213 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:64372 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:49648 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:59193 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:57101 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:55145 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:55861 - "POST /api/v1/projects HTTP/1.1" 201 Created
+INFO:     127.0.0.1:55861 - "GET /api/v1/projects HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54700 - "GET /api/v1/analytics/kpis?projectId=wik0zthls7yxicqxganvda8w&period=7d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54700 - "GET /api/v1/analytics/pass-rate?projectId=wik0zthls7yxicqxganvda8w&period=11d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54700 - "GET /api/v1/analytics/coverage?projectId=wik0zthls7yxicqxganvda8w HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54700 - "GET /api/v1/runs?projectId=wik0zthls7yxicqxganvda8w&limit=5 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54700 - "GET /api/v1/audit-logs?action=agent.*&limit=5 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54700 - "GET /api/v1/analytics/readiness?projectId=wik0zthls7yxicqxganvda8w HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55861 - "GET /api/v1/runs?projectId=wik0zthls7yxicqxganvda8w&limit=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59452 - "GET /api/v1/workspaces/j7d08eyz7cvkw68nvit272bj/api-keys HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54700 - "GET /api/v1/test-cases?projectId=wik0zthls7yxicqxganvda8w&limit=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55083 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:61154 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:53076 - "GET /api/v1/suites?projectId=wik0zthls7yxicqxganvda8w HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53076 - "GET /api/v1/test-cases?projectId=wik0zthls7yxicqxganvda8w HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49262 - "GET /api/v1/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53076 - "GET /api/v1/projects/wik0zthls7yxicqxganvda8w HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57897 - "POST /api/v1/suites HTTP/1.1" 201 Created
+INFO:     127.0.0.1:57897 - "GET /api/v1/suites?projectId=wik0zthls7yxicqxganvda8w HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57897 - "GET /api/v1/suites?projectId=wik0zthls7yxicqxganvda8w HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50320 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:58270 - "POST /api/v1/test-cases HTTP/1.1" 201 Created
+INFO:     127.0.0.1:58348 - "GET /api/v1/suites?projectId=wik0zthls7yxicqxganvda8w HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58270 - "GET /api/v1/test-cases?projectId=wik0zthls7yxicqxganvda8w HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49619 - "GET /api/v1/test-cases/TC-1000 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51810 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:56220 - "GET /api/v1/test-cases/q5ej7c0cdmn44n2zbmcmmqxz/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60912 - "GET /api/v1/test-cases/q5ej7c0cdmn44n2zbmcmmqxz/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60912 - "POST /api/v1/runs HTTP/1.1" 202 Accepted
+INFO:     127.0.0.1:50064 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:57701 - "GET /api/v1/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60912 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60912 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/logs?limit=500 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/test-cases/q5ej7c0cdmn44n2zbmcmmqxz/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/test-cases/q5ej7c0cdmn44n2zbmcmmqxz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/test-cases/q5ej7c0cdmn44n2zbmcmmqxz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64498 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53851 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53290 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64286 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64273 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59871 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62605 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56220 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59718 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57652 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51312 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56665 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56665 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56665 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56665 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56665 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56665 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56665 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56405 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57253 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54835 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51569 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:55035 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53361 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54250 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:56523 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62631 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56854 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55960 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62637 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57410 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50808 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62955 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58156 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54585 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57549 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:62219 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61279 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58921 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:53701 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59580 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59358 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55832 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52260 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55818 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55818 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55818 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55818 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55818 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61625 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61625 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61625 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61625 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61625 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61625 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61625 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61625 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61625 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61625 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61625 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64835 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:65484 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:61625 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61625 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61625 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61625 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61625 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65126 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65126 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65126 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65126 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65126 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65126 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65126 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65126 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65126 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65126 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65126 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65126 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54724 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64206 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "POST /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/cancel HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52273 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53158 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52273 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56335 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55430 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:57089 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:54032 - "GET /api/v1/runs/summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54032 - "GET /api/v1/runs?projectId=wik0zthls7yxicqxganvda8w&limit=10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54032 - "GET /api/v1/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49533 - "GET /api/v1/runs/R-1000 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54953 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:54032 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/logs?limit=500 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49533 - "GET /api/v1/test-cases/q5ej7c0cdmn44n2zbmcmmqxz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49533 - "GET /api/v1/test-cases/q5ej7c0cdmn44n2zbmcmmqxz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49533 - "GET /api/v1/runs/summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60738 - "GET /api/v1/runs/summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64993 - "GET /api/v1/runs/summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64993 - "GET /api/v1/analytics/kpis?projectId=wik0zthls7yxicqxganvda8w&period=7d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64993 - "GET /api/v1/analytics/pass-rate?projectId=wik0zthls7yxicqxganvda8w&period=11d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64993 - "GET /api/v1/analytics/coverage?projectId=wik0zthls7yxicqxganvda8w HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64993 - "GET /api/v1/runs?projectId=wik0zthls7yxicqxganvda8w&limit=5 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64993 - "GET /api/v1/audit-logs?action=agent.*&limit=5 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64993 - "GET /api/v1/analytics/readiness?projectId=wik0zthls7yxicqxganvda8w HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60867 - "GET /api/v1/workspaces/j7d08eyz7cvkw68nvit272bj/api-keys HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51543 - "GET /api/v1/runs?projectId=wik0zthls7yxicqxganvda8w&limit=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64993 - "GET /api/v1/test-cases?projectId=wik0zthls7yxicqxganvda8w&limit=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57949 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:59864 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:62063 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:64093 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:63500 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:62028 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:53957 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:61836 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:57965 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:65301 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:59071 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:58112 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:59545 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:54371 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:53614 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:60697 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:62320 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:64180 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:56724 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:56125 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:56447 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:49916 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:62281 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:60787 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:57327 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:50691 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:63985 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:52267 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:49928 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:59951 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:62171 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:65033 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:52951 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:64606 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:55174 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:64679 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:60302 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:58584 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:56588 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:62504 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:49306 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:58888 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:55672 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:65078 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:54250 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:60755 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:55783 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:53513 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:65135 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:57037 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:54352 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:64173 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:50067 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:60313 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:60397 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:50087 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:51115 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:53514 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:59692 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:55728 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:63041 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:63392 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:49158 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:64131 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:55488 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:64770 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:59969 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:64579 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:65130 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:54701 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:54112 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:56610 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:60398 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:49409 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:62847 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:64598 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:53253 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:54965 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:56992 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:57407 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:50368 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:57005 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:61945 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:60092 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:65100 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:55561 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:63573 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:50287 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:53080 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:58881 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:57461 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:63196 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:59040 - "GET /api/v1/runs/summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59040 - "GET /api/v1/runs?projectId=wik0zthls7yxicqxganvda8w&limit=10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49156 - "GET /api/v1/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59040 - "GET /api/v1/runs/R-1000 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49750 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:59040 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49156 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62365 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/logs?limit=500 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62492 - "GET /api/v1/test-cases/q5ej7c0cdmn44n2zbmcmmqxz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62492 - "GET /api/v1/test-cases/q5ej7c0cdmn44n2zbmcmmqxz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49161 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:59497 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:62492 - "GET /assets/index-BsGPPj1I.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:62492 - "GET /logo.svg HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:62365 - "GET /assets/index-BsGPPj1I.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:49975 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:62492 - "GET /capabilities HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62492 - "GET /capabilities HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60773 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:49359 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:53532 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:62492 - "GET /runs?run=R-1000 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62492 - "GET /assets/index-BsGPPj1I.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:62365 - "GET /assets/index-BsGPPj1I.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:62492 - "GET /api/v1/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62492 - "GET /api/v1/projects HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62492 - "GET /capabilities HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62365 - "GET /capabilities HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60035 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:62492 - "GET /api/v1/runs/summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62492 - "GET /api/v1/runs?projectId=wik0zthls7yxicqxganvda8w&limit=10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62492 - "GET /api/v1/runs/R-1000 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61814 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:62365 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/artifacts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62492 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/steps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52622 - "GET /api/v1/runs/e1jkz9kup98qdyav9a4is9nb/logs?limit=500 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56488 - "GET /api/v1/test-cases/q5ej7c0cdmn44n2zbmcmmqxz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56488 - "GET /api/v1/test-cases/q5ej7c0cdmn44n2zbmcmmqxz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53607 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:60378 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:54279 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:56488 - "GET /api/v1/runs/summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52834 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:56488 - "GET /settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56488 - "GET /assets/index-BAHqWqVl.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:60608 - "GET /assets/tanstack-BQdTQcIE.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:64775 - "GET /assets/index-BsGPPj1I.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:53391 - "GET /assets/radix-D-NfLl_q.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:61579 - "GET /assets/recharts-DycNZ1IV.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:53391 - "GET /assets/index-BsGPPj1I.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:61579 - "GET /api/v1/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61579 - "GET /api/v1/projects HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61579 - "GET /capabilities HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61579 - "GET /assets/geist-mono-latin-500-normal-C3sF8Y1B.woff2 HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:64775 - "GET /assets/geist-sans-latin-400-normal-gapTbOY8.woff2 HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:56488 - "GET /assets/geist-sans-latin-600-normal-DFOURf8L.woff2 HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:53391 - "GET /assets/geist-sans-latin-500-normal-uokXdC-Q.woff2 HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:60608 - "GET /assets/geist-mono-latin-400-normal-DKaoCDn5.woff2 HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:63149 - "GET /capabilities HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61469 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:58979 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:63149 - "GET /api/v1/workspaces/j7d08eyz7cvkw68nvit272bj/llm-config HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:56488 - "GET /api/v1/prompt-experiments HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53391 - "GET /api/v1/prompts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60608 - "GET /api/v1/workspaces/j7d08eyz7cvkw68nvit272bj/cost?windowDays=30 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62824 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:60608 - "GET /assets/geist-sans-latin-700-normal-BmN9tIp5.woff2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61481 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:52359 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:56479 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:59806 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:55803 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:59177 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:56046 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:55414 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:49728 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:56082 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:55783 - "GET /api/v1/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53062 - "GET /api/v1/analytics/kpis?projectId=wik0zthls7yxicqxganvda8w&period=7d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53062 - "GET /api/v1/analytics/pass-rate?projectId=wik0zthls7yxicqxganvda8w&period=11d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53062 - "GET /api/v1/analytics/coverage?projectId=wik0zthls7yxicqxganvda8w HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53062 - "GET /api/v1/runs?projectId=wik0zthls7yxicqxganvda8w&limit=5 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53062 - "GET /api/v1/audit-logs?action=agent.*&limit=5 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53062 - "GET /api/v1/analytics/readiness?projectId=wik0zthls7yxicqxganvda8w HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55783 - "GET /api/v1/runs?projectId=wik0zthls7yxicqxganvda8w&limit=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56750 - "GET /api/v1/workspaces/j7d08eyz7cvkw68nvit272bj/api-keys HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53062 - "GET /api/v1/test-cases?projectId=wik0zthls7yxicqxganvda8w&limit=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51606 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:60102 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:61032 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53587 - "GET / HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:53587 - "GET /assets/index-BAHqWqVl.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:63066 - "GET /assets/tanstack-BQdTQcIE.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:58416 - "GET /assets/radix-D-NfLl_q.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:53703 - "GET /assets/recharts-DycNZ1IV.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:50460 - "GET /assets/index-BsGPPj1I.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:50460 - "GET /api/v1/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50460 - "GET /api/v1/projects HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50460 - "GET /capabilities HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50460 - "GET /logo.svg HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:52963 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:58416 - "GET /capabilities HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53703 - "GET /api/v1/analytics/kpis?projectId=wik0zthls7yxicqxganvda8w&period=7d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50460 - "GET /assets/geist-sans-latin-400-normal-gapTbOY8.woff2 HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:53703 - "GET /assets/geist-mono-latin-500-normal-C3sF8Y1B.woff2 HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:53587 - "GET /assets/geist-sans-latin-600-normal-DFOURf8L.woff2 HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:63066 - "GET /assets/geist-mono-latin-400-normal-DKaoCDn5.woff2 HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:58416 - "GET /assets/geist-sans-latin-500-normal-uokXdC-Q.woff2 HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:59743 - "GET /api/v1/analytics/pass-rate?projectId=wik0zthls7yxicqxganvda8w&period=11d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59743 - "GET /api/v1/analytics/coverage?projectId=wik0zthls7yxicqxganvda8w HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59743 - "GET /api/v1/runs?projectId=wik0zthls7yxicqxganvda8w&limit=5 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59743 - "GET /api/v1/audit-logs?action=agent.*&limit=5 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59743 - "GET /api/v1/analytics/readiness?projectId=wik0zthls7yxicqxganvda8w HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63066 - "GET /api/v1/workspaces/j7d08eyz7cvkw68nvit272bj/api-keys HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58416 - "GET /api/v1/runs?projectId=wik0zthls7yxicqxganvda8w&limit=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59743 - "GET /api/v1/test-cases?projectId=wik0zthls7yxicqxganvda8w&limit=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63522 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:55738 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:54814 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:64828 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:64972 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:62333 - "PATCH /api/v1/projects/wik0zthls7yxicqxganvda8w HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62333 - "GET /api/v1/projects HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62333 - "GET /api/v1/inbox?status=all HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51689 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:62333 - "GET /api/v1/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60625 - "GET /api/v1/workspaces/j7d08eyz7cvkw68nvit272bj/api-keys HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61200 - "GET /api/v1/runs?projectId=wik0zthls7yxicqxganvda8w&limit=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59563 - "GET /api/v1/analytics/pass-rate?projectId=wik0zthls7yxicqxganvda8w&period=11d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64611 - "GET /api/v1/test-cases?projectId=wik0zthls7yxicqxganvda8w&limit=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64472 - "GET /api/v1/analytics/kpis?projectId=wik0zthls7yxicqxganvda8w&period=7d HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61200 - "GET /api/v1/audit-logs?action=agent.*&limit=5 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60625 - "GET /api/v1/runs?projectId=wik0zthls7yxicqxganvda8w&limit=5 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62333 - "GET /api/v1/analytics/coverage?projectId=wik0zthls7yxicqxganvda8w HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59563 - "GET /api/v1/analytics/readiness?projectId=wik0zthls7yxicqxganvda8w HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60435 - "GET /newproject HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61077 - "GET /assets/index-BsGPPj1I.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:51080 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:60435 - "GET /capabilities HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51309 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:50085 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:52119 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:56037 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:53142 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:65082 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:49501 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:52102 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:58275 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:49495 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:59132 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:57984 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:49868 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:55055 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:51389 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:64165 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:54950 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:58696 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:56445 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:53991 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:54316 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:55524 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:57083 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:53855 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:52148 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:50606 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:62938 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:57788 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     127.0.0.1:54878 - "WebSocket /ws" 403
+INFO:     connection rejected (403 Forbidden)

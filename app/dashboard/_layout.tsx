@@ -70,7 +70,9 @@ export default function DashboardLayout() {
     void hasAuthSession().then((hasSession) => {
       if (active && !hasSession) router.replace("/auth/login");
     });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
   const activeBottomLabel = useMemo(
     () => getActiveBottomLabel(pathname),
@@ -97,7 +99,10 @@ export default function DashboardLayout() {
       await logoutSession();
       router.replace("/auth/login");
     } catch {
-      Alert.alert("Logout failed", "We couldn't end your session. Check your connection and try again.");
+      Alert.alert(
+        "Logout failed",
+        "We couldn't end your session. Check your connection and try again.",
+      );
     } finally {
       setIsLoggingOut(false);
     }
@@ -137,7 +142,7 @@ export default function DashboardLayout() {
               </View>
 
               <View style={styles.drawerBrandCopy}>
-                <Text style={styles.drawerBrandTitle}>Angel Foods</Text>
+                <Text style={styles.drawerBrandTitle}>Angelic mkts</Text>
                 <Text style={styles.drawerBrandSubtitle}>MEMBER PORTAL</Text>
               </View>
 

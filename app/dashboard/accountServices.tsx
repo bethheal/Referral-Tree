@@ -153,6 +153,7 @@ export type Plan = {
   monthlyFee: number;
   key: PlanKey;
   label: string;
+  paymentDescription: string;
 };
 
 /**
@@ -161,10 +162,10 @@ export type Plan = {
  * needs to change.
  */
 export const PLANS: Plan[] = [
-  { accent: "#8B7F7A", commissionRate: 10, key: "free", label: "Free", monthlyFee: 0 },
-  { accent: "#8E9AA6", commissionRate: 7, key: "silver", label: "Silver", monthlyFee: 20 },
-  { accent: "#D7B126", commissionRate: 5, key: "gold", label: "Gold", monthlyFee: 50 },
-  { accent: "#192536", commissionRate: 3, key: "premium", label: "Premium", monthlyFee: 100 },
+  { accent: "#8B7F7A", commissionRate: 10, key: "free", label: "Free", monthlyFee: 0, paymentDescription: "No membership fee" },
+  { accent: "#8E9AA6", commissionRate: 7, key: "silver", label: "Silver", monthlyFee: 70, paymentDescription: "One-time membership payment" },
+  { accent: "#D7B126", commissionRate: 5, key: "gold", label: "Gold", monthlyFee: 700, paymentDescription: "Gold package payment" },
+  { accent: "#192536", commissionRate: 3, key: "premium", label: "Premium", monthlyFee: 7000, paymentDescription: "Step 3 membership payment" },
 ];
 
 export const getPlan = (key: PlanKey) => PLANS.find((plan) => plan.key === key) ?? PLANS[0];

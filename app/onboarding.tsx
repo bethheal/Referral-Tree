@@ -1,5 +1,6 @@
 import DeliveryAnimation from "@/components/deliveryAnimation";
 import NavigationButtons from "@/components/navigationBtn";
+import { MOBILE_CONTENT_GUTTER } from "@/components/layout";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useRef, useState } from "react";
@@ -19,33 +20,36 @@ const { width } = Dimensions.get("window");
 const onboardingData = [
   {
     id: "onboarding1",
-    title: "Angel Foods",
-    description: "Discover quality food products, all in one place.",
+    title: "Welcome to Angelic mkts",
+    description:
+      "Discover quality food packages and a supportive community, all in one place.",
     animation: require("../assets/animations/welcome.json"),
     flip: true,
   },
 
   {
     id: "onboarding2",
-    title: "Buy healthy, buy happy",
-    description: "Shop your favorite quality food products with ease.",
+    title: "Choose your membership path",
+    description:
+      "Start with a seven-day free membership, then explore the plan that suits your goals.",
     animation: require("../assets/animations/order.json"),
     flip: false,
   },
 
   {
     id: "onboarding3",
-    title: "Delivery to your doorstep",
+    title: "Marketing made simple",
     description:
-      "We ensure that you get the best quality food products delivered to your doorstep.",
+      "Browse Angelic mkts packages and manage your orders from one convenient place.",
     animation: require("../assets/animations/deliveryYello.json"),
     flip: false,
   },
 
   {
     id: "onboarding4",
-    title: "Earn rewards",
-    description: "Earn rewards by referring others to Angel Foods.",
+    title: "Grow with your community",
+    description:
+      "Invite people you know and keep track of your Angelic mkts membership journey.",
     animation: require("../assets/animations/reward1.json"),
     flip: false,
   },
@@ -118,31 +122,35 @@ export default function Onboarding() {
   };
 
   // --------------------------------
-  // START SHOPPING
+  // MEMBER ENTRY
   // --------------------------------
 
-  const finishOnboarding = async () => {
+  const finishOnboarding = async (route: "/auth/login" | "/auth/signup") => {
     try {
       await AsyncStorage.setItem("onboardingComplete", "true");
     } catch (error) {
       console.log("Saving onboarding status failed:", error);
     } finally {
-      router.replace("/auth/login");
+      router.push(route);
     }
   };
 
-  const handleStartShopping = () => {
-    finishOnboarding();
+  const handleExistingMember = () => {
+    finishOnboarding("/auth/login");
+  };
+
+  const handleNewMember = () => {
+    finishOnboarding("/auth/signup");
   };
 
   const handleSkip = () => {
-    finishOnboarding();
+    finishOnboarding("/auth/login");
   };
 
   return (
     <View style={styles.container}>
       {/* STATUS BAR */}
-      <StatusBar barStyle="dark-content" backgroundColor="#f0e3e3" />
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
       {/* CAROUSEL */}
 
@@ -205,13 +213,23 @@ export default function Onboarding() {
         {/* LAST SLIDE */}
 
         {currentIndex === onboardingData.length - 1 ? (
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleStartShopping}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.buttonText}>Start Shopping</Text>
-          </TouchableOpacity>
+          <View style={styles.memberButtons}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={handleExistingMember}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.buttonText}>Existing member</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.newMemberButton}
+              onPress={handleNewMember}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.newMemberButtonText}>New member</Text>
+            </TouchableOpacity>
+          </View>
         ) : (
           <NavigationButtons
             onNext={handleNext}
@@ -231,7 +249,7 @@ export default function Onboarding() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f0e3e3",
+    backgroundColor: "#FFFFFF",
   },
 
   slide: {
@@ -239,7 +257,7 @@ const styles = StyleSheet.create({
 
     alignItems: "center",
 
-    paddingHorizontal: 20,
+    paddingHorizontal: MOBILE_CONTENT_GUTTER,
   },
 
   animationContainer: {
@@ -284,7 +302,7 @@ const styles = StyleSheet.create({
 
     lineHeight: 25,
 
-    paddingHorizontal: 20,
+    paddingHorizontal: MOBILE_CONTENT_GUTTER,
   },
 
   /* -------------------------
@@ -334,17 +352,28 @@ const styles = StyleSheet.create({
   },
 
   /* -------------------------
-     START SHOPPING
+     MEMBER ENTRY
   ------------------------- */
 
+  memberButtons: {
+    gap: 12,
+    paddingHorizontal: MOBILE_CONTENT_GUTTER,
+    width: "100%",
+  },
+
   button: {
+    alignItems: "center",
     backgroundColor: "#192536",
-
     paddingVertical: 15,
-
-    paddingHorizontal: 40,
-
     borderRadius: 10,
+  },
+
+  newMemberButton: {
+    alignItems: "center",
+    borderColor: "#192536",
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingVertical: 14,
   },
 
   buttonText: {
@@ -352,6 +381,12 @@ const styles = StyleSheet.create({
 
     fontSize: 18,
 
+    fontWeight: "bold",
+  },
+
+  newMemberButtonText: {
+    color: "#192536",
+    fontSize: 18,
     fontWeight: "bold",
   },
 

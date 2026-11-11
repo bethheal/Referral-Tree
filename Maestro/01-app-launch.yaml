@@ -1,0 +1,4 @@
+appId: com.angelfoods.app
+---
+- launchApp
+- takeScreenshot: AngelFoods_Home
